@@ -1,20 +1,26 @@
 import { useState, type ReactNode } from "react";
-import { Users, Trophy, MessageCircle, Film, UserCircle, Gamepad2 } from "lucide-react";
+import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
 import { ClubsTab } from "./ClubsTab";
 import { ChatTab } from "./ChatTab";
 import { MediaTab } from "./MediaTab";
 import { ProfileTab } from "./ProfileTab";
+import { ClansTab } from "./ClansTab";
+import { ChallengesTab } from "./ChallengesTab";
+import { TournamentsTab } from "./TournamentsTab";
 
-export type TabKey = "find" | "clubs" | "chat" | "media" | "profile";
+export type TabKey = "find" | "clans" | "challenges" | "tournaments" | "clubs" | "chat" | "media" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
-  { key: "clubs", label: "Clubs", icon: Trophy },
+  { key: "clans", label: "Clans", icon: Shield },
+  { key: "challenges", label: "1v1", icon: Swords },
+  { key: "tournaments", label: "Cups", icon: Trophy },
+  { key: "clubs", label: "Clubs", icon: Hash },
   { key: "chat", label: "Chat", icon: MessageCircle },
   { key: "media", label: "Media", icon: Film },
-  { key: "profile", label: "Profile", icon: UserCircle },
+  { key: "profile", label: "Me", icon: UserCircle },
 ];
 
 export function Shell() {
@@ -65,6 +71,9 @@ export function Shell() {
 
         <div className="flex-1 pb-24 lg:pb-0">
           <TabFrame visible={tab === "find"}><FindTab /></TabFrame>
+          <TabFrame visible={tab === "clans"}><ClansTab /></TabFrame>
+          <TabFrame visible={tab === "challenges"}><ChallengesTab /></TabFrame>
+          <TabFrame visible={tab === "tournaments"}><TournamentsTab /></TabFrame>
           <TabFrame visible={tab === "clubs"}><ClubsTab /></TabFrame>
           <TabFrame visible={tab === "chat"}><ChatTab /></TabFrame>
           <TabFrame visible={tab === "media"}><MediaTab /></TabFrame>
@@ -73,7 +82,7 @@ export function Shell() {
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-          <div className="grid grid-cols-5">
+          <div className="grid grid-cols-8">
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.key;
@@ -82,12 +91,12 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-3 text-[10px] font-semibold uppercase tracking-wider transition-colors",
+                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
                     active ? "text-primary" : "text-muted-foreground"
                   )}
                 >
-                  <div className={cn("relative", active && "after:absolute after:-top-3 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-8 after:rounded-full after:bg-primary")}>
-                    <Icon className="h-5 w-5" />
+                  <div className={cn("relative", active && "after:absolute after:-top-2.5 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-6 after:rounded-full after:bg-primary")}>
+                    <Icon className="h-4 w-4" />
                   </div>
                   {t.label}
                 </button>
