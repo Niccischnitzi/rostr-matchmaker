@@ -74,7 +74,7 @@ export function OnboardingWizard() {
 
   const steps = [
     {
-      title: "Welcome to Rostr",
+      title: "Welcome to ostr",
       icon: Sparkles,
       body: (
         <div className="text-center">
