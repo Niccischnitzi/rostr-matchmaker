@@ -22,7 +22,9 @@ type Ctx = {
   postLFG: (data: Omit<LFG, "id" | "host" | "postedAt" | "slotsOpen"> & { slotsOpen: number }) => void;
 
   clips: Clip[];
+  likedClips: Set<string>;
   likeClip: (id: string) => void;
+
 
   linked: LinkedAccount[];
   status: "Online" | "In-Game" | "Busy" | "Looking for Squad";
