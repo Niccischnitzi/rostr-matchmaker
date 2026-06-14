@@ -1,5 +1,5 @@
 import { useState, type ReactNode, useEffect } from "react";
-import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
+import { Users, MessageCircle, Film, UserCircle, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
 import { ChatTab } from "./ChatTab";
@@ -8,9 +8,12 @@ import { ProfileTab } from "./ProfileTab";
 import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
 import { CrewsTab } from "./CrewsTab";
-
 import { SettingsSheet } from "./SettingsSheet";
+import { OnboardingWizard } from "./OnboardingWizard";
+import { RostrMark } from "./RostrMark";
+import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
+import { toast } from "sonner";
 
 export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
 
@@ -32,6 +35,11 @@ export function Shell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => { sfx.nav(); }, [tab]);
+  useEffect(() => {
+    recordDailyLoginOnce().then((r) => {
+      if (r) toast.success(`Day ${r.streak} streak! +${r.reward} tokens`, { description: "Login bonus credited." });
+    });
+  }, []);
 
 
 
@@ -153,6 +161,7 @@ export function Shell() {
 
       </main>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <OnboardingWizard />
     </div>
   );
 }
@@ -161,9 +170,7 @@ export function Shell() {
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="h-9 w-9 rounded-xl bg-primary grid place-items-center glow-orange">
-        <Gamepad2 className="h-5 w-5 text-primary-foreground" />
-      </div>
+      <RostrMark size={compact ? 32 : 40} />
       {!compact && (
         <div>
           <p className="font-display font-black text-xl tracking-tight">Rostr</p>
