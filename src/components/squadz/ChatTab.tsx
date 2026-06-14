@@ -283,6 +283,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [typingPeer, setTypingPeer] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTypingSentRef = useRef(0);
