@@ -48,6 +48,7 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(KEY, JSON.stringify(prefs));
+    window.dispatchEvent(new Event("rostr:settings-changed"));
   }, [prefs]);
 
   const set = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPrefs((p) => ({ ...p, [k]: v }));
