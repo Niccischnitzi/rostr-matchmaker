@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
+import { useState, type ReactNode, useEffect } from "react";
+import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Settings as SettingsIcon, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
 import { ChatTab } from "./ChatTab";
@@ -8,12 +8,15 @@ import { ProfileTab } from "./ProfileTab";
 import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
 import { CrewsTab } from "./CrewsTab";
+import { FriendsTab } from "./FriendsTab";
 import { SettingsSheet } from "./SettingsSheet";
+import { sfx } from "@/lib/sfx";
 
-export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
+export type TabKey = "find" | "friends" | "clans" | "chat" | "media" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
+  { key: "friends", label: "Friends", icon: UserPlus },
   { key: "clans", label: "Crews", icon: Shield },
   { key: "chat", label: "Chat", icon: MessageCircle },
   { key: "media", label: "Media", icon: Film },
@@ -28,6 +31,9 @@ export function Shell() {
   const [findSub, setFindSub] = useState<FindSub>("players");
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => { sfx.nav(); }, [tab]);
+
 
 
   return (
@@ -101,6 +107,7 @@ export function Shell() {
             />
             {findSub === "players" ? <FindTab /> : <ChallengesTab />}
           </TabFrame>
+          <TabFrame visible={tab === "friends"} tabKey="friends"><FriendsTab /></TabFrame>
           <TabFrame visible={tab === "clans"} tabKey={`clans-${clansSub}`}>
             <SubNav
               items={[
@@ -122,7 +129,7 @@ export function Shell() {
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-          <div className="grid grid-cols-5">
+          <div className="grid grid-cols-6">
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.key;
@@ -131,7 +138,7 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
+                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
                     active ? "text-primary" : "text-muted-foreground"
                   )}
                 >
@@ -144,6 +151,7 @@ export function Shell() {
             })}
           </div>
         </nav>
+
       </main>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
