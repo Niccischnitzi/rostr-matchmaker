@@ -33,6 +33,19 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
         setGames(Array.isArray(d?.lfg_games) ? d.lfg_games.join(", ") : "");
         setLoading(false);
       });
+    // load view stats
+    const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+    Promise.all([
+      supabase.from("lfg_ad_views" as any).select("id", { count: "exact", head: true }).eq("ad_owner_id", user.id),
+      supabase.from("lfg_ad_views" as any).select("id", { count: "exact", head: true }).eq("ad_owner_id", user.id).gte("created_at", since),
+      supabase.from("lfg_ad_views" as any).select("created_at").eq("ad_owner_id", user.id).order("created_at", { ascending: false }).limit(1),
+    ]).then(([t, r, l]) => {
+      setStats({
+        total: t.count ?? 0,
+        recent: r.count ?? 0,
+        last: ((l.data as any)?.[0]?.created_at as string | undefined) ?? null,
+      });
+    });
   }, [open, user]);
 
   async function save() {
