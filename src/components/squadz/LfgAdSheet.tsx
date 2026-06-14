@@ -60,7 +60,7 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
         </SheetHeader>
         {loading ? (
           <div className="grid place-items-center h-40"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
-        ) : (
+        ) : !user ? null : (
           <div className="mt-6 space-y-4 px-4 pb-6">
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
               <div>
