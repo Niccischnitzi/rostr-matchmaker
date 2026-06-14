@@ -14,16 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      linked_accounts: {
+        Row: {
+          aggregated_stats: Json
+          created_at: string
+          current_rank_display: string | null
+          external_uid: string | null
+          gamertag: string
+          id: number
+          platform: string
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          aggregated_stats?: Json
+          created_at?: string
+          current_rank_display?: string | null
+          external_uid?: string | null
+          gamertag: string
+          id?: number
+          platform: string
+          updated_at?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          aggregated_stats?: Json
+          created_at?: string
+          current_rank_display?: string | null
+          external_uid?: string | null
+          gamertag?: string
+          id?: number
+          platform?: string
+          updated_at?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "linked_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          availability_status: string
+          avatar_url: string | null
+          banner_url: string | null
+          bio: string | null
+          country: string | null
+          created_at: string
+          current_game_activity: string | null
+          customization_options: Json
+          display_name: string | null
+          gender: string | null
+          id: string
+          playing_hours: Json
+          playstyle_badges: string[]
+          timezone: string | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          age?: number | null
+          availability_status?: string
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          current_game_activity?: string | null
+          customization_options?: Json
+          display_name?: string | null
+          gender?: string | null
+          id: string
+          playing_hours?: Json
+          playstyle_badges?: string[]
+          timezone?: string | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          age?: number | null
+          availability_status?: string
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          current_game_activity?: string | null
+          customization_options?: Json
+          display_name?: string | null
+          gender?: string | null
+          id?: string
+          playing_hours?: Json
+          playstyle_badges?: string[]
+          timezone?: string | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +283,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
