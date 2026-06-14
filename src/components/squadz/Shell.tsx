@@ -144,9 +144,11 @@ export function Shell() {
           </div>
         </nav>
       </main>
+      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
+
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
