@@ -22,7 +22,9 @@ type Ctx = {
   postLFG: (data: Omit<LFG, "id" | "host" | "postedAt" | "slotsOpen"> & { slotsOpen: number }) => void;
 
   clips: Clip[];
+  likedClips: Set<string>;
   likeClip: (id: string) => void;
+
 
   linked: LinkedAccount[];
   status: "Online" | "In-Game" | "Busy" | "Looking for Squad";
@@ -40,7 +42,9 @@ export function SquadzProvider({ children }: { children: ReactNode }) {
   const [lfg, setLfg] = useState(initialLFG);
   const [clips, setClips] = useState(initialClips);
   const [linked] = useState(initialLinked);
+  const [likedClips, setLikedClips] = useState<Set<string>>(() => new Set());
   const [status, setStatus] = useState<Ctx["status"]>("Looking for Squad");
+
 
   const swipe: Ctx["swipe"] = (id, dir) => {
     const p = players.find((x) => x.id === id);
@@ -67,15 +71,19 @@ export function SquadzProvider({ children }: { children: ReactNode }) {
   const postLFG: Ctx["postLFG"] = (data) =>
     setLfg((prev) => [{ ...data, id: Math.random().toString(36).slice(2), host: "you", postedAt: "now" }, ...prev]);
 
-  const likeClip: Ctx["likeClip"] = (id) =>
+  const likeClip: Ctx["likeClip"] = (id) => {
+    if (likedClips.has(id)) return;
+    setLikedClips((prev) => new Set(prev).add(id));
     setClips((prev) => prev.map((c) => (c.id === id ? { ...c, likes: c.likes + 1 } : c)));
+  };
 
   return (
-    <StoreCtx.Provider value={{ players, connected, skipped, swipe, clubs, joinClub, chats, sendMessage, joinInvite, lfg, joinLFG, postLFG, clips, likeClip, linked, status, setStatus }}>
+    <StoreCtx.Provider value={{ players, connected, skipped, swipe, clubs, joinClub, chats, sendMessage, joinInvite, lfg, joinLFG, postLFG, clips, likedClips, likeClip, linked, status, setStatus }}>
       {children}
     </StoreCtx.Provider>
   );
 }
+
 
 export const useSquadz = () => {
   const ctx = useContext(StoreCtx);

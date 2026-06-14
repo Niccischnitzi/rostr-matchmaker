@@ -568,6 +568,77 @@ export type Database = {
           },
         ]
       }
+      media_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_posts: {
+        Row: {
+          body: string | null
+          created_at: string
+          duration_s: number | null
+          game: string | null
+          id: string
+          kind: string
+          media_path: string | null
+          size_bytes: number | null
+          source_url: string | null
+          title: string | null
+          tokens_spent: number
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          duration_s?: number | null
+          game?: string | null
+          id?: string
+          kind: string
+          media_path?: string | null
+          size_bytes?: number | null
+          source_url?: string | null
+          title?: string | null
+          tokens_spent?: number
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          duration_s?: number | null
+          game?: string | null
+          id?: string
+          kind?: string
+          media_path?: string | null
+          size_bytes?: number | null
+          source_url?: string | null
+          title?: string | null
+          tokens_spent?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -841,6 +912,7 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      spend_tokens: { Args: { _amount: number }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
