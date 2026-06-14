@@ -310,8 +310,14 @@ export function ProfileTab() {
         )}
       </div>
 
+      {/* Availability */}
+      <div className="mt-6">
+        <AvailabilityGrid userId={userId!} editable />
+      </div>
+
       {/* Showcase */}
       <div className="mt-6">
+
         <h2 className="font-display text-xl font-black mb-3">Showcase</h2>
         <div className="grid grid-cols-3 gap-3">
           {pinned.map((c) => (
