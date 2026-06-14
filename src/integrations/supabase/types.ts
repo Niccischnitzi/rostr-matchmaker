@@ -476,6 +476,33 @@ export type Database = {
           },
         ]
       }
+      friends: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leaderboard_entries: {
         Row: {
           audit_flags: Json
@@ -639,6 +666,64 @@ export type Database = {
         }
         Relationships: []
       }
+      media_reposts: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_reposts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_saves: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -653,6 +738,10 @@ export type Database = {
           display_name: string | null
           gender: string | null
           id: string
+          is_public: boolean
+          lfg_body: string | null
+          lfg_games: string[]
+          lfg_title: string | null
           playing_hours: Json
           playstyle_badges: string[]
           timezone: string | null
@@ -672,6 +761,10 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           id: string
+          is_public?: boolean
+          lfg_body?: string | null
+          lfg_games?: string[]
+          lfg_title?: string | null
           playing_hours?: Json
           playstyle_badges?: string[]
           timezone?: string | null
@@ -691,6 +784,10 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           id?: string
+          is_public?: boolean
+          lfg_body?: string | null
+          lfg_games?: string[]
+          lfg_title?: string | null
           playing_hours?: Json
           playstyle_badges?: string[]
           timezone?: string | null
