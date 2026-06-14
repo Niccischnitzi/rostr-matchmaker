@@ -430,11 +430,18 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         )}
         {messages.map((m) => {
           const me = m.sender_id === user.id;
+          const attach = parseAttachment(m.body);
           return (
-            <div key={m.id} className={cn("flex flex-col max-w-[80%] soft-rise", me ? "ml-auto items-end" : "items-start")}>
-              <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")}>
-                {m.body}
-              </div>
+            <div key={m.id} className={cn("flex flex-col max-w-[min(280px,80%)] min-w-0 soft-rise", me ? "ml-auto items-end" : "items-start")}>
+              {attach ? (
+                <div className={cn("rounded-2xl overflow-hidden", me ? "rounded-br-sm" : "rounded-bl-sm")}>
+                  <Attachment meta={attach} me={me} />
+                </div>
+              ) : (
+                <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words overflow-hidden max-w-full", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")} style={{ wordBreak: "break-word" }}>
+                  {m.body}
+                </div>
+              )}
               <p className="text-[10px] text-muted-foreground mt-1 px-2 flex items-center gap-1">
                 {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 {me && m.read_at && <span className="text-primary">· seen</span>}
