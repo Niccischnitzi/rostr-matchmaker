@@ -16,6 +16,8 @@ import {
   type Profile,
 } from "@/lib/squadz-supabase";
 import { FriendsTab } from "./FriendsTab";
+import { CallSheet } from "./CallSheet";
+import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
@@ -281,6 +283,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [typingPeer, setTypingPeer] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTypingSentRef = useRef(0);
@@ -411,7 +414,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
           <p className="text-xs text-muted-foreground">@{peer?.username ?? ""}</p>
         </div>
         <button
-          onClick={() => { sfx.nav(); toast("Voice call — connecting to private server soon. WebRTC P2P enabled in next build."); }}
+          onClick={() => { sfx.nav(); setCallOpen(true); }}
           className="h-9 w-9 rounded-full bg-success/15 text-success grid place-items-center hover:bg-success/25 transition"
           aria-label="Call"
           title="Start voice call"
@@ -419,6 +422,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
           <Phone className="h-4 w-4" />
         </button>
       </div>
+      <CallSheet open={callOpen} onClose={() => setCallOpen(false)} peer={peer} conversationId={conversationId} selfId={user.id} />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
@@ -426,11 +430,18 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         )}
         {messages.map((m) => {
           const me = m.sender_id === user.id;
+          const attach = parseAttachment(m.body ?? "");
           return (
-            <div key={m.id} className={cn("flex flex-col max-w-[80%] soft-rise", me ? "ml-auto items-end" : "items-start")}>
-              <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")}>
-                {m.body}
-              </div>
+            <div key={m.id} className={cn("flex flex-col max-w-[min(280px,80%)] min-w-0 soft-rise", me ? "ml-auto items-end" : "items-start")}>
+              {attach ? (
+                <div className={cn("rounded-2xl overflow-hidden", me ? "rounded-br-sm" : "rounded-bl-sm")}>
+                  <Attachment meta={attach} me={me} />
+                </div>
+              ) : (
+                <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words overflow-hidden max-w-full", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")} style={{ wordBreak: "break-word" }}>
+                  {m.body}
+                </div>
+              )}
               <p className="text-[10px] text-muted-foreground mt-1 px-2 flex items-center gap-1">
                 {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 {me && m.read_at && <span className="text-primary">· seen</span>}
@@ -477,10 +488,9 @@ function AttachButton({ conversationId, senderId }: { conversationId: string; se
     const path = `${conversationId}/${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage.from("dm-attachments").upload(path, f, { contentType: f.type });
     if (upErr) { setBusy(false); return toast.error(upErr.message); }
-    const { data: signed } = await supabase.storage.from("dm-attachments").createSignedUrl(path, 60 * 60 * 24 * 7);
-    const url = signed?.signedUrl ?? path;
+    const body = encodeAttachment({ path, name: f.name, mime: f.type || "application/octet-stream", size: f.size });
     const { error } = await supabase.from("direct_messages").insert({
-      conversation_id: conversationId, sender_id: senderId, body: `📎 ${f.name}\n${url}`,
+      conversation_id: conversationId, sender_id: senderId, body,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

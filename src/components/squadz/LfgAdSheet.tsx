@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Megaphone } from "lucide-react";
+import { Loader2, Megaphone, Eye, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<{ total: number; recent: number; last: string | null }>({ total: 0, recent: 0, last: null });
 
   useEffect(() => {
     if (!open || !user) return;
@@ -32,6 +33,19 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
         setGames(Array.isArray(d?.lfg_games) ? d.lfg_games.join(", ") : "");
         setLoading(false);
       });
+    // load view stats
+    const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+    Promise.all([
+      supabase.from("lfg_ad_views" as any).select("id", { count: "exact", head: true }).eq("ad_owner_id", user.id),
+      supabase.from("lfg_ad_views" as any).select("id", { count: "exact", head: true }).eq("ad_owner_id", user.id).gte("created_at", since),
+      supabase.from("lfg_ad_views" as any).select("created_at").eq("ad_owner_id", user.id).order("created_at", { ascending: false }).limit(1),
+    ]).then(([t, r, l]) => {
+      setStats({
+        total: t.count ?? 0,
+        recent: r.count ?? 0,
+        last: ((l.data as any)?.[0]?.created_at as string | undefined) ?? null,
+      });
+    });
   }, [open, user]);
 
   async function save() {
@@ -62,6 +76,20 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
           <div className="grid place-items-center h-40"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : !user ? null : (
           <div className="mt-6 space-y-4 px-4 pb-6">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-surface border border-border p-3">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Users className="h-3 w-3" /> Viewers</div>
+                <p className="font-display text-2xl font-black mt-0.5">{stats.total}</p>
+              </div>
+              <div className="rounded-xl bg-surface border border-border p-3">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Eye className="h-3 w-3" /> 7-day</div>
+                <p className="font-display text-2xl font-black mt-0.5">{stats.recent}</p>
+              </div>
+              <div className="rounded-xl bg-surface border border-border p-3">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Clock className="h-3 w-3" /> Last</div>
+                <p className="font-display text-sm font-black mt-1">{stats.last ? new Date(stats.last).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}</p>
+              </div>
+            </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
               <div>
                 <p className="text-sm font-bold">Public profile</p>
