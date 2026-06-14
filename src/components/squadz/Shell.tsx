@@ -8,7 +8,7 @@ import { ProfileTab } from "./ProfileTab";
 import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
 import { CrewsTab } from "./CrewsTab";
-import { FriendsTab } from "./FriendsTab";
+
 import { SettingsSheet } from "./SettingsSheet";
 import { sfx } from "@/lib/sfx";
 
