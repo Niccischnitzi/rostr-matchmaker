@@ -19,6 +19,7 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<{ total: number; recent: number; last: string | null }>({ total: 0, recent: 0, last: null });
 
   useEffect(() => {
     if (!open || !user) return;
