@@ -7,6 +7,7 @@ import { useSquadz } from "@/lib/squadz-store";
 import { Check, Copy, Plus, Trophy, Users, Loader2, Pencil, LogOut, Camera, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AvailabilityGrid } from "./AvailabilityGrid";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
