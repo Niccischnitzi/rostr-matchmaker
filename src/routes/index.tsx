@@ -3,7 +3,7 @@ import { Shell } from "@/components/squadz/Shell";
 import { SquadzProvider } from "@/lib/squadz-store";
 import { Toaster } from "@/components/ui/sonner";
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "SQUADZ — Your gaming social hub" },
