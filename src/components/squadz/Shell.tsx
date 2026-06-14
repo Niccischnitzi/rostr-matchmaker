@@ -10,21 +10,23 @@ import { ClansTab } from "./ClansTab";
 import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
 
-export type TabKey = "find" | "clans" | "challenges" | "tournaments" | "clubs" | "chat" | "media" | "profile";
+export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
   { key: "clans", label: "Clans", icon: Shield },
-  { key: "challenges", label: "1v1", icon: Swords },
-  { key: "tournaments", label: "Cups", icon: Trophy },
-  { key: "clubs", label: "Clubs", icon: Hash },
   { key: "chat", label: "Chat", icon: MessageCircle },
   { key: "media", label: "Media", icon: Film },
   { key: "profile", label: "Me", icon: UserCircle },
 ];
 
+type FindSub = "players" | "1v1";
+type ClansSub = "roster" | "cups" | "clubs";
+
 export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
+  const [findSub, setFindSub] = useState<FindSub>("players");
+  const [clansSub, setClansSub] = useState<ClansSub>("roster");
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -52,7 +54,7 @@ export function Shell() {
         </nav>
         <div className="mt-auto text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
-            <p className="font-semibold text-foreground">SQUADZ v0.1</p>
+            <p className="font-semibold text-foreground">ROSTR v0.1</p>
             <p className="mt-1">One passport. Every platform.</p>
           </div>
         </div>
@@ -69,12 +71,32 @@ export function Shell() {
           </div>
         </header>
 
-        <div className="flex-1 pb-24 lg:pb-0">
-          <TabFrame visible={tab === "find"}><FindTab /></TabFrame>
-          <TabFrame visible={tab === "clans"}><ClansTab /></TabFrame>
-          <TabFrame visible={tab === "challenges"}><ChallengesTab /></TabFrame>
-          <TabFrame visible={tab === "tournaments"}><TournamentsTab /></TabFrame>
-          <TabFrame visible={tab === "clubs"}><ClubsTab /></TabFrame>
+        <div className="flex-1 pb-20 lg:pb-0">
+          <TabFrame visible={tab === "find"}>
+            <SubNav
+              items={[
+                { key: "players", label: "Players", icon: Users },
+                { key: "1v1", label: "1v1 Challenges", icon: Swords },
+              ]}
+              value={findSub}
+              onChange={(v) => setFindSub(v as FindSub)}
+            />
+            {findSub === "players" ? <FindTab /> : <ChallengesTab />}
+          </TabFrame>
+          <TabFrame visible={tab === "clans"}>
+            <SubNav
+              items={[
+                { key: "roster", label: "Clans", icon: Shield },
+                { key: "cups", label: "Cups", icon: Trophy },
+                { key: "clubs", label: "Clubs", icon: Hash },
+              ]}
+              value={clansSub}
+              onChange={(v) => setClansSub(v as ClansSub)}
+            />
+            {clansSub === "roster" && <ClansTab />}
+            {clansSub === "cups" && <TournamentsTab />}
+            {clansSub === "clubs" && <ClubsTab />}
+          </TabFrame>
           <TabFrame visible={tab === "chat"}><ChatTab /></TabFrame>
           <TabFrame visible={tab === "media"}><MediaTab /></TabFrame>
           <TabFrame visible={tab === "profile"}><ProfileTab /></TabFrame>
@@ -82,7 +104,7 @@ export function Shell() {
 
         {/* Mobile bottom nav */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-          <div className="grid grid-cols-8">
+          <div className="grid grid-cols-5">
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.key;
@@ -91,12 +113,12 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
+                    "flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
                     active ? "text-primary" : "text-muted-foreground"
                   )}
                 >
                   <div className={cn("relative", active && "after:absolute after:-top-2.5 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-6 after:rounded-full after:bg-primary")}>
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-5 w-5" />
                   </div>
                   {t.label}
                 </button>
@@ -117,11 +139,11 @@ function Brand({ compact = false }: { compact?: boolean }) {
       </div>
       {!compact && (
         <div>
-          <p className="font-display font-black text-xl tracking-tight">SQUADZ</p>
+          <p className="font-display font-black text-xl tracking-tight">ROSTR</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
         </div>
       )}
-      {compact && <p className="font-display font-black text-lg tracking-tight">SQUADZ</p>}
+      {compact && <p className="font-display font-black text-lg tracking-tight">ROSTR</p>}
     </div>
   );
 }
@@ -129,4 +151,38 @@ function Brand({ compact = false }: { compact?: boolean }) {
 function TabFrame({ visible, children }: { visible: boolean; children: ReactNode }) {
   if (!visible) return null;
   return <div className="animate-in fade-in duration-200">{children}</div>;
+}
+
+function SubNav({
+  items,
+  value,
+  onChange,
+}: {
+  items: { key: string; label: string; icon: typeof Users }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="sticky top-0 lg:top-0 z-20 px-4 lg:px-6 pt-3 pb-2 bg-background/90 backdrop-blur-xl border-b border-border">
+      <div className="flex gap-1 p-1 rounded-xl bg-surface/60 border border-border w-full overflow-x-auto">
+        {items.map((it) => {
+          const Icon = it.icon;
+          const active = value === it.key;
+          return (
+            <button
+              key={it.key}
+              onClick={() => onChange(it.key)}
+              className={cn(
+                "flex-1 min-w-fit flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
+                active ? "bg-primary text-primary-foreground glow-orange" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {it.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
