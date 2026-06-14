@@ -110,10 +110,12 @@
 }
 
 @utility text-gradient-orange {
-  background: linear-gradient(135deg, var(--primary), oklch(0.78 0.18 55));
+  background-image: linear-gradient(135deg, var(--primary), oklch(0.78 0.18 55));
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
+  display: inline-block;
 }
 
 @keyframes pulse-ring {
