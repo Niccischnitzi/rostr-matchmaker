@@ -430,7 +430,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         )}
         {messages.map((m) => {
           const me = m.sender_id === user.id;
-          const attach = parseAttachment(m.body);
+          const attach = parseAttachment(m.body ?? "");
           return (
             <div key={m.id} className={cn("flex flex-col max-w-[min(280px,80%)] min-w-0 soft-rise", me ? "ml-auto items-end" : "items-start")}>
               {attach ? (
