@@ -86,10 +86,10 @@ export function FindTab() {
                 </div>
               </div>
             </div>
-            </div>
           </SheetContent>
-        </Sheet>
+          </Sheet>
         </div>
+
       </div>
       <LfgAdSheet open={adOpen} onOpenChange={setAdOpen} />
 
