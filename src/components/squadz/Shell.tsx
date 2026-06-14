@@ -170,7 +170,7 @@ export function Shell() {
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <RostrMark size={compact ? 32 : 40} />
+      <RostrMark size={compact ? 40 : 56} />
       {!compact && (
         <div>
           <p className="font-display font-black text-xl tracking-tight">ostr</p>
