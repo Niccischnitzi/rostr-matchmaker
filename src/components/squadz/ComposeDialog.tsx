@@ -100,20 +100,23 @@ export function ComposeDialog({
         });
         if (insErr) throw insErr;
       } else if (kind === "text") {
+        if (!title.trim()) { toast.error("Subject is required"); return; }
         if (!body.trim()) { toast.error("Write something"); return; }
         const { error } = await supabase.from("media_posts").insert({
-          user_id: userId, kind: "text", body: body.trim().slice(0, 280),
+          user_id: userId, kind: "text", title: title.trim().slice(0, 80), body: body.trim().slice(0, 280),
         });
         if (error) throw error;
       } else {
+        if (!title.trim()) { toast.error("Subject is required"); return; }
         if (!/^https?:\/\/(twitter|x)\.com\//.test(url.trim())) {
           toast.error("Paste a valid X/Twitter URL"); return;
         }
         const { error } = await supabase.from("media_posts").insert({
-          user_id: userId, kind: "tweet", source_url: url.trim(), title: title.trim() || null,
+          user_id: userId, kind: "tweet", source_url: url.trim(), title: title.trim().slice(0, 80),
         });
         if (error) throw error;
       }
+
 
       toast.success("Posted!");
       onPosted?.();
@@ -199,6 +202,12 @@ export function ComposeDialog({
 
         {kind === "text" && (
           <div className="space-y-2">
+            <Input
+              placeholder="Subject (required)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={80}
+            />
             <Textarea
               placeholder="What's on your mind, gamer?"
               value={body}
@@ -213,14 +222,20 @@ export function ComposeDialog({
         {kind === "tweet" && (
           <div className="space-y-2">
             <Input
+              placeholder="Subject (required)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={80}
+            />
+            <Input
               placeholder="https://x.com/username/status/..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
-            <Input placeholder="Caption (optional)" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
             <p className="text-[10px] text-muted-foreground">We'll embed the tweet in your feed.</p>
           </div>
         )}
+
 
         <div className="flex gap-2 pt-2">
           <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>

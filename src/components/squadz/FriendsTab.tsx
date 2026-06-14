@@ -1,0 +1,161 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Users, UserPlus, Check, X, Loader2, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { sfx } from "@/lib/sfx";
+import { fetchProfiles, type Profile } from "@/lib/squadz-supabase";
+
+type Friend = {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: "pending" | "accepted" | "blocked";
+  created_at: string;
+};
+
+export function FriendsTab() {
+  const { user } = useAuth();
+  const [rows, setRows] = useState<Friend[]>([]);
+  const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+
+  async function load() {
+    if (!user) return;
+    const { data } = await supabase
+      .from("friends")
+      .select("*")
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+    const list = (data ?? []) as Friend[];
+    setRows(list);
+    const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
+    if (ids.length) {
+      const ps = await fetchProfiles(ids);
+      setProfiles(new Map(ps.map((p) => [p.id, p])));
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
+
+  const accepted = rows.filter((r) => r.status === "accepted");
+  const incoming = rows.filter((r) => r.status === "pending" && r.addressee_id === user?.id);
+  const outgoing = rows.filter((r) => r.status === "pending" && r.requester_id === user?.id);
+
+  const filteredAccepted = useMemo(() => {
+    if (!q) return accepted;
+    return accepted.filter((r) => {
+      const other = r.requester_id === user?.id ? r.addressee_id : r.requester_id;
+      const p = profiles.get(other);
+      return p?.username?.toLowerCase().includes(q.toLowerCase()) || p?.display_name?.toLowerCase().includes(q.toLowerCase());
+    });
+  }, [accepted, profiles, q, user]);
+
+  async function respond(id: string, status: "accepted" | "blocked") {
+    const { error } = await supabase.from("friends").update({ status }).eq("id", id);
+    if (error) return toast.error(error.message);
+    sfx.win();
+    toast.success(status === "accepted" ? "Friend added!" : "Blocked");
+    load();
+  }
+  async function remove(id: string) {
+    const { error } = await supabase.from("friends").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
+  }
+
+  if (!user) return null;
+  return (
+    <div className="max-w-3xl mx-auto px-4 pt-6 lg:pt-10 pb-10 arcade-enter">
+      <div className="flex items-end justify-between gap-3 mb-6">
+        <div>
+          <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Friends</h1>
+          <p className="text-sm text-muted-foreground mt-1">Your squad, requests, and incoming pings.</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+      ) : (
+        <div className="space-y-6">
+          {incoming.length > 0 && (
+            <Section title={`Incoming (${incoming.length})`} icon={UserPlus}>
+              {incoming.map((r) => {
+                const p = profiles.get(r.requester_id);
+                return (
+                  <Row key={r.id} profile={p}>
+                    <Button size="sm" onClick={() => respond(r.id, "accepted")}><Check className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
+                  </Row>
+                );
+              })}
+            </Section>
+          )}
+
+          {outgoing.length > 0 && (
+            <Section title={`Sent (${outgoing.length})`} icon={UserPlus}>
+              {outgoing.map((r) => (
+                <Row key={r.id} profile={profiles.get(r.addressee_id)}>
+                  <span className="text-xs text-muted-foreground">Pending…</span>
+                  <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
+                </Row>
+              ))}
+            </Section>
+          )}
+
+          <Section title={`Squad (${accepted.length})`} icon={Users}>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search friends…"
+              className="w-full mb-3 bg-surface rounded-lg px-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {filteredAccepted.length === 0 && (
+              <p className="text-sm text-muted-foreground py-6 text-center">No friends yet. Send a request from the Find tab.</p>
+            )}
+            {filteredAccepted.map((r) => {
+              const other = r.requester_id === user.id ? r.addressee_id : r.requester_id;
+              const p = profiles.get(other);
+              return (
+                <Row key={r.id} profile={p}>
+                  <Button size="sm" variant="outline" onClick={() => toast("Open chat from the Chat tab")}>
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
+                </Row>
+              );
+            })}
+          </Section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, icon: Icon, children }: { title: string; icon: typeof Users; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 soft-rise">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3 flex items-center gap-2">
+        <Icon className="h-3.5 w-3.5" /> {title}
+      </p>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function Row({ profile, children }: { profile?: Profile | null; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface/60 transition">
+      <div className="h-10 w-10 rounded-full bg-surface-2 overflow-hidden shrink-0">
+        {profile?.avatar_url && <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold truncate">{profile?.display_name ?? profile?.username ?? "…"}</p>
+        <p className="text-[11px] text-muted-foreground truncate">@{profile?.username ?? "user"}</p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">{children}</div>
+    </div>
+  );
+}

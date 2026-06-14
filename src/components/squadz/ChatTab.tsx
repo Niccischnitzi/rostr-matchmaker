@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Send, Plus, Gamepad2, MessageSquarePlus, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Send, Gamepad2, MessageSquarePlus, Loader2, Search, Phone, Paperclip } from "lucide-react";
+import { sfx } from "@/lib/sfx";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -401,10 +403,18 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
           <ArrowLeft className="h-4 w-4" />
         </button>
         <Avatar profile={peer} size={10} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-bold truncate">{peer?.display_name ?? peer?.username ?? "…"}</p>
           <p className="text-xs text-muted-foreground">@{peer?.username ?? ""}</p>
         </div>
+        <button
+          onClick={() => { sfx.nav(); toast("Voice call — connecting to private server soon. WebRTC P2P enabled in next build."); }}
+          className="h-9 w-9 rounded-full bg-success/15 text-success grid place-items-center hover:bg-success/25 transition"
+          aria-label="Call"
+          title="Start voice call"
+        >
+          <Phone className="h-4 w-4" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -414,7 +424,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         {messages.map((m) => {
           const me = m.sender_id === user.id;
           return (
-            <div key={m.id} className={cn("flex flex-col max-w-[80%]", me ? "ml-auto items-end" : "items-start")}>
+            <div key={m.id} className={cn("flex flex-col max-w-[80%] soft-rise", me ? "ml-auto items-end" : "items-start")}>
               <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")}>
                 {m.body}
               </div>
@@ -435,10 +445,8 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={send} className="p-3 border-t border-border flex items-center gap-2">
-        <button type="button" onClick={() => toast("Attachments coming next round")} className="h-10 w-10 rounded-full bg-surface grid place-items-center shrink-0 hover:bg-surface-2">
-          <Plus className="h-4 w-4" />
-        </button>
+      <form onSubmit={(e) => { sfx.send(); send(e); }} className="p-3 border-t border-border flex items-center gap-2">
+        <AttachButton conversationId={conversationId} senderId={user.id} />
         <input
           value={text}
           onChange={(e) => handleTyping(e.target.value)}
@@ -452,6 +460,40 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
     </div>
   );
 }
+
+function AttachButton({ conversationId, senderId }: { conversationId: string; senderId: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (f.size > 20 * 1024 * 1024) return toast.error("Max 20 MB");
+    setBusy(true);
+    const ext = (f.name.split(".").pop() || "bin").toLowerCase();
+    const path = `${conversationId}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("dm-attachments").upload(path, f, { contentType: f.type });
+    if (upErr) { setBusy(false); return toast.error(upErr.message); }
+    const { data: signed } = await supabase.storage.from("dm-attachments").createSignedUrl(path, 60 * 60 * 24 * 7);
+    const url = signed?.signedUrl ?? path;
+    const { error } = await supabase.from("direct_messages").insert({
+      conversation_id: conversationId, sender_id: senderId, body: `📎 ${f.name}\n${url}`,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    sfx.send();
+  }
+  return (
+    <>
+      <input ref={ref} type="file" hidden onChange={onPick} />
+      <button type="button" onClick={() => ref.current?.click()} disabled={busy}
+        className="h-10 w-10 rounded-full bg-surface grid place-items-center shrink-0 hover:bg-surface-2">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+      </button>
+    </>
+  );
+}
+
 
 /* -------------------- LFG Board (unchanged local) -------------------- */
 

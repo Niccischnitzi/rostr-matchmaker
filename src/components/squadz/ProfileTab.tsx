@@ -316,6 +316,15 @@ export function ProfileTab() {
         <AvailabilityGrid userId={userId!} editable />
       </div>
 
+      {/* LFG ad shortcut */}
+      <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-lg font-black">Looking for squad?</p>
+          <p className="text-xs text-muted-foreground">Toggle your profile public and post an LFG ad from the Find page.</p>
+        </div>
+      </div>
+
+
       {/* Showcase */}
       <div className="mt-6">
 

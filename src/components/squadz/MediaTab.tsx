@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSquadz } from "@/lib/squadz-store";
-import { Play, Flame, Eye, Plus, Coins, Loader2, Video as VideoIcon, MessageSquare, Link2 } from "lucide-react";
+import { Play, Flame, Eye, Plus, Coins, Loader2, Video as VideoIcon, MessageSquare, Link2, Bookmark, Repeat2, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ComposeDialog } from "./ComposeDialog";
+import { sfx } from "@/lib/sfx";
 
 type MediaPost = {
   id: string;
@@ -21,11 +22,15 @@ type MediaPost = {
   created_at: string;
 };
 type Like = { post_id: string; user_id: string };
+type Save = { post_id: string; user_id: string };
+type Repost = { id: string; post_id: string; user_id: string };
+type AuthorMini = { id: string; username: string; display_name: string | null; avatar_url: string | null };
 
 export function MediaTab() {
   const qc = useQueryClient();
   const { clips, likeClip, likedClips } = useSquadz();
   const [composeOpen, setComposeOpen] = useState(false);
+  const [tab, setTab] = useState<"feed" | "saved">("feed");
 
   const { data: userId } = useQuery({
     queryKey: ["auth-user-id"],
@@ -55,15 +60,63 @@ export function MediaTab() {
     },
   });
 
+  const { data: saves = [] } = useQuery<Save[]>({
+    queryKey: ["media-saves", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("media_saves" as any).select("post_id, user_id");
+      if (error) throw error;
+      return (data as any) as Save[];
+    },
+  });
+
+  const { data: reposts = [] } = useQuery<Repost[]>({
+    queryKey: ["media-reposts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("media_reposts" as any).select("id, post_id, user_id");
+      if (error) throw error;
+      return (data as any) as Repost[];
+    },
+  });
+
+  // Fetch liker mini-profiles
+  const likerIds = useMemo(() => Array.from(new Set(likes.map((l) => l.user_id))), [likes]);
+  const { data: likers = [] } = useQuery<AuthorMini[]>({
+    queryKey: ["likers", likerIds.join(",")],
+    enabled: likerIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", likerIds);
+      return (data ?? []) as AuthorMini[];
+    },
+  });
+  const likerMap = useMemo(() => new Map(likers.map((u) => [u.id, u])), [likers]);
+
   const likeCounts = useMemo(() => {
     const m = new Map<string, number>();
     likes.forEach((l) => m.set(l.post_id, (m.get(l.post_id) ?? 0) + 1));
     return m;
   }, [likes]);
+  const repostCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    reposts.forEach((r) => m.set(r.post_id, (m.get(r.post_id) ?? 0) + 1));
+    return m;
+  }, [reposts]);
 
-  const myLikes = useMemo(() => {
-    return new Set(likes.filter((l) => l.user_id === userId).map((l) => l.post_id));
-  }, [likes, userId]);
+  const myLikes = useMemo(() => new Set(likes.filter((l) => l.user_id === userId).map((l) => l.post_id)), [likes, userId]);
+  const mySaves = useMemo(() => new Set(saves.filter((s) => s.user_id === userId).map((s) => s.post_id)), [saves, userId]);
+  const myReposts = useMemo(() => new Set(reposts.filter((r) => r.user_id === userId).map((r) => r.post_id)), [reposts, userId]);
+
+  const likersByPost = useMemo(() => {
+    const m = new Map<string, AuthorMini[]>();
+    likes.forEach((l) => {
+      const u = likerMap.get(l.user_id);
+      if (!u) return;
+      const arr = m.get(l.post_id) ?? [];
+      arr.push(u);
+      m.set(l.post_id, arr);
+    });
+    return m;
+  }, [likes, likerMap]);
 
   const toggleLike = useMutation({
     mutationFn: async (postId: string) => {
@@ -74,13 +127,45 @@ export function MediaTab() {
       } else {
         const { error } = await supabase.from("media_likes").insert({ user_id: userId, post_id: postId });
         if (error) throw error;
+        sfx.like();
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["media-likes"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not like"),
   });
 
-  // signed url cache for video posts
+  const toggleSave = useMutation({
+    mutationFn: async (postId: string) => {
+      if (!userId) throw new Error("Not signed in");
+      if (mySaves.has(postId)) {
+        const { error } = await supabase.from("media_saves" as any).delete().eq("user_id", userId).eq("post_id", postId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("media_saves" as any).insert({ user_id: userId, post_id: postId } as any);
+        if (error) throw error;
+        sfx.tap();
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-saves", userId] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+  });
+
+  const toggleRepost = useMutation({
+    mutationFn: async (postId: string) => {
+      if (!userId) throw new Error("Not signed in");
+      if (myReposts.has(postId)) {
+        const { error } = await supabase.from("media_reposts" as any).delete().eq("user_id", userId).eq("post_id", postId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("media_reposts" as any).insert({ user_id: userId, post_id: postId } as any);
+        if (error) throw error;
+        sfx.send();
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-reposts"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Repost failed"),
+  });
+
   const videoPaths = posts.filter((p) => p.kind === "video" && p.media_path).map((p) => p.media_path as string);
   const { data: signedMap = {} } = useQuery<Record<string, string>>({
     queryKey: ["media-signed", videoPaths.join("|")],
@@ -95,6 +180,7 @@ export function MediaTab() {
     },
   });
 
+  const visiblePosts = tab === "saved" ? posts.filter((p) => mySaves.has(p.id)) : posts;
   const featured = clips[0];
   const rest = clips.slice(1);
 
@@ -106,37 +192,52 @@ export function MediaTab() {
           <p className="text-sm text-muted-foreground mt-1">Clips, posts, and the weekly featured drop.</p>
         </div>
         <button
-          onClick={() => setComposeOpen(true)}
+          onClick={() => { sfx.tap(); setComposeOpen(true); }}
           className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 glow-orange hover:opacity-90"
         >
           <Plus className="h-4 w-4" /> New post
         </button>
       </div>
 
-      {/* User posts feed */}
+      <div className="inline-flex rounded-full bg-surface p-1 border border-border mb-5">
+        {([["feed", "Feed"], ["saved", `Saved (${mySaves.size})`]] as const).map(([k, l]) => (
+          <button key={k} onClick={() => { setTab(k); sfx.tap(); }}
+            className={cn("px-4 py-1.5 rounded-full text-sm font-semibold transition-colors",
+              tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+            {l}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
-      ) : posts.length > 0 && (
+      ) : visiblePosts.length > 0 ? (
         <section className="mb-10">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Fresh from the squad</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {posts.map((p) => (
+            {visiblePosts.map((p) => (
               <PostCard
                 key={p.id}
                 post={p}
                 signedUrl={p.media_path ? signedMap[p.media_path] : undefined}
                 liked={myLikes.has(p.id)}
+                saved={mySaves.has(p.id)}
+                reposted={myReposts.has(p.id)}
                 likeCount={likeCounts.get(p.id) ?? 0}
+                repostCount={repostCounts.get(p.id) ?? 0}
+                likers={likersByPost.get(p.id) ?? []}
                 onToggleLike={() => toggleLike.mutate(p.id)}
+                onToggleSave={() => toggleSave.mutate(p.id)}
+                onToggleRepost={() => toggleRepost.mutate(p.id)}
               />
             ))}
           </div>
         </section>
-      )}
+      ) : tab === "saved" ? (
+        <p className="text-center text-sm text-muted-foreground py-10">No saved posts yet.</p>
+      ) : null}
 
-      {/* Featured */}
-      {featured && (
-        <div className="relative rounded-3xl overflow-hidden border border-primary/30 mb-8 aspect-[16/9] sm:aspect-[21/9] group cursor-pointer">
+      {tab === "feed" && featured && (
+        <div className="relative rounded-3xl overflow-hidden border border-primary/30 mb-8 aspect-[16/9] sm:aspect-[21/9] group cursor-pointer soft-rise">
           <img src={featured.thumb} alt={featured.title} className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
           <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground uppercase tracking-wider">
@@ -154,38 +255,39 @@ export function MediaTab() {
         </div>
       )}
 
-      {/* Mock community grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {rest.map((c) => {
-          const isLiked = likedClips.has(c.id);
-          return (
-            <div key={c.id} className="group relative rounded-2xl overflow-hidden border border-border bg-card aspect-[3/4] cursor-pointer">
-              <img src={c.thumb} alt={c.title} className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-              <div className="absolute top-2 left-2 flex gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-black/60 backdrop-blur text-white px-2 py-0.5 rounded">{c.game}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded">{c.type}</span>
+      {tab === "feed" && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {rest.map((c) => {
+            const isLiked = likedClips.has(c.id);
+            return (
+              <div key={c.id} className="group relative rounded-2xl overflow-hidden border border-border bg-card aspect-[3/4] cursor-pointer soft-rise">
+                <img src={c.thumb} alt={c.title} className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <div className="absolute top-2 left-2 flex gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-black/60 backdrop-blur text-white px-2 py-0.5 rounded">{c.game}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded">{c.type}</span>
+                </div>
+                <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-bold text-white bg-black/60 backdrop-blur px-2 py-0.5 rounded">
+                  <Eye className="h-3 w-3" />{c.views}
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (isLiked) { toast("You already liked this"); return; } sfx.like(); likeClip(c.id); }}
+                  className={cn(
+                    "absolute bottom-2 right-2 flex items-center gap-1 text-xs font-bold text-white bg-black/60 backdrop-blur px-2 py-1 rounded-full transition-colors",
+                    isLiked ? "bg-primary cursor-default" : "hover:bg-primary"
+                  )}
+                >
+                  <Flame className={cn("h-3 w-3", isLiked && "fill-current")} /> {c.likes.toLocaleString()}
+                </button>
+                <div className="absolute bottom-2 left-2 right-16 text-white">
+                  <p className="text-xs font-bold truncate">{c.title}</p>
+                  <p className="text-[10px] opacity-70">@{c.author}</p>
+                </div>
               </div>
-              <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-bold text-white bg-black/60 backdrop-blur px-2 py-0.5 rounded">
-                <Eye className="h-3 w-3" />{c.views}
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); if (isLiked) { toast("You already liked this"); return; } likeClip(c.id); }}
-                className={cn(
-                  "absolute bottom-2 right-2 flex items-center gap-1 text-xs font-bold text-white bg-black/60 backdrop-blur px-2 py-1 rounded-full transition-colors",
-                  isLiked ? "bg-primary cursor-default" : "hover:bg-primary"
-                )}
-              >
-                <Flame className={cn("h-3 w-3", isLiked && "fill-current")} /> {c.likes.toLocaleString()}
-              </button>
-              <div className="absolute bottom-2 left-2 right-16 text-white">
-                <p className="text-xs font-bold truncate">{c.title}</p>
-                <p className="text-[10px] opacity-70">@{c.author}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {userId && (
         <ComposeDialog
@@ -200,16 +302,22 @@ export function MediaTab() {
 }
 
 function PostCard({
-  post, signedUrl, liked, likeCount, onToggleLike,
+  post, signedUrl, liked, saved, reposted, likeCount, repostCount, likers, onToggleLike, onToggleSave, onToggleRepost,
 }: {
   post: MediaPost;
   signedUrl?: string;
   liked: boolean;
+  saved: boolean;
+  reposted: boolean;
   likeCount: number;
+  repostCount: number;
+  likers: AuthorMini[];
   onToggleLike: () => void;
+  onToggleSave: () => void;
+  onToggleRepost: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col soft-rise">
       <div className="p-3 flex items-center gap-2 border-b border-border">
         <KindBadge kind={post.kind} />
         {post.title && <p className="text-sm font-bold truncate flex-1">{post.title}</p>}
@@ -247,22 +355,58 @@ function PostCard({
         </div>
       )}
 
-      <div className="p-3 flex items-center justify-between border-t border-border">
+      {likers.length > 0 && (
+        <div className="px-3 pt-2 flex items-center gap-2">
+          <div className="flex -space-x-2">
+            {likers.slice(0, 5).map((u) => (
+              <div key={u.id} className="h-5 w-5 rounded-full border-2 border-card bg-surface-2 overflow-hidden" title={u.display_name ?? u.username}>
+                {u.avatar_url && <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Liked by <span className="font-semibold text-foreground">{likers[0].display_name ?? likers[0].username}</span>
+            {likers.length > 1 && ` and ${likers.length - 1} others`}
+          </p>
+        </div>
+      )}
+
+      <div className="p-3 flex items-center justify-between border-t border-border mt-2">
+        <div className="flex items-center gap-1">
+          <ActionBtn active={liked} onClick={onToggleLike} title="Like">
+            <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+            <span className="text-xs font-semibold">{likeCount}</span>
+          </ActionBtn>
+          <ActionBtn active={reposted} onClick={onToggleRepost} title="Repost" tone="success">
+            <Repeat2 className="h-4 w-4" />
+            <span className="text-xs font-semibold">{repostCount}</span>
+          </ActionBtn>
+          <ActionBtn active={saved} onClick={onToggleSave} title="Save">
+            <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
+          </ActionBtn>
+        </div>
         <div className="text-[10px] text-muted-foreground">
           {post.game && <span className="mr-2">{post.game}</span>}
           {post.duration_s ? <span>{post.duration_s}s</span> : null}
         </div>
-        <button
-          onClick={onToggleLike}
-          className={cn(
-            "flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border transition-all",
-            liked ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-primary hover:border-primary/40"
-          )}
-        >
-          <Flame className={cn("h-3 w-3", liked && "fill-current")} /> {likeCount}
-        </button>
       </div>
     </div>
+  );
+}
+
+function ActionBtn({ active, onClick, title, tone, children }: { active: boolean; onClick: () => void; title: string; tone?: "success"; children: React.ReactNode }) {
+  const color = tone === "success" ? "text-success" : "text-primary";
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className={cn(
+        "flex items-center gap-1 px-2 py-1 rounded-full transition-colors",
+        active ? `${color} bg-foreground/5` : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
