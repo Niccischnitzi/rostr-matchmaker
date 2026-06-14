@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
 import { LfgAdSheet } from "./LfgAdSheet";
+import { LfgAdsList } from "./LfgAdsList";
 
 const allTraits = ["Toxic-free", "Tryhard", "Chill", "Shot-caller", "Night Owl", "Funny", "Mic'd up"];
 
