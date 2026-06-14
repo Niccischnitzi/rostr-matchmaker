@@ -1,32 +1,34 @@
 import { useState, type ReactNode } from "react";
-import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Hash } from "lucide-react";
+import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
-import { ClubsTab } from "./ClubsTab";
 import { ChatTab } from "./ChatTab";
 import { MediaTab } from "./MediaTab";
 import { ProfileTab } from "./ProfileTab";
-import { ClansTab } from "./ClansTab";
 import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
+import { CrewsTab } from "./CrewsTab";
+import { SettingsSheet } from "./SettingsSheet";
 
 export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
-  { key: "clans", label: "Clans", icon: Shield },
+  { key: "clans", label: "Crews", icon: Shield },
   { key: "chat", label: "Chat", icon: MessageCircle },
   { key: "media", label: "Media", icon: Film },
   { key: "profile", label: "Me", icon: UserCircle },
 ];
 
 type FindSub = "players" | "1v1";
-type ClansSub = "roster" | "cups" | "clubs";
+type ClansSub = "crews" | "cups";
 
 export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
   const [findSub, setFindSub] = useState<FindSub>("players");
-  const [clansSub, setClansSub] = useState<ClansSub>("roster");
+  const [clansSub, setClansSub] = useState<ClansSub>("crews");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -52,12 +54,19 @@ export function Shell() {
             );
           })}
         </nav>
-        <div className="mt-auto text-xs text-muted-foreground">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="mt-auto flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-surface hover:text-foreground transition-all"
+        >
+          <SettingsIcon className="h-5 w-5" /> Settings
+        </button>
+        <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
             <p className="font-semibold text-foreground">Rostr v0.1</p>
             <p className="mt-1">One passport. Every platform.</p>
           </div>
         </div>
+
       </aside>
 
       {/* Main area */}
@@ -65,9 +74,18 @@ export function Shell() {
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-border bg-background/80 backdrop-blur-xl">
           <Brand compact />
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-success pulse-ring" />
-            <span className="text-xs text-muted-foreground">Online</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-success pulse-ring" />
+              <span className="text-xs text-muted-foreground">Online</span>
+            </span>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
+              aria-label="Settings"
+            >
+              <SettingsIcon className="h-4 w-4" />
+            </button>
           </div>
         </header>
 
@@ -86,17 +104,16 @@ export function Shell() {
           <TabFrame visible={tab === "clans"}>
             <SubNav
               items={[
-                { key: "roster", label: "Clans", icon: Shield },
+                { key: "crews", label: "Crews", icon: Shield },
                 { key: "cups", label: "Cups", icon: Trophy },
-                { key: "clubs", label: "Clubs", icon: Hash },
               ]}
               value={clansSub}
               onChange={(v) => setClansSub(v as ClansSub)}
             />
-            {clansSub === "roster" && <ClansTab />}
+            {clansSub === "crews" && <CrewsTab />}
             {clansSub === "cups" && <TournamentsTab />}
-            {clansSub === "clubs" && <ClubsTab />}
           </TabFrame>
+
           <TabFrame visible={tab === "chat"}><ChatTab /></TabFrame>
           <TabFrame visible={tab === "media"}><MediaTab /></TabFrame>
           <TabFrame visible={tab === "profile"}><ProfileTab /></TabFrame>
@@ -127,9 +144,11 @@ export function Shell() {
           </div>
         </nav>
       </main>
+      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
+
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (

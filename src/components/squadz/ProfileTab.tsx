@@ -7,6 +7,7 @@ import { useSquadz } from "@/lib/squadz-store";
 import { Check, Copy, Plus, Trophy, Users, Loader2, Pencil, LogOut, Camera, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AvailabilityGrid } from "./AvailabilityGrid";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
@@ -310,8 +311,14 @@ export function ProfileTab() {
         )}
       </div>
 
+      {/* Availability */}
+      <div className="mt-6">
+        <AvailabilityGrid userId={userId!} editable />
+      </div>
+
       {/* Showcase */}
       <div className="mt-6">
+
         <h2 className="font-display text-xl font-black mb-3">Showcase</h2>
         <div className="grid grid-cols-3 gap-3">
           {pinned.map((c) => (
