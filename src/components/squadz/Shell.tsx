@@ -54,12 +54,19 @@ export function Shell() {
             );
           })}
         </nav>
-        <div className="mt-auto text-xs text-muted-foreground">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="mt-auto flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-surface hover:text-foreground transition-all"
+        >
+          <SettingsIcon className="h-5 w-5" /> Settings
+        </button>
+        <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
             <p className="font-semibold text-foreground">Rostr v0.1</p>
             <p className="mt-1">One passport. Every platform.</p>
           </div>
         </div>
+
       </aside>
 
       {/* Main area */}
