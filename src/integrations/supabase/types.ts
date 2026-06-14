@@ -41,6 +41,41 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["activity_kind"]
+          payload: Json | null
+          subject_id: string | null
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["activity_kind"]
+          payload?: Json | null
+          subject_id?: string | null
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["activity_kind"]
+          payload?: Json | null
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_slots: {
         Row: {
           created_at: string
@@ -62,6 +97,30 @@ export type Database = {
           id?: string
           user_id?: string
           weekday?: number
+        }
+        Relationships: []
+      }
+      badges: {
+        Row: {
+          description: string
+          icon: string
+          key: string
+          label: string
+          tier: string
+        }
+        Insert: {
+          description: string
+          icon: string
+          key: string
+          label: string
+          tier?: string
+        }
+        Update: {
+          description?: string
+          icon?: string
+          key?: string
+          label?: string
+          tier?: string
         }
         Relationships: []
       }
@@ -397,6 +456,90 @@ export type Database = {
         }
         Relationships: []
       }
+      crew_event_rsvps: {
+        Row: {
+          event_id: string
+          status: Database["public"]["Enums"]["rsvp_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          status: Database["public"]["Enums"]["rsvp_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "crew_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_event_rsvps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crew_events: {
+        Row: {
+          clan_id: string
+          created_at: string
+          game: string | null
+          id: string
+          notes: string | null
+          organizer_id: string
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          clan_id: string
+          created_at?: string
+          game?: string | null
+          id?: string
+          notes?: string | null
+          organizer_id: string
+          starts_at: string
+          title: string
+        }
+        Update: {
+          clan_id?: string
+          created_at?: string
+          game?: string | null
+          id?: string
+          notes?: string | null
+          organizer_id?: string
+          starts_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_events_clan_id_fkey"
+            columns: ["clan_id"]
+            isOneToOne: false
+            referencedRelation: "clans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       direct_messages: {
         Row: {
           attachment_url: string | null
@@ -548,6 +691,74 @@ export type Database = {
           },
         ]
       }
+      lfg_ad_views: {
+        Row: {
+          ad_owner_id: string
+          created_at: string
+          id: string
+          viewer_id: string | null
+        }
+        Insert: {
+          ad_owner_id: string
+          created_at?: string
+          id?: string
+          viewer_id?: string | null
+        }
+        Update: {
+          ad_owner_id?: string
+          created_at?: string
+          id?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lfg_ad_views_ad_owner_id_fkey"
+            columns: ["ad_owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lfg_ad_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lfg_boosts: {
+        Row: {
+          expires_at: string
+          id: string
+          starts_at: string
+          tokens_spent: number
+          user_id: string
+        }
+        Insert: {
+          expires_at: string
+          id?: string
+          starts_at?: string
+          tokens_spent?: number
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          id?: string
+          starts_at?: string
+          tokens_spent?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lfg_boosts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       linked_accounts: {
         Row: {
           aggregated_stats: Json
@@ -590,6 +801,38 @@ export type Database = {
             foreignKeyName: "linked_accounts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      login_streaks: {
+        Row: {
+          current_streak: number
+          last_login_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_login_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_login_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_streaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -724,6 +967,93 @@ export type Database = {
           },
         ]
       }
+      mentions: {
+        Row: {
+          created_at: string
+          id: string
+          mentioned_id: string
+          mentioner_id: string
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mentioned_id: string
+          mentioner_id: string
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mentioned_id?: string
+          mentioner_id?: string
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentions_mentioned_id_fkey"
+            columns: ["mentioned_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentions_mentioner_id_fkey"
+            columns: ["mentioner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      play_sessions: {
+        Row: {
+          ended_at: string | null
+          game: string | null
+          id: string
+          kind: Database["public"]["Enums"]["play_session_kind"]
+          started_at: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          ended_at?: string | null
+          game?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["play_session_kind"]
+          started_at?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          ended_at?: string | null
+          game?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["play_session_kind"]
+          started_at?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "play_sessions_user_a_fkey"
+            columns: ["user_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "play_sessions_user_b_fkey"
+            columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -735,15 +1065,22 @@ export type Database = {
           created_at: string
           current_game_activity: string | null
           customization_options: Json
+          date_of_birth: string | null
           display_name: string | null
+          dm_policy: string
+          email_verified_at: string | null
           gender: string | null
           id: string
           is_public: boolean
           lfg_body: string | null
           lfg_games: string[]
           lfg_title: string | null
+          onboarded_at: string | null
           playing_hours: Json
           playstyle_badges: string[]
+          pro_until: string | null
+          rep_score: number
+          show_availability: boolean
           timezone: string | null
           updated_at: string
           username: string
@@ -758,15 +1095,22 @@ export type Database = {
           created_at?: string
           current_game_activity?: string | null
           customization_options?: Json
+          date_of_birth?: string | null
           display_name?: string | null
+          dm_policy?: string
+          email_verified_at?: string | null
           gender?: string | null
           id: string
           is_public?: boolean
           lfg_body?: string | null
           lfg_games?: string[]
           lfg_title?: string | null
+          onboarded_at?: string | null
           playing_hours?: Json
           playstyle_badges?: string[]
+          pro_until?: string | null
+          rep_score?: number
+          show_availability?: boolean
           timezone?: string | null
           updated_at?: string
           username: string
@@ -781,20 +1125,91 @@ export type Database = {
           created_at?: string
           current_game_activity?: string | null
           customization_options?: Json
+          date_of_birth?: string | null
           display_name?: string | null
+          dm_policy?: string
+          email_verified_at?: string | null
           gender?: string | null
           id?: string
           is_public?: boolean
           lfg_body?: string | null
           lfg_games?: string[]
           lfg_title?: string | null
+          onboarded_at?: string | null
           playing_hours?: Json
           playstyle_badges?: string[]
+          pro_until?: string | null
+          rep_score?: number
+          show_availability?: boolean
           timezone?: string | null
           updated_at?: string
           username?: string
         }
         Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_limit_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limit_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tournament_entries: {
         Row: {
@@ -885,6 +1300,129 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          badge_key: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge_key: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_key_fkey"
+            columns: ["badge_key"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          reviewer_id: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -982,6 +1520,11 @@ export type Database = {
       }
     }
     Functions: {
+      boost_lfg: { Args: { _cost: number; _hours: number }; Returns: string }
+      check_rate_limit: {
+        Args: { _action: string; _limit: number; _window_seconds: number }
+        Returns: boolean
+      }
       clan_role_of: {
         Args: { _clan: string; _user: string }
         Returns: Database["public"]["Enums"]["clan_role"]
@@ -1009,9 +1552,24 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      record_daily_login: {
+        Args: never
+        Returns: {
+          reward: number
+          streak: number
+        }[]
+      }
       spend_tokens: { Args: { _amount: number }; Returns: number }
     }
     Enums: {
+      activity_kind:
+        | "post"
+        | "like"
+        | "friend_add"
+        | "crew_join"
+        | "tournament_win"
+        | "badge_earned"
+        | "streak"
       app_role: "admin" | "moderator" | "user"
       challenge_status:
         | "pending"
@@ -1023,6 +1581,15 @@ export type Database = {
       clan_role: "leader" | "officer" | "member"
       club_role: "owner" | "officer" | "member" | "recruit"
       escrow_status: "held" | "released" | "refunded"
+      play_session_kind: "call" | "lfg_match" | "crew_event"
+      report_status: "open" | "reviewing" | "upheld" | "dismissed"
+      report_target:
+        | "profile"
+        | "media_post"
+        | "direct_message"
+        | "crew"
+        | "comment"
+      rsvp_status: "yes" | "maybe" | "no"
       tournament_status: "draft" | "open" | "live" | "completed" | "cancelled"
     }
     CompositeTypes: {
@@ -1151,6 +1718,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_kind: [
+        "post",
+        "like",
+        "friend_add",
+        "crew_join",
+        "tournament_win",
+        "badge_earned",
+        "streak",
+      ],
       app_role: ["admin", "moderator", "user"],
       challenge_status: [
         "pending",
@@ -1163,6 +1739,16 @@ export const Constants = {
       clan_role: ["leader", "officer", "member"],
       club_role: ["owner", "officer", "member", "recruit"],
       escrow_status: ["held", "released", "refunded"],
+      play_session_kind: ["call", "lfg_match", "crew_event"],
+      report_status: ["open", "reviewing", "upheld", "dismissed"],
+      report_target: [
+        "profile",
+        "media_post",
+        "direct_message",
+        "crew",
+        "comment",
+      ],
+      rsvp_status: ["yes", "maybe", "no"],
       tournament_status: ["draft", "open", "live", "completed", "cancelled"],
     },
   },
