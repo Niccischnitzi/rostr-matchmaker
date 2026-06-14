@@ -488,10 +488,9 @@ function AttachButton({ conversationId, senderId }: { conversationId: string; se
     const path = `${conversationId}/${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage.from("dm-attachments").upload(path, f, { contentType: f.type });
     if (upErr) { setBusy(false); return toast.error(upErr.message); }
-    const { data: signed } = await supabase.storage.from("dm-attachments").createSignedUrl(path, 60 * 60 * 24 * 7);
-    const url = signed?.signedUrl ?? path;
+    const body = encodeAttachment({ path, name: f.name, mime: f.type || "application/octet-stream", size: f.size });
     const { error } = await supabase.from("direct_messages").insert({
-      conversation_id: conversationId, sender_id: senderId, body: `📎 ${f.name}\n${url}`,
+      conversation_id: conversationId, sender_id: senderId, body,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
