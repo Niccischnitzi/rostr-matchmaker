@@ -75,7 +75,7 @@ export function Shell() {
         </button>
         <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
-            <p className="font-semibold text-foreground">Rostr v0.1</p>
+            <p className="font-semibold text-foreground">ostr v0.1</p>
             <p className="mt-1">One passport. Every platform.</p>
           </div>
         </div>
