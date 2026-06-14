@@ -54,7 +54,7 @@ export function Shell() {
         </nav>
         <div className="mt-auto text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
-            <p className="font-semibold text-foreground">ROSTR v0.1</p>
+            <p className="font-semibold text-foreground">Rostr v0.1</p>
             <p className="mt-1">One passport. Every platform.</p>
           </div>
         </div>
@@ -139,11 +139,11 @@ function Brand({ compact = false }: { compact?: boolean }) {
       </div>
       {!compact && (
         <div>
-          <p className="font-display font-black text-xl tracking-tight">ROSTR</p>
+          <p className="font-display font-black text-xl tracking-tight">Rostr</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
         </div>
       )}
-      {compact && <p className="font-display font-black text-lg tracking-tight">ROSTR</p>}
+      {compact && <p className="font-display font-black text-lg tracking-tight">Rostr</p>}
     </div>
   );
 }
