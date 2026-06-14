@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Send, Plus, Gamepad2, MessageSquarePlus, Loader2, Search, Phone, Paperclip } from "lucide-react";
+import { ArrowLeft, Send, Gamepad2, MessageSquarePlus, Loader2, Search, Phone, Paperclip } from "lucide-react";
 import { sfx } from "@/lib/sfx";
 
 import { Button } from "@/components/ui/button";
