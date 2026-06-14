@@ -1,14 +1,14 @@
-import logoAsset from "@/assets/rostr-logo-new.png.asset.json";
+import logoAsset from "@/assets/rostr-r-logo.png.asset.json";
 import { cn } from "@/lib/utils";
 
-export function RostrMark({ size = 36, className }: { size?: number; className?: string }) {
+export function RostrMark({ size = 48, className }: { size?: number; className?: string }) {
   return (
     <img
       src={logoAsset.url}
       alt="Rostr"
       width={size}
       height={size}
-      className={cn("rounded-xl object-contain", className)}
+      className={cn("object-contain", className)}
       style={{ width: size, height: size }}
     />
   );
