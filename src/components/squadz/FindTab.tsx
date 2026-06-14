@@ -1,19 +1,24 @@
 import { useState } from "react";
-import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Users } from "lucide-react";
+import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Users, Megaphone } from "lucide-react";
 import { useSquadz } from "@/lib/squadz-store";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { sfx } from "@/lib/sfx";
+import { LfgAdSheet } from "./LfgAdSheet";
 
 const allTraits = ["Toxic-free", "Tryhard", "Chill", "Shot-caller", "Night Owl", "Funny", "Mic'd up"];
+
 
 export function FindTab() {
   const { players, connected, swipe } = useSquadz();
   const [ageRange, setAgeRange] = useState([18, 35]);
   const [traitFilter, setTraitFilter] = useState<string[]>([]);
   const [countryFilter, setCountryFilter] = useState("");
+  const [adOpen, setAdOpen] = useState(false);
+
 
   const filtered = players.filter((p) => {
     if (p.age < ageRange[0] || p.age > ageRange[1]) return false;
@@ -28,8 +33,10 @@ export function FindTab() {
   const handle = (dir: "skip" | "squad") => {
     if (!top) return;
     swipe(top.id, dir);
-    if (dir === "squad") toast.success(`Squad request sent to ${top.username}!`, { description: "They'll get notified instantly." });
+    if (dir === "squad") { sfx.like(); toast.success(`Squad request sent to ${top.username}!`, { description: "They'll get notified instantly." }); }
+    else sfx.tap();
   };
+
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10">
@@ -38,12 +45,20 @@ export function FindTab() {
           <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Find your <span className="text-gradient-orange">squad</span></h1>
           <p className="text-sm text-muted-foreground mt-1">Swipe through players matched to your playstyle.</p>
         </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full h-11 w-11 shrink-0">
-              <SlidersHorizontal className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button onClick={() => setAdOpen(true)} className="rounded-full h-11 gap-2 hidden sm:flex">
+            <Megaphone className="h-4 w-4" /> Post LFG ad
+          </Button>
+          <Button onClick={() => setAdOpen(true)} size="icon" className="rounded-full h-11 w-11 sm:hidden">
+            <Megaphone className="h-4 w-4" />
+          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full h-11 w-11">
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+
           <SheetContent side="right" className="w-full sm:max-w-md">
             <SheetHeader><SheetTitle>Filters</SheetTitle></SheetHeader>
             <div className="mt-6 space-y-6 px-4">
@@ -71,9 +86,13 @@ export function FindTab() {
                 </div>
               </div>
             </div>
+            </div>
           </SheetContent>
         </Sheet>
+        </div>
       </div>
+      <LfgAdSheet open={adOpen} onOpenChange={setAdOpen} />
+
 
       {/* Card stack */}
       <div className="relative h-[540px] sm:h-[580px]">
@@ -82,18 +101,21 @@ export function FindTab() {
             style={{ transform: `translateY(${(stack.length - i) * 10}px) scale(${1 - (stack.length - i) * 0.04})`, opacity: 0.5 }} />
         ))}
         {top ? (
-          <div className="absolute inset-0 rounded-3xl border border-border bg-card overflow-hidden shadow-2xl flex flex-col">
-            <div className="relative h-48 sm:h-56 bg-gradient-to-br from-primary via-orange-600 to-accent overflow-hidden">
-              <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-              <div className="absolute -bottom-12 left-6">
-                <div className="h-24 w-24 rounded-2xl border-4 border-card bg-surface-2 grid place-items-center overflow-hidden">
-                  <img src={top.avatar} alt={top.username} className="h-full w-full object-cover" />
-                </div>
-              </div>
-              <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/40 backdrop-blur text-white text-xs font-medium flex items-center gap-1.5">
+          <div className="absolute inset-0 rounded-3xl border border-border bg-card overflow-hidden shadow-2xl flex flex-col soft-rise">
+            <div className="relative h-48 sm:h-56 bg-gradient-to-br from-primary via-orange-600 to-accent">
+              <div className="absolute inset-0 opacity-30 overflow-hidden" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+              <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/40 backdrop-blur text-white text-xs font-medium flex items-center gap-1.5 z-10">
                 <span className="h-1.5 w-1.5 rounded-full bg-success" /> Online
               </div>
             </div>
+            <div className="relative">
+              <div className="absolute -top-12 left-6 z-10">
+                <div className="h-24 w-24 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden shadow-xl">
+                  <img src={top.avatar} alt={top.username} className="h-full w-full object-cover" />
+                </div>
+              </div>
+            </div>
+
             <div className="px-6 pt-16 pb-6 flex-1 overflow-y-auto">
               <div className="flex items-baseline gap-2 flex-wrap">
                 <h2 className="font-display text-2xl font-black">{top.username}</h2>
