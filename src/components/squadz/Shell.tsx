@@ -1,32 +1,34 @@
 import { useState, type ReactNode } from "react";
-import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Hash } from "lucide-react";
+import { Users, MessageCircle, Film, UserCircle, Gamepad2, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
-import { ClubsTab } from "./ClubsTab";
 import { ChatTab } from "./ChatTab";
 import { MediaTab } from "./MediaTab";
 import { ProfileTab } from "./ProfileTab";
-import { ClansTab } from "./ClansTab";
 import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
+import { CrewsTab } from "./CrewsTab";
+import { SettingsSheet } from "./SettingsSheet";
 
 export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
-  { key: "clans", label: "Clans", icon: Shield },
+  { key: "clans", label: "Crews", icon: Shield },
   { key: "chat", label: "Chat", icon: MessageCircle },
   { key: "media", label: "Media", icon: Film },
   { key: "profile", label: "Me", icon: UserCircle },
 ];
 
 type FindSub = "players" | "1v1";
-type ClansSub = "roster" | "cups" | "clubs";
+type ClansSub = "crews" | "cups";
 
 export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
   const [findSub, setFindSub] = useState<FindSub>("players");
-  const [clansSub, setClansSub] = useState<ClansSub>("roster");
+  const [clansSub, setClansSub] = useState<ClansSub>("crews");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
