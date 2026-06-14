@@ -414,7 +414,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
           <p className="text-xs text-muted-foreground">@{peer?.username ?? ""}</p>
         </div>
         <button
-          onClick={() => { sfx.nav(); toast("Voice call — connecting to private server soon. WebRTC P2P enabled in next build."); }}
+          onClick={() => { sfx.nav(); setCallOpen(true); }}
           className="h-9 w-9 rounded-full bg-success/15 text-success grid place-items-center hover:bg-success/25 transition"
           aria-label="Call"
           title="Start voice call"
@@ -422,6 +422,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
           <Phone className="h-4 w-4" />
         </button>
       </div>
+      <CallSheet open={callOpen} onClose={() => setCallOpen(false)} peer={peer} conversationId={conversationId} selfId={user.id} />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
