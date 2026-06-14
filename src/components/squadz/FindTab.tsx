@@ -185,6 +185,8 @@ export function FindTab() {
           </div>
         </div>
       )}
+
+      <LfgAdsList />
     </div>
   );
 }
