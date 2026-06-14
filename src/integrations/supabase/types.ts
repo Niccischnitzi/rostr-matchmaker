@@ -14,6 +14,225 @@ export type Database = {
   }
   public: {
     Tables: {
+      club_channels: {
+        Row: {
+          club_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          position: number
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          position?: number
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_channels_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_members: {
+        Row: {
+          club_id: string
+          id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["club_role"]
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["club_role"]
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["club_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_messages: {
+        Row: {
+          attachment_url: string | null
+          body: string
+          channel_id: string
+          club_id: string
+          created_at: string
+          id: string
+          pinned: boolean
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          body: string
+          channel_id: string
+          club_id: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          body?: string
+          channel_id?: string
+          club_id?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "club_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_messages_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          member_count: number
+          name: string
+          owner_id: string
+          tag: string | null
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          member_count?: number
+          name: string
+          owner_id: string
+          tag?: string | null
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          member_count?: number
+          name?: string
+          owner_id?: string
+          tag?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: []
+      }
+      direct_messages: {
+        Row: {
+          attachment_url: string | null
+          body: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       linked_accounts: {
         Row: {
           aggregated_stats: Json
@@ -147,6 +366,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      club_role_of: {
+        Args: { _club: string; _user: string }
+        Returns: Database["public"]["Enums"]["club_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -154,9 +377,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_club_member: {
+        Args: { _club: string; _user: string }
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { _conv: string; _user: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      club_role: "owner" | "officer" | "member" | "recruit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -285,6 +517,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      club_role: ["owner", "officer", "member", "recruit"],
     },
   },
 } as const
