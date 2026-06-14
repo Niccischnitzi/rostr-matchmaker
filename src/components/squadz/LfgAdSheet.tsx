@@ -76,6 +76,20 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
           <div className="grid place-items-center h-40"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : !user ? null : (
           <div className="mt-6 space-y-4 px-4 pb-6">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-surface border border-border p-3">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Users className="h-3 w-3" /> Viewers</div>
+                <p className="font-display text-2xl font-black mt-0.5">{stats.total}</p>
+              </div>
+              <div className="rounded-xl bg-surface border border-border p-3">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Eye className="h-3 w-3" /> 7-day</div>
+                <p className="font-display text-2xl font-black mt-0.5">{stats.recent}</p>
+              </div>
+              <div className="rounded-xl bg-surface border border-border p-3">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Clock className="h-3 w-3" /> Last</div>
+                <p className="font-display text-sm font-black mt-1">{stats.last ? new Date(stats.last).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}</p>
+              </div>
+            </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
               <div>
                 <p className="text-sm font-bold">Public profile</p>
