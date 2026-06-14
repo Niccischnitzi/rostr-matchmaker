@@ -167,10 +167,16 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabFrame({ visible, children }: { visible: boolean; children: ReactNode }) {
+function TabFrame({ visible, tabKey, children }: { visible: boolean; tabKey: string; children: ReactNode }) {
   if (!visible) return null;
-  return <div className="animate-in fade-in duration-200">{children}</div>;
+  return (
+    <div key={tabKey} className="arcade-enter relative overflow-hidden">
+      <div className="arcade-sweep" aria-hidden />
+      {children}
+    </div>
+  );
 }
+
 
 function SubNav({
   items,
