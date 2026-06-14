@@ -65,7 +65,7 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="font-display text-2xl font-black">Settings</SheetTitle>
-          <SheetDescription>Personalize how Rostr behaves.</SheetDescription>
+          <SheetDescription>Personalize how ostr behaves.</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
