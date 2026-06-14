@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/hooks/use-auth";
 import type { Clan, ClanMember, Profile } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
