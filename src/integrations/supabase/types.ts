@@ -14,6 +14,187 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_verification_checks: {
+        Row: {
+          audit_flags: Json
+          checked_at: string
+          id: string
+          lifetime_hours: number | null
+          provider: string
+          user_id: string
+        }
+        Insert: {
+          audit_flags?: Json
+          checked_at?: string
+          id?: string
+          lifetime_hours?: number | null
+          provider: string
+          user_id: string
+        }
+        Update: {
+          audit_flags?: Json
+          checked_at?: string
+          id?: string
+          lifetime_hours?: number | null
+          provider?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      challenges: {
+        Row: {
+          challenger_id: string
+          created_at: string
+          format: string | null
+          game: string
+          id: string
+          notes: string | null
+          opponent_id: string
+          rake_pct: number
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["challenge_status"]
+          updated_at: string
+          wager_points: number
+          winner_id: string | null
+        }
+        Insert: {
+          challenger_id: string
+          created_at?: string
+          format?: string | null
+          game: string
+          id?: string
+          notes?: string | null
+          opponent_id: string
+          rake_pct?: number
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["challenge_status"]
+          updated_at?: string
+          wager_points?: number
+          winner_id?: string | null
+        }
+        Update: {
+          challenger_id?: string
+          created_at?: string
+          format?: string | null
+          game?: string
+          id?: string
+          notes?: string | null
+          opponent_id?: string
+          rake_pct?: number
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["challenge_status"]
+          updated_at?: string
+          wager_points?: number
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
+      clan_invites: {
+        Row: {
+          clan_id: string
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          status: string
+        }
+        Insert: {
+          clan_id: string
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          status?: string
+        }
+        Update: {
+          clan_id?: string
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clan_invites_clan_id_fkey"
+            columns: ["clan_id"]
+            isOneToOne: false
+            referencedRelation: "clans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clan_members: {
+        Row: {
+          clan_id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["clan_role"]
+          user_id: string
+        }
+        Insert: {
+          clan_id: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["clan_role"]
+          user_id: string
+        }
+        Update: {
+          clan_id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["clan_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clan_members_clan_id_fkey"
+            columns: ["clan_id"]
+            isOneToOne: false
+            referencedRelation: "clans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clans: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          elo: number
+          id: string
+          max_members: number
+          member_count: number
+          name: string
+          owner_id: string
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          elo?: number
+          id?: string
+          max_members?: number
+          member_count?: number
+          name: string
+          owner_id: string
+          tag: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          elo?: number
+          id?: string
+          max_members?: number
+          member_count?: number
+          name?: string
+          owner_id?: string
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       club_channels: {
         Row: {
           club_id: string
@@ -233,6 +414,89 @@ export type Database = {
           },
         ]
       }
+      escrow_transactions: {
+        Row: {
+          amount: number
+          challenge_id: string | null
+          created_at: string
+          id: string
+          settled_at: string | null
+          status: Database["public"]["Enums"]["escrow_status"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["escrow_status"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["escrow_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_transactions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leaderboard_entries: {
+        Row: {
+          audit_flags: Json
+          id: string
+          metric: string
+          recorded_at: string
+          tournament_id: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          audit_flags?: Json
+          id?: string
+          metric: string
+          recorded_at?: string
+          tournament_id: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          audit_flags?: Json
+          id?: string
+          metric?: string
+          recorded_at?: string
+          tournament_id?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboard_entries_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_payout"
+            referencedColumns: ["tournament_id"]
+          },
+          {
+            foreignKeyName: "leaderboard_entries_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       linked_accounts: {
         Row: {
           aggregated_stats: Json
@@ -340,6 +604,96 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_entries: {
+        Row: {
+          id: string
+          joined_at: string
+          tournament_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          tournament_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          tournament_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_entries_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_payout"
+            referencedColumns: ["tournament_id"]
+          },
+          {
+            foreignKeyName: "tournament_entries_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournaments: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          entry_fee: number
+          format: string | null
+          game: string
+          id: string
+          max_entries: number | null
+          name: string
+          rake_pct: number
+          starts_at: string | null
+          status: Database["public"]["Enums"]["tournament_status"]
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          entry_fee?: number
+          format?: string | null
+          game: string
+          id?: string
+          max_entries?: number | null
+          name: string
+          rake_pct?: number
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["tournament_status"]
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          entry_fee?: number
+          format?: string | null
+          game?: string
+          id?: string
+          max_entries?: number | null
+          name?: string
+          rake_pct?: number
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["tournament_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -361,11 +715,85 @@ export type Database = {
         }
         Relationships: []
       }
+      wallets: {
+        Row: {
+          balance_points: number
+          created_at: string
+          lifetime_lost: number
+          lifetime_won: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_points?: number
+          created_at?: string
+          lifetime_lost?: number
+          lifetime_won?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_points?: number
+          created_at?: string
+          lifetime_lost?: number
+          lifetime_won?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_type: string | null
+          id: string
+          payload: Json
+          processed: boolean
+          provider: string
+          signature: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload: Json
+          processed?: boolean
+          provider: string
+          signature?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          provider?: string
+          signature?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      tournament_payout: {
+        Row: {
+          entries: number | null
+          entry_fee: number | null
+          gross: number | null
+          net_payout: number | null
+          rake_pct: number | null
+          tournament_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      clan_role_of: {
+        Args: { _clan: string; _user: string }
+        Returns: Database["public"]["Enums"]["clan_role"]
+      }
       club_role_of: {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
@@ -375,6 +803,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_clan_member: {
+        Args: { _clan: string; _user: string }
         Returns: boolean
       }
       is_club_member: {
@@ -388,7 +820,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      challenge_status:
+        | "pending"
+        | "accepted"
+        | "live"
+        | "disputed"
+        | "settled"
+        | "cancelled"
+      clan_role: "leader" | "officer" | "member"
       club_role: "owner" | "officer" | "member" | "recruit"
+      escrow_status: "held" | "released" | "refunded"
+      tournament_status: "draft" | "open" | "live" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -517,7 +959,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      challenge_status: [
+        "pending",
+        "accepted",
+        "live",
+        "disputed",
+        "settled",
+        "cancelled",
+      ],
+      clan_role: ["leader", "officer", "member"],
       club_role: ["owner", "officer", "member", "recruit"],
+      escrow_status: ["held", "released", "refunded"],
+      tournament_status: ["draft", "open", "live", "completed", "cancelled"],
     },
   },
 } as const
