@@ -16,6 +16,8 @@ import {
   type Profile,
 } from "@/lib/squadz-supabase";
 import { FriendsTab } from "./FriendsTab";
+import { CallSheet } from "./CallSheet";
+import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
