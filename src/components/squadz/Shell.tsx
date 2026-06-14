@@ -173,11 +173,11 @@ function Brand({ compact = false }: { compact?: boolean }) {
       <RostrMark size={compact ? 32 : 40} />
       {!compact && (
         <div>
-          <p className="font-display font-black text-xl tracking-tight">Rostr</p>
+          <p className="font-display font-black text-xl tracking-tight">ostr</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
         </div>
       )}
-      {compact && <p className="font-display font-black text-lg tracking-tight">Rostr</p>}
+      {compact && <p className="font-display font-black text-lg tracking-tight">ostr</p>}
     </div>
   );
 }
