@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      availability_slots: {
+        Row: {
+          created_at: string
+          hour: number
+          id: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          hour: number
+          id?: string
+          user_id: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          hour?: number
+          id?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           challenger_id: string
