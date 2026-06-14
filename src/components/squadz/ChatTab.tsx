@@ -15,6 +15,7 @@ import {
   type DirectMessage,
   type Profile,
 } from "@/lib/squadz-supabase";
+import { FriendsTab } from "./FriendsTab";
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
@@ -22,7 +23,7 @@ type ConvWithPeer = Conversation & {
 };
 
 export function ChatTab() {
-  const [view, setView] = useState<"chats" | "lfg">("chats");
+  const [view, setView] = useState<"chats" | "friends" | "lfg">("chats");
   const [openChat, setOpenChat] = useState<string | null>(null);
 
   return (
@@ -30,9 +31,9 @@ export function ChatTab() {
       {!openChat && (
         <>
           <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Chat</h1>
-          <p className="text-sm text-muted-foreground mt-1 mb-5">Direct messages and the LFG board.</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-5">Messages, friends, and the LFG board.</p>
           <div className="inline-flex rounded-full bg-surface p-1 border border-border mb-5">
-            {([["chats", "Messages"], ["lfg", "LFG Board"]] as const).map(([k, l]) => (
+            {([["chats", "Messages"], ["friends", "Friends"], ["lfg", "LFG Board"]] as const).map(([k, l]) => (
               <button
                 key={k}
                 onClick={() => setView(k)}
@@ -52,6 +53,8 @@ export function ChatTab() {
         <DMWindow conversationId={openChat} onBack={() => setOpenChat(null)} />
       ) : view === "chats" ? (
         <DMList onOpen={setOpenChat} />
+      ) : view === "friends" ? (
+        <FriendsTab />
       ) : (
         <LFGBoard />
       )}

@@ -1,50 +1,44 @@
-# Plan
+# Polish pass: sound, nav, LFG, settings
 
-## 1. Merge Clubs + Clans into one unified "Crews" surface
-The "Clans" tab currently has 3 sub-tabs (Clans / Cups / Clubs). Since clubs (social hangout groups) and clans (competitive rosters) overlap a lot conceptually, I'll merge them into a single **Crews** list with a filter chip (`All · Competitive · Social`) backed by a new `kind` flag on the existing `clans` table (`'competitive' | 'social'`). Cups stays as its own sub-tab.
+## 1. Subtler sound effects
+Rewrite `src/lib/sfx.ts` so tones are softer and less piercing:
+- Lower master gain (~0.04 instead of 0.15)
+- Use `sine`/`triangle` waves (no `square`/`sawtooth`)
+- Shorter envelopes (~60–90ms) with gentle attack/release ramps
+- Drop high frequencies (cap around 700–900Hz for taps/nav, 220–440Hz for sends)
+- Add a tiny lowpass filter to round off harshness
 
-- Migration: add `kind` column to `clans` (default `'competitive'`), backfill old clubs.
-- Migration: copy existing `clubs` rows into `clans` with `kind='social'`, then keep the `clubs` table around (read-only) for the chat channels feature. Club channels stay accessible from inside a "social" crew's detail view.
-- New `CrewsTab.tsx` replacing `ClansTab` + `ClubsTab` in the sub-nav. Bottom nav becomes: **Find · Crews · Chat · Media · Me · Settings** (or settings as a gear in the header — see #3).
-- `Shell.tsx` `ClansSub` becomes `'crews' | 'cups'`.
+## 2. Fewer tabs in the bottom nav
+Current: Home, Find, Crews, Media, Chat, Friends, Profile (7).
+New (5):
+- Home
+- Find
+- Crews
+- Media
+- Chat (Friends becomes a sub-view inside Chat)
+- Profile
 
-## 2. Fix the bugged neon gradient text
-The `text-gradient-orange` utility in `src/styles.css` renders as a solid orange rectangle in the user's browser. Cause: missing `-webkit-text-fill-color: transparent` and no `display: inline-block`, so `background-clip: text` falls back to painting the box.
+Inside `ChatTab.tsx`, add a top segmented control: **Messages | Friends**. The Friends list (current `FriendsTab.tsx`) renders under the Friends segment; tapping a friend opens a DM in the Messages segment. Remove the Friends entry from `Shell.tsx` nav.
 
-Fix: update the utility to:
-```css
-@utility text-gradient-orange {
-  background-image: linear-gradient(135deg, var(--primary), oklch(0.78 0.18 55));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-```
+## 3. LFG ad includes playing times
+Extend `LfgAdSheet.tsx` so creating/editing an LFG ad includes an availability block:
+- Reuse the existing `AvailabilityGrid` (days × time-of-day) already used on Profile
+- Persist to existing `availability_slots` table (no schema change) tied to user; the ad on the Find page shows a compact "Plays: Mon/Wed/Fri evenings" summary derived from those slots
+- Add a small day/time chip row on each LFG card on the Find page
 
-## 3. Settings / Options menu
-Add a gear icon in the desktop sidebar footer and mobile header that opens a `SettingsSheet` (shadcn Sheet) with:
-- Theme (dark / system) — written to `localStorage`.
-- Notifications toggles (squad requests, DM, challenge results) — stored on `profiles` as a `notification_prefs jsonb`.
-- Default platform (PC / PS / Xbox / Switch) — stored on `profiles.default_platform`.
-- Privacy: profile visibility (public / squad only) — stored on `profiles.visibility`.
-- Sign out.
+## 4. Fix the Sound on/off toggle in Settings
+In `SettingsSheet.tsx` the toggle currently flips local state but `sfx.ts` never checks it. Fix by:
+- Storing `sfx_enabled` in `localStorage` (key `squadz:sfx`)
+- Having every `play()` call in `sfx.ts` early-return when disabled
+- Toggle writes to localStorage and dispatches a `storage`-like event so the module picks it up immediately
+- Default: enabled
 
-Migration adds `notification_prefs jsonb`, `default_platform text`, `visibility text` to `profiles`.
+## Files touched
+- `src/lib/sfx.ts` — softer tones + enabled flag
+- `src/components/squadz/Shell.tsx` — remove Friends tab
+- `src/components/squadz/ChatTab.tsx` — Messages/Friends segmented control, mount FriendsTab inside
+- `src/components/squadz/LfgAdSheet.tsx` — availability picker + save to `availability_slots`
+- `src/components/squadz/FindTab.tsx` — show playing-times chips on LFG cards
+- `src/components/squadz/SettingsSheet.tsx` — wire toggle to localStorage
 
-## 4. Availability schedule on profile
-Add an "When I play" card to `ProfileTab.tsx` so squadmates can see when you're around.
-
-- New table `public.availability_slots` with columns: `user_id`, `weekday` (0–6), `start_minute` (0–1439), `end_minute` (0–1439).
-- RLS: public read (for discovery), owner write.
-- UI: a 7×24 grid where the user toggles hour blocks on each weekday, plus a timezone select stored on `profiles.timezone`. Other users viewing a profile see a compact heatmap of the same grid.
-- Surfaced as a small "Available now" / "Next online: Sat 8pm" badge on Find cards (read-only consumption, no Find UI rewrite).
-
-## Technical notes (for reference)
-- New files: `src/components/squadz/CrewsTab.tsx`, `src/components/squadz/SettingsSheet.tsx`, `src/components/squadz/AvailabilityGrid.tsx`.
-- Removed from nav: `ClansTab` + `ClubsTab` direct entries (files kept, used inside CrewsTab detail views).
-- Two migrations: (a) `clans.kind` + copy clubs → clans + profile prefs columns, (b) `availability_slots` table with RLS + grants.
-- All new tables get explicit GRANTs and RLS per project rules.
-- `tracker.gg` integration from the previous turn is unaffected.
-
-Want me to proceed with all four, or trim scope (e.g. skip the clubs→clans data copy and just relabel)?
+No database migrations required.
