@@ -543,9 +543,12 @@ function LFGBoard() {
 /* -------------------- Helpers -------------------- */
 
 function Avatar({ profile, size = 12 }: { profile: Profile | null; size?: number }) {
-  const cls = `h-${size} w-${size}`;
+  const px = size * 4;
   return (
-    <div className={cn(cls, "rounded-xl bg-surface-2 grid place-items-center overflow-hidden shrink-0")}>
+    <div
+      style={{ width: px, height: px }}
+      className="rounded-xl bg-surface-2 grid place-items-center overflow-hidden shrink-0"
+    >
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
       ) : (

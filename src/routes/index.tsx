@@ -3,6 +3,7 @@ import { Shell } from "@/components/squadz/Shell";
 import { SquadzProvider } from "@/lib/squadz-store";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthProvider } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -25,10 +26,12 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="dark">
-      <SquadzProvider>
-        <Shell />
-        <Toaster theme="dark" position="top-center" />
-      </SquadzProvider>
+      <AuthProvider>
+        <SquadzProvider>
+          <Shell />
+          <Toaster theme="dark" position="top-center" />
+        </SquadzProvider>
+      </AuthProvider>
     </div>
   );
 }
