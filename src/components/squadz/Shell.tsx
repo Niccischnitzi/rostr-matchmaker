@@ -67,9 +67,18 @@ export function Shell() {
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-border bg-background/80 backdrop-blur-xl">
           <Brand compact />
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-success pulse-ring" />
-            <span className="text-xs text-muted-foreground">Online</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-success pulse-ring" />
+              <span className="text-xs text-muted-foreground">Online</span>
+            </span>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
+              aria-label="Settings"
+            >
+              <SettingsIcon className="h-4 w-4" />
+            </button>
           </div>
         </header>
 
@@ -88,17 +97,16 @@ export function Shell() {
           <TabFrame visible={tab === "clans"}>
             <SubNav
               items={[
-                { key: "roster", label: "Clans", icon: Shield },
+                { key: "crews", label: "Crews", icon: Shield },
                 { key: "cups", label: "Cups", icon: Trophy },
-                { key: "clubs", label: "Clubs", icon: Hash },
               ]}
               value={clansSub}
               onChange={(v) => setClansSub(v as ClansSub)}
             />
-            {clansSub === "roster" && <ClansTab />}
+            {clansSub === "crews" && <CrewsTab />}
             {clansSub === "cups" && <TournamentsTab />}
-            {clansSub === "clubs" && <ClubsTab />}
           </TabFrame>
+
           <TabFrame visible={tab === "chat"}><ChatTab /></TabFrame>
           <TabFrame visible={tab === "media"}><MediaTab /></TabFrame>
           <TabFrame visible={tab === "profile"}><ProfileTab /></TabFrame>
