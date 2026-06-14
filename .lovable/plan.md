@@ -1,75 +1,50 @@
-## Scope Recap
+# Plan
 
-You selected: DMs · Clubs (text) · Clans + Clan Wars + Player Search · 1v1 Challenges + Escrow (mock $) · Tournaments + Leaderboards · Google + Email auth · Real API for one provider (TBD).
+## 1. Merge Clubs + Clans into one unified "Crews" surface
+The "Clans" tab currently has 3 sub-tabs (Clans / Cups / Clubs). Since clubs (social hangout groups) and clans (competitive rosters) overlap a lot conceptually, I'll merge them into a single **Crews** list with a filter chip (`All · Competitive · Social`) backed by a new `kind` flag on the existing `clans` table (`'competitive' | 'social'`). Cups stays as its own sub-tab.
 
-I'll deliver this in three approval rounds so each layer is testable before the next lands.
+- Migration: add `kind` column to `clans` (default `'competitive'`), backfill old clubs.
+- Migration: copy existing `clubs` rows into `clans` with `kind='social'`, then keep the `clubs` table around (read-only) for the chat channels feature. Club channels stay accessible from inside a "social" crew's detail view.
+- New `CrewsTab.tsx` replacing `ClansTab` + `ClubsTab` in the sub-nav. Bottom nav becomes: **Find · Crews · Chat · Media · Me · Settings** (or settings as a gear in the header — see #3).
+- `Shell.tsx` `ClansSub` becomes `'crews' | 'cups'`.
 
-## Clarifying decision needed before round 3
+## 2. Fix the bugged neon gradient text
+The `text-gradient-orange` utility in `src/styles.css` renders as a solid orange rectangle in the user's browser. Cause: missing `-webkit-text-fill-color: transparent` and no `display: inline-block`, so `background-clip: text` falls back to painting the box.
 
-**Clubs vs Clans** — your prompt has "Clubs" (general communities) and you also asked for "Clans" (competitive teams that challenge other clans). I'll build them as two distinct concepts:
-- **Clubs** = social community, text channels, any size, roles Owner/Officer/Member/Recruit.
-- **Clans** = competitive roster (≤50), tagged, ELO rating, can issue/accept clan-war challenges vs another clan.
+Fix: update the utility to:
+```css
+@utility text-gradient-orange {
+  background-image: linear-gradient(135deg, var(--primary), oklch(0.78 0.18 55));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+```
 
-**Real API provider** — pick one: Tracker.gg (easiest, covers Apex/Valorant/CoD via single key), Riot (Valorant/LoL only, requires production approval), or Steam WebAPI (CS2/Dota, free key). I'll wire it in Round 3.
+## 3. Settings / Options menu
+Add a gear icon in the desktop sidebar footer and mobile header that opens a `SettingsSheet` (shadcn Sheet) with:
+- Theme (dark / system) — written to `localStorage`.
+- Notifications toggles (squad requests, DM, challenge results) — stored on `profiles` as a `notification_prefs jsonb`.
+- Default platform (PC / PS / Xbox / Switch) — stored on `profiles.default_platform`.
+- Privacy: profile visibility (public / squad only) — stored on `profiles.visibility`.
+- Sign out.
 
-## Round 1 — Communication core
+Migration adds `notification_prefs jsonb`, `default_platform text`, `visibility text` to `profiles`.
 
-Migration:
-- `conversations` (1v1, unique pair), `conversation_participants`, `direct_messages` (text + image_url + read_at), `typing_indicators` (ephemeral via Realtime broadcast — no table)
-- Storage bucket `dm-attachments` (private, RLS by participant)
-- Enable Realtime on `direct_messages`
-- `clubs`, `club_members` (role enum), `club_channels`, `club_messages`
-- RLS scoped to participant / club_member; GRANTs to authenticated + service_role
+## 4. Availability schedule on profile
+Add an "When I play" card to `ProfileTab.tsx` so squadmates can see when you're around.
 
-UI:
-- New `ChatTab` rewrite: conversations list → message thread, attachment upload, typing dots, read receipts
-- New `ClubsTab` rewrite: club list → channel list → message feed
-- Google sign-in button on `/auth` using `lovable.auth.signInWithOAuth("google", ...)` + `configure_social_auth(["google"])`
+- New table `public.availability_slots` with columns: `user_id`, `weekday` (0–6), `start_minute` (0–1439), `end_minute` (0–1439).
+- RLS: public read (for discovery), owner write.
+- UI: a 7×24 grid where the user toggles hour blocks on each weekday, plus a timezone select stored on `profiles.timezone`. Other users viewing a profile see a compact heatmap of the same grid.
+- Surfaced as a small "Available now" / "Next online: Sat 8pm" badge on Find cards (read-only consumption, no Find UI rewrite).
 
-## Round 2 — Competitive: Clans, Player Search, 1v1 Challenges
+## Technical notes (for reference)
+- New files: `src/components/squadz/CrewsTab.tsx`, `src/components/squadz/SettingsSheet.tsx`, `src/components/squadz/AvailabilityGrid.tsx`.
+- Removed from nav: `ClansTab` + `ClubsTab` direct entries (files kept, used inside CrewsTab detail views).
+- Two migrations: (a) `clans.kind` + copy clubs → clans + profile prefs columns, (b) `availability_slots` table with RLS + grants.
+- All new tables get explicit GRANTs and RLS per project rules.
+- `tracker.gg` integration from the previous turn is unaffected.
 
-Migration:
-- `clans` (tag, name, elo default 1000, owner_id), `clan_members` (role: leader/officer/member), `clan_invites`
-- `challenges` (challenger_id, opponent_id, game, wager_points, status: pending/accepted/live/disputed/settled, winner_id)
-- `clan_wars` (clan_a, clan_b, format, wager_points, status, winner_clan)
-- `wallets` (user_id, balance_points), `escrow_transactions` (challenge_id|war_id, amount, status: held/released/refunded)
-- Trigger: on challenge `accepted` → debit both wallets, insert held escrow rows; on `settled` → credit winner minus rake
-- Function `public.settle_challenge(_id uuid, _winner uuid)` SECURITY DEFINER
-
-UI:
-- `FindTab` enhancement: full-text search across profiles (username, bio, badges, linked gamertags) + filter pills (platform, rank, region, playstyle)
-- New `ClansTab`: my clan dashboard, browse clans, create/join, issue clan-war challenge
-- 1v1 challenge modal from any profile: pick game, wager points, send → notification on opponent
-
-## Round 3 — Tournaments, Leaderboards, Real API ingest
-
-Migration:
-- `tournaments` (game, format, entry_fee, rake_pct, starts_at, ends_at, status), `tournament_entries`, `leaderboard_entries` (entry_id, metric, value, recorded_at)
-- Computed view `tournament_payout` applying `P = (E*N)*(1-R)`
-- `webhook_events` (raw payload archive), `account_verification_checks` (lifetime_hours, audit_flags jsonb)
-
-Server routes (TanStack `/api/public/*`):
-- `/api/public/webhooks/<provider>` — HMAC-verified ingest → `webhook_events` → upsert `leaderboard_entries`
-- `/api/public/cron/stat-poll` — pg_cron hits this hourly to pull stats from chosen provider
-
-Anti-cheat:
-- Trigger on `leaderboard_entries` insert → audit-flag if stat delta > N stddev vs user history → freeze any open escrow tied to user
-
-UI:
-- `MediaTab` upgrade: real upload to `clips` bucket, upvote, comments, pin top 3 to profile
-- New `TournamentsTab`: browse, enter, live leaderboard subscribed via Realtime
-
-## Cross-cutting
-
-- All new tables follow the GRANT → ENABLE RLS → CREATE POLICY pattern, scoped to `auth.uid()`.
-- All server-fn admin work uses `await import("@/integrations/supabase/client.server")` inside `.handler()`.
-- No real money — `wallets.balance_points` is internal currency, seeded with 1000 on signup via `handle_new_user`.
-- Steam/Discord/PSN sign-in stays as **linked accounts** (manual gamertag entry + later OAuth bridge), not auth providers.
-
-## What I need from you to start Round 1
-
-1. Approve this plan.
-2. Confirm Clubs-vs-Clans split above is what you want (or tell me to merge).
-3. Pick the real-API provider for Round 3 (Tracker.gg / Riot / Steam) — not blocking Round 1.
-
-On approval I'll ship Round 1 (migration + Chat/Clubs UI + Google auth) in one go.
+Want me to proceed with all four, or trim scope (e.g. skip the clubs→clans data copy and just relabel)?
