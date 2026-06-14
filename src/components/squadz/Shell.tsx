@@ -90,7 +90,7 @@ export function Shell() {
         </header>
 
         <div className="flex-1 pb-20 lg:pb-0">
-          <TabFrame visible={tab === "find"}>
+          <TabFrame visible={tab === "find"} tabKey={`find-${findSub}`}>
             <SubNav
               items={[
                 { key: "players", label: "Players", icon: Users },
@@ -101,7 +101,7 @@ export function Shell() {
             />
             {findSub === "players" ? <FindTab /> : <ChallengesTab />}
           </TabFrame>
-          <TabFrame visible={tab === "clans"}>
+          <TabFrame visible={tab === "clans"} tabKey={`clans-${clansSub}`}>
             <SubNav
               items={[
                 { key: "crews", label: "Crews", icon: Shield },
@@ -114,9 +114,10 @@ export function Shell() {
             {clansSub === "cups" && <TournamentsTab />}
           </TabFrame>
 
-          <TabFrame visible={tab === "chat"}><ChatTab /></TabFrame>
-          <TabFrame visible={tab === "media"}><MediaTab /></TabFrame>
-          <TabFrame visible={tab === "profile"}><ProfileTab /></TabFrame>
+          <TabFrame visible={tab === "chat"} tabKey="chat"><ChatTab /></TabFrame>
+          <TabFrame visible={tab === "media"} tabKey="media"><MediaTab /></TabFrame>
+          <TabFrame visible={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>
+
         </div>
 
         {/* Mobile bottom nav */}
