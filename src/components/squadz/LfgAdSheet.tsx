@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
+import { AvailabilityGrid } from "./AvailabilityGrid";
 
 export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { user } = useAuth();
@@ -80,6 +81,11 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
             <div>
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Games (comma separated)</label>
               <Input value={games} onChange={(e) => setGames(e.target.value)} placeholder="Valorant, Apex, CS2" maxLength={120} />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 block">Playing times</label>
+              <AvailabilityGrid userId={user.id} editable />
+              <p className="text-[10px] text-muted-foreground mt-2">Tap blocks to mark when you're usually online. Others see this on your ad.</p>
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
