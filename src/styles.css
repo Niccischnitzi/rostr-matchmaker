@@ -127,3 +127,38 @@
 @utility pulse-ring {
   animation: pulse-ring 2s infinite;
 }
+
+/* Arcade scanline tab transition */
+@keyframes scanline-in {
+  0%   { clip-path: inset(0 100% 0 0); opacity: 0.4; filter: brightness(1.6) saturate(1.4); }
+  60%  { clip-path: inset(0 0 0 0);   opacity: 1;   filter: brightness(1.15) saturate(1.15); }
+  100% { clip-path: inset(0 0 0 0);   opacity: 1;   filter: none; }
+}
+@keyframes scanline-sweep {
+  0%   { transform: translateX(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+@utility arcade-enter {
+  animation: scanline-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: clip-path, filter, opacity;
+}
+
+@utility arcade-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--primary) 0%, transparent) 30%,
+    color-mix(in oklab, var(--primary) 60%, transparent) 50%,
+    color-mix(in oklab, var(--primary) 0%, transparent) 70%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  animation: scanline-sweep 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 50;
+}
+
