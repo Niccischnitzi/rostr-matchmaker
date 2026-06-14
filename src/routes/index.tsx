@@ -1,29 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Shell } from "@/components/squadz/Shell";
+import { SquadzProvider } from "@/lib/squadz-store";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "SQUADZ — Your gaming social hub" },
+      { name: "description", content: "Find squads, join clubs, share clips, and link every gaming platform in one passport." },
+      { property: "og:title", content: "SQUADZ — Your gaming social hub" },
+      { property: "og:description", content: "Find squads, join clubs, share clips, and link every gaming platform in one passport." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="dark">
+      <SquadzProvider>
+        <Shell />
+        <Toaster theme="dark" position="top-center" />
+      </SquadzProvider>
     </div>
   );
 }
