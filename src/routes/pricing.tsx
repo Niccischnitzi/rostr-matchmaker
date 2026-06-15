@@ -24,9 +24,27 @@ const TOKEN_PACKS = [
 ];
 
 const ENTRY_TIERS = [
-  { priceId: "entry_5", price: "$5", label: "Bronze cup" },
-  { priceId: "entry_10", price: "$10", label: "Silver cup" },
-  { priceId: "entry_25", price: "$25", label: "Gold cup" },
+  {
+    priceId: "entry_free",
+    price: "Free",
+    label: "Daily Sprints",
+    blurb: "Daily quick cups. Token rewards, no entry fee.",
+    cta: "Join free",
+  },
+  {
+    priceId: "entry_5",
+    price: "$2 – $5",
+    label: "Weekend Warriors",
+    blurb: "Weekend brackets with paid entry & prize splits.",
+    cta: "Pay entry",
+  },
+  {
+    priceId: "entry_25",
+    price: "$50",
+    label: "Club War Showdowns",
+    blurb: "Inter-club showdowns. High stakes, winner-take-most.",
+    cta: "Buy in",
+  },
 ];
 
 function PricingPage() {
