@@ -75,7 +75,7 @@ export function Shell() {
         </button>
         <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
-            <p className="font-semibold text-foreground">ostr v0.1</p>
+            <p className="font-semibold text-foreground">Rostr v0.1</p>
             <p className="mt-1">One passport. Every platform.</p>
           </div>
         </div>
@@ -173,11 +173,11 @@ function Brand({ compact = false }: { compact?: boolean }) {
       <RostrMark size={compact ? 40 : 56} />
       {!compact && (
         <div>
-          <p className="font-display font-black text-xl tracking-tight">ostr</p>
+          <p className="font-display font-black text-xl tracking-tight">Rostr</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
         </div>
       )}
-      {compact && <p className="font-display font-black text-lg tracking-tight">ostr</p>}
+      {compact && <p className="font-display font-black text-lg tracking-tight">Rostr</p>}
     </div>
   );
 }

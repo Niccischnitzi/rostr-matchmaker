@@ -10,7 +10,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
 type Prefs = {
-  theme: "dark" | "system";
+  theme: "dark" | "light" | "system";
   notifSquad: boolean;
   notifDM: boolean;
   notifChallenges: boolean;
@@ -20,7 +20,7 @@ type Prefs = {
 };
 
 const DEFAULTS: Prefs = {
-  theme: "dark",
+  theme: "system",
   notifSquad: true,
   notifDM: true,
   notifChallenges: true,
@@ -74,8 +74,9 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
               <Select value={prefs.theme} onValueChange={(v) => set("theme", v as Prefs["theme"])}>
                 <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dark">Dark</SelectItem>
                   <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="light">Light</SelectItem>
                 </SelectContent>
               </Select>
             </Row>

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Megaphone, Eye, Users, Clock } from "lucide-react";
+import { Loader2, Megaphone, Eye, Users, Clock, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -20,6 +20,8 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{ total: number; recent: number; last: string | null }>({ total: 0, recent: 0, last: null });
+  const [boostExpiresAt, setBoostExpiresAt] = useState<string | null>(null);
+  const [boosting, setBoosting] = useState(false);
 
   useEffect(() => {
     if (!open || !user) return;
@@ -46,7 +48,27 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
         last: ((l.data as any)?.[0]?.created_at as string | undefined) ?? null,
       });
     });
+    // load active boost
+    supabase.from("lfg_boosts" as any)
+      .select("expires_at")
+      .eq("user_id", user.id)
+      .gt("expires_at", new Date().toISOString())
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => setBoostExpiresAt(((data as any)?.[0]?.expires_at as string) ?? null));
   }, [open, user]);
+
+  async function boost(hours: number, cost: number) {
+    if (!user) return;
+    setBoosting(true);
+    const { error } = await supabase.rpc("boost_lfg" as any, { _hours: hours, _cost: cost });
+    setBoosting(false);
+    if (error) { sfx.error?.(); return toast.error(error.message); }
+    sfx.win();
+    const expires = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+    setBoostExpiresAt(expires);
+    toast.success(`Boosted for ${hours}h`, { description: `${cost} tokens spent. You're at the top of the Find page.` });
+  }
 
   async function save() {
     if (!user) return;
@@ -88,6 +110,23 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
               <div className="rounded-xl bg-surface border border-border p-3">
                 <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold"><Clock className="h-3 w-3" /> Last</div>
                 <p className="font-display text-sm font-black mt-1">{stats.last ? new Date(stats.last).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}</p>
+              </div>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-primary/15 via-surface to-surface border border-primary/30 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Rocket className="h-4 w-4 text-primary" />
+                <p className="text-sm font-bold">Boost LFG</p>
+                {boostExpiresAt && new Date(boostExpiresAt) > new Date() && (
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
+                    Active · {new Date(boostExpiresAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric" })}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Pin your ad to the top of the Find page.</p>
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" disabled={boosting} onClick={() => boost(1, 25)}>1h · 25</Button>
+                <Button size="sm" variant="outline" disabled={boosting} onClick={() => boost(6, 100)}>6h · 100</Button>
+                <Button size="sm" disabled={boosting} onClick={() => boost(24, 300)}>24h · 300</Button>
               </div>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
