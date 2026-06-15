@@ -18,10 +18,12 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
   const [games, setGames] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{ total: number; recent: number; last: string | null }>({ total: 0, recent: 0, last: null });
   const [boostExpiresAt, setBoostExpiresAt] = useState<string | null>(null);
   const [boosting, setBoosting] = useState(false);
+  const hasAd = title.trim().length > 0 || body.trim().length > 0 || games.trim().length > 0;
 
   useEffect(() => {
     if (!open || !user) return;
@@ -72,10 +74,14 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
 
   async function save() {
     if (!user) return;
+    if (!title.trim()) {
+      sfx.error?.();
+      return toast.error("Add a headline so players can find you");
+    }
     setBusy(true);
     const payload = {
       is_public: isPublic,
-      lfg_title: title.trim() || null,
+      lfg_title: title.trim(),
       lfg_body: body.trim() || null,
       lfg_games: games.split(",").map((g) => g.trim()).filter(Boolean),
     };
@@ -84,6 +90,22 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
     if (error) { sfx.error?.(); return toast.error(error.message); }
     sfx.win();
     toast.success("Your ad is live!");
+    onOpenChange(false);
+  }
+
+  async function remove() {
+    if (!user) return;
+    if (!confirm("Delete your LFG ad? It will be removed from the Find page.")) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("profiles" as any)
+      .update({ lfg_title: null, lfg_body: null, lfg_games: [] })
+      .eq("id", user.id);
+    setDeleting(false);
+    if (error) { sfx.error?.(); return toast.error(error.message); }
+    setTitle(""); setBody(""); setGames("");
+    sfx.tap();
+    toast.success("LFG ad deleted");
     onOpenChange(false);
   }
 
@@ -155,9 +177,22 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
               <p className="text-[10px] text-muted-foreground mt-2">Tap blocks to mark when you're usually online. Others see this on your ad.</p>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-              <Button className="flex-1" onClick={save} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save ad"}</Button>
+              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy || deleting}>Cancel</Button>
+              <Button className="flex-1" onClick={save} disabled={busy || deleting}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAd ? "Save ad" : "Post ad"}
+              </Button>
             </div>
+            {hasAd && (
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={remove}
+                disabled={busy || deleting}
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete ad
+              </Button>
+            )}
           </div>
         )}
       </SheetContent>
