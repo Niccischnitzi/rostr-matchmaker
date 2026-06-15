@@ -438,7 +438,7 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
   const available = PLATFORMS.filter((p) => !existing.includes(p));
   const [platform, setPlatform] = useState<string>(available[0] ?? "Steam");
   const [tag, setTag] = useState("");
-  const [rank, setRank] = useState("");
+  
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -459,7 +459,7 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
         user_id: userId,
         platform,
         gamertag: tag.trim(),
-        current_rank_display: rank.trim() || null,
+        current_rank_display: null,
       });
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["linked-accounts", userId] });
@@ -482,9 +482,6 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
         </Row>
         <Row label="Gamertag / ID">
           <input value={tag} onChange={(e) => setTag(e.target.value)} className={inputCls} placeholder="ghostshot42#1234" />
-        </Row>
-        <Row label="Rank (optional)">
-          <input value={rank} onChange={(e) => setRank(e.target.value)} className={inputCls} placeholder="Diamond II" />
         </Row>
         <div className="flex gap-2 pt-2">
           <button onClick={onClose} className="flex-1 h-10 rounded-xl border border-border bg-surface text-sm font-bold hover:bg-surface-2">Cancel</button>
