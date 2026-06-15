@@ -24,21 +24,23 @@ export function LfgAdsList() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      setLoading(true);
+      let q = supabase
         .from("profiles" as any)
         .select("id, username, display_name, avatar_url, lfg_title, lfg_body, lfg_games, country, is_public")
         .eq("is_public", true)
         .not("lfg_title", "is", null)
-        .neq("id", user?.id ?? "")
         .order("updated_at", { ascending: false })
         .limit(20);
+      if (user?.id) q = q.neq("id", user.id);
+      const { data, error } = await q;
+      if (error) console.warn("LFG ads load failed", error.message);
       setAds(((data as any) ?? []) as Ad[]);
       setLoading(false);
     })();
   }, [user?.id]);
 
   if (loading) return <div className="grid place-items-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
-  if (ads.length === 0) return null;
 
   return (
     <div className="mt-8">
