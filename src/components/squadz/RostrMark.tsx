@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/rostr-r-logo.png.asset.json";
+import logoAsset from "@/assets/rostr-r-v2.png.asset.json";
 import { cn } from "@/lib/utils";
 
 export function RostrMark({ size = 48, className }: { size?: number; className?: string }) {
@@ -8,7 +8,7 @@ export function RostrMark({ size = 48, className }: { size?: number; className?:
       alt="Rostr"
       width={size}
       height={size}
-      className={cn("object-contain", className)}
+      className={cn("object-contain drop-shadow-[0_4px_18px_rgba(255,87,34,0.35)]", className)}
       style={{ width: size, height: size }}
     />
   );

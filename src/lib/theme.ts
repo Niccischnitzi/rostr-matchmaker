@@ -26,7 +26,9 @@ export function applyTheme() {
   if (typeof document === "undefined") return;
   const pref = readPref();
   const dark = pref === "dark" || (pref === "system" && systemPrefersDark());
-  document.documentElement.classList.toggle("dark", dark);
+  const el = document.documentElement;
+  el.classList.toggle("dark", dark);
+  el.style.colorScheme = dark ? "dark" : "light";
 }
 
 export function initThemeListeners() {
