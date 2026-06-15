@@ -10,8 +10,8 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — SQUADZ" },
-      { name: "description", content: "Sign in or create your SQUADZ account to find your squad." },
+      { title: "Sign in — Rostr" },
+      { name: "description", content: "Sign in or create your Rostr account to find your squad." },
     ],
   }),
   component: AuthPage,
@@ -47,7 +47,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created — welcome to SQUADZ");
+        toast.success("Account created — welcome to Rostr");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -88,7 +88,7 @@ function AuthPage() {
             <Gamepad2 className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <p className="font-display font-black text-2xl tracking-tight">SQUADZ</p>
+            <p className="font-display font-black text-2xl tracking-tight">Rostr</p>
             <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
           </div>
         </div>
