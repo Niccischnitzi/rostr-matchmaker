@@ -245,7 +245,7 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
   const [channels, setChannels] = useState<ClubChannel[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
-  const [view, setView] = useState<"channel" | "members">("channel");
+  const [view, setView] = useState<"channel" | "members" | "wars">("channel");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
