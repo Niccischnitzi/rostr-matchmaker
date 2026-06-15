@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Megaphone, Eye, Users, Clock } from "lucide-react";
+import { Loader2, Megaphone, Eye, Users, Clock, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -20,6 +20,8 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{ total: number; recent: number; last: string | null }>({ total: 0, recent: 0, last: null });
+  const [boostExpiresAt, setBoostExpiresAt] = useState<string | null>(null);
+  const [boosting, setBoosting] = useState(false);
 
   useEffect(() => {
     if (!open || !user) return;
@@ -46,10 +48,27 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
         last: ((l.data as any)?.[0]?.created_at as string | undefined) ?? null,
       });
     });
+    // load active boost
+    supabase.from("lfg_boosts" as any)
+      .select("expires_at")
+      .eq("user_id", user.id)
+      .gt("expires_at", new Date().toISOString())
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => setBoostExpiresAt(((data as any)?.[0]?.expires_at as string) ?? null));
   }, [open, user]);
 
-  async function save() {
+  async function boost(hours: number, cost: number) {
     if (!user) return;
+    setBoosting(true);
+    const { error } = await supabase.rpc("boost_lfg" as any, { _hours: hours, _cost: cost });
+    setBoosting(false);
+    if (error) { sfx.error?.(); return toast.error(error.message); }
+    sfx.win();
+    const expires = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+    setBoostExpiresAt(expires);
+    toast.success(`Boosted for ${hours}h`, { description: `${cost} tokens spent. You're at the top of the Find page.` });
+  }
     setBusy(true);
     const payload = {
       is_public: isPublic,
