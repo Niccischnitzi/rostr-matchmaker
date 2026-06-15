@@ -4,10 +4,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell, Eye, Volume2, Palette } from "lucide-react";
+import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert } from "lucide-react";
 import { signOut } from "@/hooks/use-auth";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type Prefs = {
   theme: "dark" | "light" | "system";
@@ -41,10 +42,20 @@ function loadPrefs(): Prefs {
 
 export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   useEffect(() => { setPrefs(loadPrefs()); }, []);
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return setIsAdmin(false);
+      const { data } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+      setIsAdmin(Boolean(data));
+    })();
+  }, [open]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(KEY, JSON.stringify(prefs));
@@ -114,6 +125,19 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
               </Select>
             </Row>
           </Section>
+
+          {isAdmin && (
+            <Link
+              to="/moderation"
+              onClick={() => onOpenChange(false)}
+              className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm font-bold">
+                <ShieldAlert className="h-4 w-4 text-primary" /> Moderation queue
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-primary font-bold">Admin</span>
+            </Link>
+          )}
 
           <div className="pt-4 border-t border-border">
             <Button variant="destructive" className="w-full" onClick={handleSignOut}>
