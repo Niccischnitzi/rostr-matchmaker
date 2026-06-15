@@ -289,12 +289,12 @@ export function MediaTab() {
                 commenterMap={likerMap}
                 currentUserId={userId}
                 commentDraft={commentDrafts[p.id] ?? ""}
-                onCommentDraft={(value) => setCommentDrafts((prev) => ({ ...prev, [p.id]: value }))}
+                onCommentDraft={(value: string) => setCommentDrafts((prev) => ({ ...prev, [p.id]: value }))}
                 onToggleLike={() => toggleLike.mutate(p.id)}
                 onToggleSave={() => toggleSave.mutate(p.id)}
                 onToggleRepost={() => toggleRepost.mutate(p.id)}
                 onAddComment={() => addComment.mutate({ postId: p.id, body: commentDrafts[p.id] ?? "" })}
-                onDeleteComment={(commentId) => deleteComment.mutate(commentId)}
+                onDeleteComment={(commentId: string) => deleteComment.mutate(commentId)}
                 onDeletePost={() => {
                   if (confirm("Delete this post?")) deletePost.mutate(p);
                 }}
@@ -372,7 +372,8 @@ export function MediaTab() {
 }
 
 function PostCard({
-  post, signedUrl, liked, saved, reposted, likeCount, repostCount, likers, onToggleLike, onToggleSave, onToggleRepost,
+  post, signedUrl, liked, saved, reposted, likeCount, repostCount, likers, comments, commenterMap, currentUserId, commentDraft,
+  onCommentDraft, onToggleLike, onToggleSave, onToggleRepost, onAddComment, onDeleteComment, onDeletePost,
 }: {
   post: MediaPost;
   signedUrl?: string;
@@ -382,10 +383,19 @@ function PostCard({
   likeCount: number;
   repostCount: number;
   likers: AuthorMini[];
+  comments: MediaComment[];
+  commenterMap: Map<string, AuthorMini>;
+  currentUserId: string | null | undefined;
+  commentDraft: string;
+  onCommentDraft: (value: string) => void;
   onToggleLike: () => void;
   onToggleSave: () => void;
   onToggleRepost: () => void;
+  onAddComment: () => void;
+  onDeleteComment: (commentId: string) => void;
+  onDeletePost: () => void;
 }) {
+  const isOwner = currentUserId === post.user_id;
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col soft-rise">
       <div className="p-3 flex items-center gap-2 border-b border-border">
@@ -395,6 +405,11 @@ function PostCard({
           <span className="text-[10px] font-bold flex items-center gap-1 text-primary">
             <Coins className="h-3 w-3" />{post.tokens_spent}
           </span>
+        )}
+        {isOwner && (
+          <button onClick={onDeletePost} title="Delete post" className="h-8 w-8 rounded-full grid place-items-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+            <Trash2 className="h-4 w-4" />
+          </button>
         )}
       </div>
 
@@ -454,11 +469,49 @@ function PostCard({
           <ActionBtn active={saved} onClick={onToggleSave} title="Save">
             <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
           </ActionBtn>
+          <ActionBtn active={comments.length > 0} onClick={() => document.getElementById(`comment-${post.id}`)?.focus()} title="Comment">
+            <MessageSquare className="h-4 w-4" />
+            <span className="text-xs font-semibold">{comments.length}</span>
+          </ActionBtn>
         </div>
         <div className="text-[10px] text-muted-foreground">
           {post.game && <span className="mr-2">{post.game}</span>}
           {post.duration_s ? <span>{post.duration_s}s</span> : null}
         </div>
+      </div>
+      <div className="px-3 pb-3 space-y-2">
+        {comments.slice(-3).map((comment) => {
+          const author = commenterMap.get(comment.user_id);
+          return (
+            <div key={comment.id} className="flex items-start gap-2 rounded-xl bg-surface/60 px-3 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold text-muted-foreground truncate">@{author?.username ?? "player"}</p>
+                <p className="text-sm break-words">{comment.body}</p>
+              </div>
+              {comment.user_id === currentUserId && (
+                <button onClick={() => onDeleteComment(comment.id)} title="Delete comment" className="h-7 w-7 rounded-full grid place-items-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {currentUserId && (
+          <div className="flex items-center gap-2">
+            <input
+              id={`comment-${post.id}`}
+              value={commentDraft}
+              onChange={(e) => onCommentDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && commentDraft.trim()) onAddComment(); }}
+              placeholder="Add a comment…"
+              maxLength={280}
+              className="min-w-0 flex-1 bg-surface rounded-full px-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button onClick={onAddComment} disabled={!commentDraft.trim()} className="h-9 w-9 rounded-full bg-primary text-primary-foreground grid place-items-center disabled:opacity-40">
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
