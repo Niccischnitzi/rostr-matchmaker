@@ -33,7 +33,6 @@ const FORMATS = [
 ];
 
 export function ClubWars({ club, isOfficer }: { club: Club; isOfficer: boolean }) {
-  const { user } = useAuth();
   const [tab, setTab] = useState<"active" | "history">("active");
   const [wars, setWars] = useState<ClubWar[]>([]);
   const [clubMap, setClubMap] = useState<Map<string, Club>>(new Map());
