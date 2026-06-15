@@ -48,11 +48,17 @@ export function LfgAdsList() {
         <Megaphone className="h-4 w-4 text-primary" />
         <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">LFG ads</p>
       </div>
-      <div className="grid gap-3">
-        {ads.map((ad) => (
-          <AdCard key={ad.id} ad={ad} viewerId={user?.id ?? null} />
-        ))}
-      </div>
+      {ads.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          No active LFG ads yet — post one to be the first.
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {ads.map((ad) => (
+            <AdCard key={ad.id} ad={ad} viewerId={user?.id ?? null} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
