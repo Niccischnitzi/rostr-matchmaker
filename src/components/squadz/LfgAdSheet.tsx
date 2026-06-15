@@ -74,10 +74,14 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
 
   async function save() {
     if (!user) return;
+    if (!title.trim()) {
+      sfx.error?.();
+      return toast.error("Add a headline so players can find you");
+    }
     setBusy(true);
     const payload = {
       is_public: isPublic,
-      lfg_title: title.trim() || null,
+      lfg_title: title.trim(),
       lfg_body: body.trim() || null,
       lfg_games: games.split(",").map((g) => g.trim()).filter(Boolean),
     };
@@ -86,6 +90,22 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
     if (error) { sfx.error?.(); return toast.error(error.message); }
     sfx.win();
     toast.success("Your ad is live!");
+    onOpenChange(false);
+  }
+
+  async function remove() {
+    if (!user) return;
+    if (!confirm("Delete your LFG ad? It will be removed from the Find page.")) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("profiles" as any)
+      .update({ lfg_title: null, lfg_body: null, lfg_games: [] })
+      .eq("id", user.id);
+    setDeleting(false);
+    if (error) { sfx.error?.(); return toast.error(error.message); }
+    setTitle(""); setBody(""); setGames("");
+    sfx.tap();
+    toast.success("LFG ad deleted");
     onOpenChange(false);
   }
 
