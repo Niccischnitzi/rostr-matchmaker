@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { ROSTR_LOGO_URL } from "@/components/squadz/RostrMark";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { initThemeListeners } from "../lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -120,6 +121,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => initThemeListeners(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
