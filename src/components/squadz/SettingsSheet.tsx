@@ -4,10 +4,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell, Eye, Volume2, Palette } from "lucide-react";
+import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert } from "lucide-react";
 import { signOut } from "@/hooks/use-auth";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type Prefs = {
   theme: "dark" | "light" | "system";
