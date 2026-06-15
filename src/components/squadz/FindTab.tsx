@@ -29,7 +29,7 @@ export function FindTab() {
   });
 
   const top = filtered[0];
-  const stack = filtered.slice(1, 3);
+
 
   const handle = (dir: "skip" | "squad") => {
     if (!top) return;
