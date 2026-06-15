@@ -105,10 +105,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const themeInitScript = `
+(function(){
+  try {
+    var raw = localStorage.getItem("rostr:settings");
+    var pref = raw ? (JSON.parse(raw).theme || "system") : "system";
+    var dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var el = document.documentElement;
+    if (dark) { el.classList.add("dark"); } else { el.classList.remove("dark"); }
+    el.style.colorScheme = dark ? "dark" : "light";
+  } catch (e) {
+    document.documentElement.classList.add("dark");
+  }
+})();
+`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body>
