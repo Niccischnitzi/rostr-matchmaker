@@ -177,9 +177,22 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
               <p className="text-[10px] text-muted-foreground mt-2">Tap blocks to mark when you're usually online. Others see this on your ad.</p>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-              <Button className="flex-1" onClick={save} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save ad"}</Button>
+              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy || deleting}>Cancel</Button>
+              <Button className="flex-1" onClick={save} disabled={busy || deleting}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAd ? "Save ad" : "Post ad"}
+              </Button>
             </div>
+            {hasAd && (
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={remove}
+                disabled={busy || deleting}
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete ad
+              </Button>
+            )}
           </div>
         )}
       </SheetContent>
