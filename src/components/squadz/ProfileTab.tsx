@@ -445,6 +445,7 @@ function EditProfileDialog({ profile, userId, onClose }: { profile: Profile; use
 
 function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existing: string[]; onClose: () => void }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const available = PLATFORMS.filter((p) => !existing.includes(p));
   const [platform, setPlatform] = useState<string>(available[0] ?? "Steam");
   const [tag, setTag] = useState("");
