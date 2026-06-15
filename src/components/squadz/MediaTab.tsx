@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSquadz } from "@/lib/squadz-store";
-import { Play, Flame, Eye, Plus, Coins, Loader2, Video as VideoIcon, MessageSquare, Link2, Bookmark, Repeat2, Heart } from "lucide-react";
+import { Play, Flame, Eye, Plus, Coins, Loader2, Video as VideoIcon, MessageSquare, Link2, Bookmark, Repeat2, Heart, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ComposeDialog } from "./ComposeDialog";
@@ -24,6 +24,7 @@ type MediaPost = {
 type Like = { post_id: string; user_id: string };
 type Save = { post_id: string; user_id: string };
 type Repost = { id: string; post_id: string; user_id: string };
+type MediaComment = { id: string; post_id: string; user_id: string; body: string; created_at: string };
 type AuthorMini = { id: string; username: string; display_name: string | null; avatar_url: string | null };
 
 export function MediaTab() {
@@ -31,6 +32,7 @@ export function MediaTab() {
   const { clips, likeClip, likedClips } = useSquadz();
   const [composeOpen, setComposeOpen] = useState(false);
   const [tab, setTab] = useState<"feed" | "saved">("feed");
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
 
   const { data: userId } = useQuery({
     queryKey: ["auth-user-id"],
@@ -79,8 +81,17 @@ export function MediaTab() {
     },
   });
 
+  const { data: comments = [] } = useQuery<MediaComment[]>({
+    queryKey: ["media-comments"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("media_comments" as any).select("*").order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data as any) as MediaComment[];
+    },
+  });
+
   // Fetch liker mini-profiles
-  const likerIds = useMemo(() => Array.from(new Set(likes.map((l) => l.user_id))), [likes]);
+  const likerIds = useMemo(() => Array.from(new Set([...likes.map((l) => l.user_id), ...comments.map((c) => c.user_id)])), [likes, comments]);
   const { data: likers = [] } = useQuery<AuthorMini[]>({
     queryKey: ["likers", likerIds.join(",")],
     enabled: likerIds.length > 0,
@@ -101,6 +112,15 @@ export function MediaTab() {
     reposts.forEach((r) => m.set(r.post_id, (m.get(r.post_id) ?? 0) + 1));
     return m;
   }, [reposts]);
+  const commentsByPost = useMemo(() => {
+    const m = new Map<string, MediaComment[]>();
+    comments.forEach((c) => {
+      const arr = m.get(c.post_id) ?? [];
+      arr.push(c);
+      m.set(c.post_id, arr);
+    });
+    return m;
+  }, [comments]);
 
   const myLikes = useMemo(() => new Set(likes.filter((l) => l.user_id === userId).map((l) => l.post_id)), [likes, userId]);
   const mySaves = useMemo(() => new Set(saves.filter((s) => s.user_id === userId).map((s) => s.post_id)), [saves, userId]);
@@ -166,6 +186,46 @@ export function MediaTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Repost failed"),
   });
 
+  const deletePost = useMutation({
+    mutationFn: async (post: MediaPost) => {
+      if (!userId || post.user_id !== userId) throw new Error("You can only delete your own posts");
+      const { error } = await supabase.from("media_posts").delete().eq("id", post.id).eq("user_id", userId);
+      if (error) throw error;
+      if (post.media_path) await supabase.storage.from("media-clips").remove([post.media_path]);
+    },
+    onSuccess: () => {
+      toast.success("Post deleted");
+      qc.invalidateQueries({ queryKey: ["media-posts"] });
+      qc.invalidateQueries({ queryKey: ["media-comments"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
+  });
+
+  const addComment = useMutation({
+    mutationFn: async ({ postId, body }: { postId: string; body: string }) => {
+      if (!userId) throw new Error("Not signed in");
+      const text = body.trim();
+      if (!text) throw new Error("Write a comment first");
+      const { error } = await supabase.from("media_comments" as any).insert({ post_id: postId, user_id: userId, body: text.slice(0, 280) } as any);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      setCommentDrafts((prev) => ({ ...prev, [vars.postId]: "" }));
+      qc.invalidateQueries({ queryKey: ["media-comments"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Comment failed"),
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: async (commentId: string) => {
+      if (!userId) throw new Error("Not signed in");
+      const { error } = await supabase.from("media_comments" as any).delete().eq("id", commentId).eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-comments"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
+  });
+
   const videoPaths = posts.filter((p) => p.kind === "video" && p.media_path).map((p) => p.media_path as string);
   const { data: signedMap = {} } = useQuery<Record<string, string>>({
     queryKey: ["media-signed", videoPaths.join("|")],
@@ -225,9 +285,19 @@ export function MediaTab() {
                 likeCount={likeCounts.get(p.id) ?? 0}
                 repostCount={repostCounts.get(p.id) ?? 0}
                 likers={likersByPost.get(p.id) ?? []}
+                comments={commentsByPost.get(p.id) ?? []}
+                commenterMap={likerMap}
+                currentUserId={userId}
+                commentDraft={commentDrafts[p.id] ?? ""}
+                onCommentDraft={(value) => setCommentDrafts((prev) => ({ ...prev, [p.id]: value }))}
                 onToggleLike={() => toggleLike.mutate(p.id)}
                 onToggleSave={() => toggleSave.mutate(p.id)}
                 onToggleRepost={() => toggleRepost.mutate(p.id)}
+                onAddComment={() => addComment.mutate({ postId: p.id, body: commentDrafts[p.id] ?? "" })}
+                onDeleteComment={(commentId) => deleteComment.mutate(commentId)}
+                onDeletePost={() => {
+                  if (confirm("Delete this post?")) deletePost.mutate(p);
+                }}
               />
             ))}
           </div>
