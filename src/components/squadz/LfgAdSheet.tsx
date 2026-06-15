@@ -18,10 +18,12 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
   const [games, setGames] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{ total: number; recent: number; last: string | null }>({ total: 0, recent: 0, last: null });
   const [boostExpiresAt, setBoostExpiresAt] = useState<string | null>(null);
   const [boosting, setBoosting] = useState(false);
+  const hasAd = title.trim().length > 0 || body.trim().length > 0 || games.trim().length > 0;
 
   useEffect(() => {
     if (!open || !user) return;
