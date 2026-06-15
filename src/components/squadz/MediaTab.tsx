@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ComposeDialog } from "./ComposeDialog";
 import { sfx } from "@/lib/sfx";
+import { UserSafetyActions } from "./UserSafetyActions";
 
 type MediaPost = {
   id: string;
@@ -411,6 +412,7 @@ function PostCard({
             <Trash2 className="h-4 w-4" />
           </button>
         )}
+        {!isOwner && <UserSafetyActions targetId={post.user_id} targetLabel="post author" />}
       </div>
 
       {post.kind === "video" && (
