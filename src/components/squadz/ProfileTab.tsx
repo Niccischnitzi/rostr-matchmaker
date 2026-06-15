@@ -438,8 +438,8 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
   const available = PLATFORMS.filter((p) => !existing.includes(p));
   const [platform, setPlatform] = useState<string>(available[0] ?? "Steam");
   const [tag, setTag] = useState("");
-  
   const [busy, setBusy] = useState(false);
+  const [connecting, setConnecting] = useState<string | null>(null);
 
   useEffect(() => {
     if (available.length === 0) {
@@ -472,9 +472,69 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
     }
   };
 
+  // Mock OAuth quick-connect: simulates a third-party handshake and inserts a linked_account.
+  const quickConnect = async (provider: "Steam" | "Discord" | "Tracker.gg") => {
+    const platformName = provider === "Tracker.gg" ? "Steam" : provider === "Discord" ? "Discord" : "Steam";
+    if (existing.includes(platformName)) {
+      toast.info(`${platformName} already linked`);
+      return;
+    }
+    setConnecting(provider);
+    // Simulate redirect + token exchange
+    await new Promise((r) => setTimeout(r, 900));
+    const mockTag =
+      provider === "Steam" ? `steamuser_${Math.floor(Math.random() * 9000 + 1000)}` :
+      provider === "Discord" ? `discord_${Math.floor(Math.random() * 9000 + 1000)}#${Math.floor(Math.random() * 9000 + 1000)}` :
+      `tracker_${Math.floor(Math.random() * 9000 + 1000)}`;
+    try {
+      const { error } = await supabase.from("linked_accounts").insert({
+        user_id: userId,
+        platform: platformName,
+        gamertag: mockTag,
+        current_rank_display: provider === "Tracker.gg" ? "Diamond II · 1.45 K/D" : null,
+      });
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["linked-accounts", userId] });
+      toast.success(`${provider} connected`, { description: `Mock account: ${mockTag}` });
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not link");
+    } finally {
+      setConnecting(null);
+    }
+  };
+
   return (
     <Modal title="Add platform" onClose={onClose}>
-      <div className="space-y-3">
+      <div className="space-y-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Quick connect (mock)</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["Steam", "Discord", "Tracker.gg"] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => quickConnect(p)}
+                disabled={connecting !== null}
+                className="h-16 rounded-xl border border-border bg-surface hover:bg-surface-2 text-xs font-bold flex flex-col items-center justify-center gap-1 disabled:opacity-50 transition"
+              >
+                {connecting === p ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                ) : (
+                  <span className="text-lg">{p === "Steam" ? "🎮" : p === "Discord" ? "💬" : "📊"}</span>
+                )}
+                <span>{p}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">Mock OAuth — real Steam/Discord/Tracker.gg integration coming soon.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-px bg-border" />
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Or add manually</p>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
         <Row label="Platform">
           <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={inputCls}>
             {available.map((p) => <option key={p} value={p}>{p}</option>)}

@@ -112,6 +112,23 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
                 <p className="font-display text-sm font-black mt-1">{stats.last ? new Date(stats.last).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}</p>
               </div>
             </div>
+            <div className="rounded-xl bg-gradient-to-br from-primary/15 via-surface to-surface border border-primary/30 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Rocket className="h-4 w-4 text-primary" />
+                <p className="text-sm font-bold">Boost LFG</p>
+                {boostExpiresAt && new Date(boostExpiresAt) > new Date() && (
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
+                    Active · {new Date(boostExpiresAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric" })}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Pin your ad to the top of the Find page.</p>
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" disabled={boosting} onClick={() => boost(1, 25)}>1h · 25</Button>
+                <Button size="sm" variant="outline" disabled={boosting} onClick={() => boost(6, 100)}>6h · 100</Button>
+                <Button size="sm" disabled={boosting} onClick={() => boost(24, 300)}>24h · 300</Button>
+              </div>
+            </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
               <div>
                 <p className="text-sm font-bold">Public profile</p>
