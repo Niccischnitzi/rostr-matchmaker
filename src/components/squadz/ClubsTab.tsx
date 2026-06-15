@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield } from "lucide-react";
+import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield, Swords } from "lucide-react";
+import { ClubWars } from "./ClubWars";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
