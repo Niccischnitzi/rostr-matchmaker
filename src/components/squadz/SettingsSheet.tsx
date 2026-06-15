@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert } from "lucide-react";
+import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert, Sparkles } from "lucide-react";
 import { signOut } from "@/hooks/use-auth";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -125,6 +125,17 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
               </Select>
             </Row>
           </Section>
+
+          <Link
+            to="/pricing"
+            onClick={() => onOpenChange(false)}
+            className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-amber-400/40 bg-amber-400/5 hover:bg-amber-400/10 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold">
+              <Sparkles className="h-4 w-4 text-amber-500" /> Tokens & Rostr Pro
+            </span>
+            <span className="text-[10px] uppercase tracking-widest text-amber-500 font-bold">Store</span>
+          </Link>
 
           {isAdmin && (
             <Link
