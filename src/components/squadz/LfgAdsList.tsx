@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Megaphone, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { UserSafetyActions } from "./UserSafetyActions";
 
 type Ad = {
   id: string;
@@ -55,7 +56,7 @@ export function LfgAdsList() {
       ) : (
         <div className="grid gap-3">
           {ads.map((ad) => (
-            <AdCard key={ad.id} ad={ad} viewerId={user?.id ?? null} />
+            <AdCard key={ad.id} ad={ad} viewerId={user?.id ?? null} onBlocked={() => setAds((prev) => prev.filter((item) => item.id !== ad.id))} />
           ))}
         </div>
       )}
@@ -63,7 +64,7 @@ export function LfgAdsList() {
   );
 }
 
-function AdCard({ ad, viewerId }: { ad: Ad; viewerId: string | null }) {
+function AdCard({ ad, viewerId, onBlocked }: { ad: Ad; viewerId: string | null; onBlocked: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -111,7 +112,10 @@ function AdCard({ ad, viewerId }: { ad: Ad; viewerId: string | null }) {
           </div>
         )}
       </div>
-      <Eye className="h-4 w-4 text-muted-foreground shrink-0" />
+      <div className="flex items-center gap-1 shrink-0">
+        <Eye className="h-4 w-4 text-muted-foreground" />
+        <UserSafetyActions targetId={ad.id} targetLabel={ad.display_name ?? ad.username} onBlocked={onBlocked} />
+      </div>
     </div>
   );
 }

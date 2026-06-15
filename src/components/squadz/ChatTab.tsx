@@ -18,6 +18,7 @@ import {
 import { FriendsTab } from "./FriendsTab";
 import { CallSheet } from "./CallSheet";
 import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
+import { UserSafetyActions } from "./UserSafetyActions";
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
@@ -413,6 +414,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
           <p className="font-bold truncate">{peer?.display_name ?? peer?.username ?? "…"}</p>
           <p className="text-xs text-muted-foreground">@{peer?.username ?? ""}</p>
         </div>
+        <UserSafetyActions targetId={peer?.id} targetLabel={peer?.display_name ?? peer?.username} onBlocked={onBack} />
         <button
           onClick={() => { sfx.nav(); setCallOpen(true); }}
           className="h-9 w-9 rounded-full bg-success/15 text-success grid place-items-center hover:bg-success/25 transition"
