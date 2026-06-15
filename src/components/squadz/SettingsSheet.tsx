@@ -42,10 +42,20 @@ function loadPrefs(): Prefs {
 
 export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   useEffect(() => { setPrefs(loadPrefs()); }, []);
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return setIsAdmin(false);
+      const { data } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+      setIsAdmin(Boolean(data));
+    })();
+  }, [open]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(KEY, JSON.stringify(prefs));
