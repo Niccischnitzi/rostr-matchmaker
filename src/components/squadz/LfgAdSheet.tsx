@@ -69,6 +69,9 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
     setBoostExpiresAt(expires);
     toast.success(`Boosted for ${hours}h`, { description: `${cost} tokens spent. You're at the top of the Find page.` });
   }
+
+  async function save() {
+    if (!user) return;
     setBusy(true);
     const payload = {
       is_public: isPublic,
