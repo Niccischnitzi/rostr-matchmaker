@@ -6,7 +6,9 @@ export async function fetchBlockedIds(userId: string): Promise<Set<string>> {
 }
 
 export async function blockUser(blocker: string, blocked: string) {
-  return supabase.from("user_blocks" as any).insert({ blocker_id: blocker, blocked_id: blocked } as any);
+  return supabase
+    .from("user_blocks" as any)
+    .upsert({ blocker_id: blocker, blocked_id: blocked } as any, { onConflict: "blocker_id,blocked_id" });
 }
 
 export async function unblockUser(blocker: string, blocked: string) {
@@ -20,5 +22,9 @@ export async function reportTarget(opts: {
   reason: string;
   details?: string;
 }) {
-  return supabase.from("user_reports" as any).insert(opts as any);
+  return supabase.from("user_reports" as any).insert({
+    ...opts,
+    reason: opts.reason.trim().slice(0, 120),
+    details: opts.details?.trim().slice(0, 1000) || null,
+  } as any);
 }
