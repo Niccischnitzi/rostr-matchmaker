@@ -96,14 +96,10 @@ export function FindTab() {
 
 
       {/* Card stack */}
-      <div className="relative h-[540px] sm:h-[580px]">
-        {stack.slice().reverse().map((p, i) => (
-          <div key={p.id} className="absolute inset-0 rounded-3xl border border-border bg-card shadow-xl"
-            style={{ transform: `translateY(${(stack.length - i) * 10}px) scale(${1 - (stack.length - i) * 0.04})`, opacity: 0.5 }} />
-        ))}
+      <div className="relative">
         {top ? (
-          <div className="absolute inset-0 rounded-3xl border border-border bg-card overflow-hidden shadow-2xl flex flex-col soft-rise">
-            <div className="relative h-48 sm:h-56 bg-gradient-to-br from-primary via-orange-600 to-accent">
+          <div className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-2xl flex flex-col soft-rise">
+            <div className="relative h-32 sm:h-40 bg-gradient-to-br from-primary via-orange-600 to-accent">
               <div className="absolute inset-0 opacity-30 overflow-hidden" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
               <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/40 backdrop-blur text-white text-xs font-medium flex items-center gap-1.5 z-10">
                 <span className="h-1.5 w-1.5 rounded-full bg-success" /> Online
@@ -111,13 +107,14 @@ export function FindTab() {
             </div>
             <div className="relative">
               <div className="absolute -top-12 left-6 z-10">
-                <div className="h-24 w-24 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden shadow-xl">
+                <div className="h-20 w-20 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden shadow-xl">
                   <img src={top.avatar} alt={top.username} className="h-full w-full object-cover" />
                 </div>
               </div>
             </div>
 
-            <div className="px-6 pt-16 pb-6 flex-1 overflow-y-auto">
+            <div className="px-6 pt-12 pb-6">
+
               <div className="flex items-baseline gap-2 flex-wrap">
                 <h2 className="font-display text-2xl font-black">{top.username}</h2>
                 <span className="text-sm text-muted-foreground">· {top.age}</span>
@@ -162,7 +159,7 @@ export function FindTab() {
             </div>
           </div>
         ) : (
-          <div className="absolute inset-0 rounded-3xl border border-dashed border-border grid place-items-center text-center px-6">
+          <div className="rounded-3xl border border-dashed border-border grid place-items-center text-center px-6 py-16">
             <div>
               <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
               <p className="font-semibold">No more matches</p>
@@ -171,6 +168,7 @@ export function FindTab() {
           </div>
         )}
       </div>
+
 
       {connected.length > 0 && (
         <div className="mt-8">
