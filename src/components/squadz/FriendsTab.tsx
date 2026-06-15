@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, UserPlus, Check, X, Loader2, MessageCircle } from "lucide-react";
+import { Users, UserPlus, Check, X, Loader2, MessageCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
 import { fetchProfiles, type Profile } from "@/lib/squadz-supabase";
+import { useSquadz } from "@/lib/squadz-store";
+import { UserSafetyActions } from "./UserSafetyActions";
 
 type Friend = {
   id: string;
@@ -14,27 +16,39 @@ type Friend = {
   status: "pending" | "accepted" | "blocked";
   created_at: string;
 };
+type RowProfile = Pick<Profile, "id" | "username" | "display_name" | "avatar_url">;
 
 export function FriendsTab() {
   const { user } = useAuth();
+  const { connected } = useSquadz();
   const [rows, setRows] = useState<Friend[]>([]);
   const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
+  const [discover, setDiscover] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
   async function load() {
     if (!user) return;
-    const { data } = await supabase
+    setLoading(true);
+    const { data, error } = await supabase
       .from("friends")
       .select("*")
-      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
-    const list = (data ?? []) as Friend[];
-    setRows(list);
-    const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
-    if (ids.length) {
-      const ps = await fetchProfiles(ids);
-      setProfiles(new Map(ps.map((p) => [p.id, p])));
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+      .order("updated_at", { ascending: false });
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
     }
+    const list = (data ?? []) as Friend[];
+    const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
+    const [friendProfiles, discoverRows] = await Promise.all([
+      fetchProfiles(ids),
+      supabase.from("profiles").select("*").neq("id", user.id).order("username").limit(50),
+    ]);
+    setRows(list);
+    setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));
+    setDiscover((discoverRows.data ?? []) as Profile[]);
     setLoading(false);
   }
 
@@ -43,15 +57,26 @@ export function FriendsTab() {
   const accepted = rows.filter((r) => r.status === "accepted");
   const incoming = rows.filter((r) => r.status === "pending" && r.addressee_id === user?.id);
   const outgoing = rows.filter((r) => r.status === "pending" && r.requester_id === user?.id);
+  const connectedMatches = connected.filter((p) => p.username.toLowerCase().includes(q.toLowerCase()));
 
   const filteredAccepted = useMemo(() => {
-    if (!q) return accepted;
+    if (!q.trim()) return accepted;
     return accepted.filter((r) => {
       const other = r.requester_id === user?.id ? r.addressee_id : r.requester_id;
       const p = profiles.get(other);
       return p?.username?.toLowerCase().includes(q.toLowerCase()) || p?.display_name?.toLowerCase().includes(q.toLowerCase());
     });
   }, [accepted, profiles, q, user]);
+
+  const discoveryResults = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return [];
+    const existing = new Set(rows.flatMap((r) => [r.requester_id, r.addressee_id]));
+    return discover
+      .filter((p) => !existing.has(p.id))
+      .filter((p) => p.username.toLowerCase().includes(needle) || (p.display_name ?? "").toLowerCase().includes(needle))
+      .slice(0, 8);
+  }, [discover, q, rows]);
 
   async function respond(id: string, status: "accepted" | "blocked") {
     const { error } = await supabase.from("friends").update({ status }).eq("id", id);
@@ -63,6 +88,16 @@ export function FriendsTab() {
   async function remove(id: string) {
     const { error } = await supabase.from("friends").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    load();
+  }
+  async function add(profile: Profile) {
+    if (!user) return;
+    const { error } = await supabase.from("friends").upsert(
+      { requester_id: user.id, addressee_id: profile.id, status: "pending" },
+      { onConflict: "requester_id,addressee_id" },
+    );
+    if (error) return toast.error(error.message);
+    toast.success(`Request sent to ${profile.display_name ?? profile.username}`);
     load();
   }
 
@@ -106,20 +141,29 @@ export function FriendsTab() {
           )}
 
           <Section title={`Squad (${accepted.length})`} icon={Users}>
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search friends…"
-              className="w-full mb-3 bg-surface rounded-lg px-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            {filteredAccepted.length === 0 && (
-              <p className="text-sm text-muted-foreground py-6 text-center">No friends yet. Send a request from the Find tab.</p>
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search friends or players…"
+                className="w-full bg-surface rounded-lg pl-9 pr-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            {connectedMatches.map((p) => (
+              <Row key={p.id} profile={{ id: p.id, username: p.username, display_name: p.username, avatar_url: p.avatar }}>
+                <span className="text-xs text-primary font-semibold">Find match</span>
+              </Row>
+            ))}
+            {filteredAccepted.length === 0 && connectedMatches.length === 0 && discoveryResults.length === 0 && (
+              <p className="text-sm text-muted-foreground py-6 text-center">{q.trim() ? "No matches found." : "No friends yet. Send a request from the Find tab."}</p>
             )}
             {filteredAccepted.map((r) => {
               const other = r.requester_id === user.id ? r.addressee_id : r.requester_id;
               const p = profiles.get(other);
               return (
                 <Row key={r.id} profile={p}>
+                  <UserSafetyActions targetId={p?.id} targetLabel={p?.display_name ?? p?.username} onBlocked={() => remove(r.id)} />
                   <Button size="sm" variant="outline" onClick={() => toast("Open chat from the Chat tab")}>
                     <MessageCircle className="h-4 w-4" />
                   </Button>
@@ -127,6 +171,12 @@ export function FriendsTab() {
                 </Row>
               );
             })}
+            {discoveryResults.map((p) => (
+              <Row key={p.id} profile={p}>
+                <UserSafetyActions targetId={p.id} targetLabel={p.display_name ?? p.username} />
+                <Button size="sm" onClick={() => add(p)}><UserPlus className="h-4 w-4" /></Button>
+              </Row>
+            ))}
           </Section>
         </div>
       )}
@@ -145,7 +195,7 @@ function Section({ title, icon: Icon, children }: { title: string; icon: typeof 
   );
 }
 
-function Row({ profile, children }: { profile?: Profile | null; children: React.ReactNode }) {
+function Row({ profile, children }: { profile?: RowProfile | null; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface/60 transition">
       <div className="h-10 w-10 rounded-full bg-surface-2 overflow-hidden shrink-0">
