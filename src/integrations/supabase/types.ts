@@ -396,6 +396,79 @@ export type Database = {
           },
         ]
       }
+      club_wars: {
+        Row: {
+          challenger_club_id: string
+          created_at: string
+          created_by: string
+          defender_club_id: string
+          ends_at: string | null
+          format: string
+          game_title: string
+          id: string
+          ruleset: string
+          starts_at: string | null
+          status: string
+          updated_at: string
+          wager_pool: number
+          winner_club_id: string | null
+        }
+        Insert: {
+          challenger_club_id: string
+          created_at?: string
+          created_by: string
+          defender_club_id: string
+          ends_at?: string | null
+          format?: string
+          game_title: string
+          id?: string
+          ruleset: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          wager_pool?: number
+          winner_club_id?: string | null
+        }
+        Update: {
+          challenger_club_id?: string
+          created_at?: string
+          created_by?: string
+          defender_club_id?: string
+          ends_at?: string | null
+          format?: string
+          game_title?: string
+          id?: string
+          ruleset?: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          wager_pool?: number
+          winner_club_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_wars_challenger_club_id_fkey"
+            columns: ["challenger_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_wars_defender_club_id_fkey"
+            columns: ["defender_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_wars_winner_club_id_fkey"
+            columns: ["winner_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           banner_url: string | null
