@@ -438,7 +438,7 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
   const available = PLATFORMS.filter((p) => !existing.includes(p));
   const [platform, setPlatform] = useState<string>(available[0] ?? "Steam");
   const [tag, setTag] = useState("");
-  const [rank, setRank] = useState("");
+  
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
