@@ -1009,6 +1009,48 @@ export type Database = {
           },
         ]
       }
+      payment_grants: {
+        Row: {
+          amount_paid: number | null
+          created_at: string | null
+          currency: string | null
+          environment: string
+          id: string
+          kind: string
+          metadata: Json | null
+          price_id: string
+          stripe_session_id: string
+          tokens_granted: number | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string | null
+          currency?: string | null
+          environment?: string
+          id?: string
+          kind: string
+          metadata?: Json | null
+          price_id: string
+          stripe_session_id: string
+          tokens_granted?: number | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string | null
+          currency?: string | null
+          environment?: string
+          id?: string
+          kind?: string
+          metadata?: Json | null
+          price_id?: string
+          stripe_session_id?: string
+          tokens_granted?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       play_sessions: {
         Row: {
           ended_at: string | null
@@ -1210,6 +1252,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          price_id: string
+          product_id: string
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          price_id: string
+          product_id: string
+          status?: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          price_id?: string
+          product_id?: string
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       tournament_entries: {
         Row: {
@@ -1532,6 +1622,10 @@ export type Database = {
       club_role_of: {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
+      }
+      has_active_pro_subscription: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
