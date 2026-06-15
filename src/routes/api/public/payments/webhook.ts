@@ -109,10 +109,10 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
 
   // Tournament entry registration
   if (kind === "tournament_entry" && tournamentId) {
-    await supabase
+    await getSupabase()
       .from("tournament_entries")
       .insert({ tournament_id: tournamentId, user_id: userId })
-      .then(() => undefined, (e) => console.error("tournament_entries insert failed", e));
+      .then(() => undefined, (e: unknown) => console.error("tournament_entries insert failed", e));
   }
 }
 
