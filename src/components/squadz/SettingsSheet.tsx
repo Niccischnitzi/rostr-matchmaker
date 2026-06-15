@@ -126,6 +126,19 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
             </Row>
           </Section>
 
+          {isAdmin && (
+            <Link
+              to="/moderation"
+              onClick={() => onOpenChange(false)}
+              className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm font-bold">
+                <ShieldAlert className="h-4 w-4 text-primary" /> Moderation queue
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-primary font-bold">Admin</span>
+            </Link>
+          )}
+
           <div className="pt-4 border-t border-border">
             <Button variant="destructive" className="w-full" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" /> Sign out
