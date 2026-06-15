@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AvailabilityGrid } from "./AvailabilityGrid";
 import { BattleCard } from "./BattleCard";
+import { PurchasesSection } from "./PurchasesSection";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
@@ -322,6 +323,9 @@ export function ProfileTab() {
         <AvailabilityGrid userId={userId!} editable />
       </div>
 
+      {/* Purchases */}
+      <PurchasesSection userId={userId!} />
+
       {/* LFG ad shortcut */}
       <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-center justify-between gap-3">
         <div>
@@ -478,36 +482,20 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
     }
   };
 
-  // Mock OAuth quick-connect: simulates a third-party handshake and inserts a linked_account.
-  const quickConnect = async (provider: "Steam" | "Discord" | "Tracker.gg") => {
-    const platformName = provider === "Tracker.gg" ? "Steam" : provider === "Discord" ? "Discord" : "Steam";
+  // Mock OAuth quick-connect: redirects through /auth/callback/{provider}
+  // which simulates a token-exchange handshake and inserts the linked_account.
+  const quickConnect = (provider: "Steam" | "Discord" | "Tracker.gg") => {
+    const slug = provider === "Tracker.gg" ? "tracker" : provider.toLowerCase();
+    const platformName = provider === "Tracker.gg" ? "Steam" : provider;
     if (existing.includes(platformName)) {
       toast.info(`${platformName} already linked`);
       return;
     }
     setConnecting(provider);
-    // Simulate redirect + token exchange
-    await new Promise((r) => setTimeout(r, 900));
-    const mockTag =
-      provider === "Steam" ? `steamuser_${Math.floor(Math.random() * 9000 + 1000)}` :
-      provider === "Discord" ? `discord_${Math.floor(Math.random() * 9000 + 1000)}#${Math.floor(Math.random() * 9000 + 1000)}` :
-      `tracker_${Math.floor(Math.random() * 9000 + 1000)}`;
-    try {
-      const { error } = await supabase.from("linked_accounts").insert({
-        user_id: userId,
-        platform: platformName,
-        gamertag: mockTag,
-        current_rank_display: provider === "Tracker.gg" ? "Diamond II · 1.45 K/D" : null,
-      });
-      if (error) throw error;
-      qc.invalidateQueries({ queryKey: ["linked-accounts", userId] });
-      toast.success(`${provider} connected`, { description: `Mock account: ${mockTag}` });
-      onClose();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not link");
-    } finally {
-      setConnecting(null);
-    }
+    // Brief visual delay before navigating to the mock callback route.
+    setTimeout(() => {
+      navigate({ to: "/auth/callback/$provider", params: { provider: slug } });
+    }, 250);
   };
 
   return (
