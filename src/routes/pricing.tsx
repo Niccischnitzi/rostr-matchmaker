@@ -24,9 +24,27 @@ const TOKEN_PACKS = [
 ];
 
 const ENTRY_TIERS = [
-  { priceId: "entry_5", price: "$5", label: "Bronze cup" },
-  { priceId: "entry_10", price: "$10", label: "Silver cup" },
-  { priceId: "entry_25", price: "$25", label: "Gold cup" },
+  {
+    priceId: "entry_free",
+    price: "Free",
+    label: "Daily Sprints",
+    blurb: "Daily quick cups. Token rewards, no entry fee.",
+    cta: "Join free",
+  },
+  {
+    priceId: "entry_5",
+    price: "$2 – $5",
+    label: "Weekend Warriors",
+    blurb: "Weekend brackets with paid entry & prize splits.",
+    cta: "Pay entry",
+  },
+  {
+    priceId: "entry_25",
+    price: "$50",
+    label: "Club War Showdowns",
+    blurb: "Inter-club showdowns. High stakes, winner-take-most.",
+    cta: "Buy in",
+  },
 ];
 
 function PricingPage() {
@@ -204,20 +222,18 @@ function PricingPage() {
         )}
 
         {tab === "tournaments" && (
-          <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {ENTRY_TIERS.map((t) => (
               <div key={t.priceId} className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-3">
                 <Trophy className="h-6 w-6 text-amber-500" />
                 <div className="font-semibold">{t.label}</div>
                 <div className="font-display text-3xl font-bold">{t.price}</div>
-                <p className="text-xs text-muted-foreground">
-                  Entry fee contributes to the prize pool. Pick a cup from the Tournaments tab to apply.
-                </p>
+                <p className="text-xs text-muted-foreground">{t.blurb}</p>
                 <button
-                  onClick={() => setActivePrice(t.priceId)}
+                  onClick={() => t.priceId === "entry_free" ? alert("Free cups open in the Tournaments tab.") : setActivePrice(t.priceId)}
                   className="mt-auto rounded-md border border-primary text-primary px-3 py-1.5 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition"
                 >
-                  Pay entry
+                  {t.cta}
                 </button>
               </div>
             ))}

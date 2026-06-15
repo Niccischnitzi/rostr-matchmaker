@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield } from "lucide-react";
+import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield, Swords } from "lucide-react";
+import { ClubWars } from "./ClubWars";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -244,7 +245,7 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
   const [channels, setChannels] = useState<ClubChannel[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
-  const [view, setView] = useState<"channel" | "members">("channel");
+  const [view, setView] = useState<"channel" | "members" | "wars">("channel");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -371,6 +372,16 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
               <Users className="h-4 w-4" />
               Members
             </button>
+            <button
+              onClick={() => setView("wars")}
+              className={cn(
+                "w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-left",
+                view === "wars" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-surface",
+              )}
+            >
+              <Swords className="h-4 w-4" />
+              Club Wars
+            </button>
           </div>
 
           {/* Channel / Members content */}
@@ -383,6 +394,10 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
               />
             ) : view === "members" ? (
               <MembersList members={members} />
+            ) : view === "wars" ? (
+              <div className="p-5">
+                <ClubWars club={club} isOfficer={isOwnerOrOfficer} />
+              </div>
             ) : (
               <p className="p-6 text-sm text-muted-foreground">No channels yet.</p>
             )}
