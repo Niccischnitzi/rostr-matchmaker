@@ -16,6 +16,7 @@ type Friend = {
   status: "pending" | "accepted" | "blocked";
   created_at: string;
 };
+type RowProfile = Pick<Profile, "id" | "username" | "display_name" | "avatar_url">;
 
 export function FriendsTab() {
   const { user } = useAuth();
@@ -150,7 +151,7 @@ export function FriendsTab() {
               />
             </div>
             {connectedMatches.map((p) => (
-              <Row key={p.id} profile={{ username: p.username, display_name: p.username, avatar_url: p.avatar }}>
+              <Row key={p.id} profile={{ id: p.id, username: p.username, display_name: p.username, avatar_url: p.avatar }}>
                 <span className="text-xs text-primary font-semibold">Find match</span>
               </Row>
             ))}
@@ -194,7 +195,7 @@ function Section({ title, icon: Icon, children }: { title: string; icon: typeof 
   );
 }
 
-function Row({ profile, children }: { profile?: Profile | null; children: React.ReactNode }) {
+function Row({ profile, children }: { profile?: RowProfile | null; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface/60 transition">
       <div className="h-10 w-10 rounded-full bg-surface-2 overflow-hidden shrink-0">
