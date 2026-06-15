@@ -222,20 +222,18 @@ function PricingPage() {
         )}
 
         {tab === "tournaments" && (
-          <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {ENTRY_TIERS.map((t) => (
               <div key={t.priceId} className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-3">
                 <Trophy className="h-6 w-6 text-amber-500" />
                 <div className="font-semibold">{t.label}</div>
                 <div className="font-display text-3xl font-bold">{t.price}</div>
-                <p className="text-xs text-muted-foreground">
-                  Entry fee contributes to the prize pool. Pick a cup from the Tournaments tab to apply.
-                </p>
+                <p className="text-xs text-muted-foreground">{t.blurb}</p>
                 <button
-                  onClick={() => setActivePrice(t.priceId)}
+                  onClick={() => t.priceId === "entry_free" ? alert("Free cups open in the Tournaments tab.") : setActivePrice(t.priceId)}
                   className="mt-auto rounded-md border border-primary text-primary px-3 py-1.5 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition"
                 >
-                  Pay entry
+                  {t.cta}
                 </button>
               </div>
             ))}
