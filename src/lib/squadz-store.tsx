@@ -1,8 +1,15 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   initialPlayers, initialClubs, initialChats, initialLFG, initialClips, initialLinked,
   type Player, type Club, type Chat, type LFG, type Clip, type LinkedAccount, type Message,
 } from "./squadz-data";
+
+const MOCK_FRIEND_PROFILE_IDS = [
+  "b39094bf-8e98-480f-9772-45ae9601f084",
+  "ebc0a87f-72d3-4944-9d90-1ec3f3cc35ac",
+];
 
 type Ctx = {
   players: Player[];
@@ -50,8 +57,23 @@ export function SquadzProvider({ children }: { children: ReactNode }) {
     const p = players.find((x) => x.id === id);
     if (!p) return;
     setPlayers((prev) => prev.filter((x) => x.id !== id));
-    if (dir === "squad") setConnected((c) => [p, ...c]);
-    else setSkipped((s) => [id, ...s]);
+    if (dir === "squad") {
+      setConnected((c) => [p, ...c]);
+      void addSwipeFriend(p);
+    } else setSkipped((s) => [id, ...s]);
+  };
+
+  const addSwipeFriend = async (player: Player) => {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth.user?.id;
+    if (!userId) return;
+    const targetId = MOCK_FRIEND_PROFILE_IDS[Math.abs(player.id.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0)) % MOCK_FRIEND_PROFILE_IDS.length];
+    if (targetId === userId) return;
+    const { error } = await supabase.from("friends").upsert(
+      { requester_id: userId, addressee_id: targetId, status: "accepted" },
+      { onConflict: "requester_id,addressee_id" },
+    );
+    if (error) toast.error(`Couldn't add ${player.username} to Friends`, { description: error.message });
   };
 
   const joinClub: Ctx["joinClub"] = (id) =>
