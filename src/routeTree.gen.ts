@@ -14,6 +14,7 @@ import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as AuthCallbackProviderRouteImport } from './routes/auth.callback.$provider'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const PricingRoute = PricingRouteImport.update({
@@ -41,6 +42,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackProviderRoute = AuthCallbackProviderRouteImport.update({
+  id: '/callback/$provider',
+  path: '/callback/$provider',
+  getParentRoute: () => AuthRoute,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -50,27 +56,30 @@ const ApiPublicPaymentsWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/pricing'
     | '/checkout/return'
+    | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/pricing'
     | '/checkout/return'
+    | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -97,12 +108,13 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/pricing'
     | '/checkout/return'
+    | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ModerationRoute: typeof ModerationRoute
   PricingRoute: typeof PricingRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -146,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback/$provider': {
+      id: '/auth/callback/$provider'
+      path: '/callback/$provider'
+      fullPath: '/auth/callback/$provider'
+      preLoaderRoute: typeof AuthCallbackProviderRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -156,9 +175,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthRouteChildren {
+  AuthCallbackProviderRoute: typeof AuthCallbackProviderRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackProviderRoute: AuthCallbackProviderRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ModerationRoute: ModerationRoute,
   PricingRoute: PricingRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
