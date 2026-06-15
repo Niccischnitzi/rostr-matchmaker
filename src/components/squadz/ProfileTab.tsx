@@ -8,6 +8,7 @@ import { Check, Copy, Plus, Trophy, Users, Loader2, Pencil, LogOut, Camera, X, T
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AvailabilityGrid } from "./AvailabilityGrid";
+import { BattleCard } from "./BattleCard";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
@@ -263,6 +264,11 @@ export function ProfileTab() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Battlecard — aggregated stats from linked platforms */}
+      <div className="mt-6">
+        <BattleCard username={profile.username} linkedPlatforms={linked.map((l) => l.platform)} />
       </div>
 
       {/* Linked accounts */}
