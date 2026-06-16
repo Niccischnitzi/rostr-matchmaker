@@ -163,7 +163,18 @@ export function Shell() {
           </div>
         </header>
 
-        <div className="flex-1 pb-20 lg:pb-0">
+        <div
+          className="flex-1 pb-20 lg:pb-0 touch-pan-y"
+          onTouchStart={touch.onTouchStart}
+          onTouchMove={touch.onTouchMove}
+          onTouchEnd={touch.onTouchEnd}
+          style={{
+            transform: swipeDx ? `translateX(${swipeDx}px)` : undefined,
+            transition: swipeDx === 0 ? "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
+            willChange: "transform",
+          }}
+        >
+
           <TabFrame visible={tab === "find"} tabKey={`find-${findSub}`}>
             <SubNav
               items={[
