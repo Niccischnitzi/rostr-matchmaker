@@ -182,26 +182,26 @@ export function Shell() {
 
       {/* Main area */}
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-border bg-background/80 backdrop-blur-xl">
+        {/* Mobile header — ultra-compact */}
+        <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-3 py-2 border-b border-border bg-background/85 backdrop-blur-xl">
           <Brand compact />
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-success pulse-ring" />
-              <span className="text-xs text-muted-foreground">Online</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-success pulse-ring" />
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Online</span>
             </span>
             <button
               onClick={() => setSettingsOpen(true)}
-              className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
+              className="h-7 w-7 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
               aria-label="Settings"
             >
-              <SettingsIcon className="h-4 w-4" />
+              <SettingsIcon className="h-3.5 w-3.5" />
             </button>
           </div>
         </header>
 
         <div
-          className="flex-1 pb-20 lg:pb-0 touch-pan-y"
+          className="flex-1 pb-16 lg:pb-0 touch-pan-y"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -271,11 +271,11 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
+                    "flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5 transition-transform duration-300", active && "scale-110")} />
+                  <Icon className={cn("h-[18px] w-[18px] transition-transform duration-300", active && "scale-110")} />
                   {t.label}
                 </button>
               );
@@ -332,7 +332,7 @@ function SubNav({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="sticky top-0 lg:top-0 z-20 px-4 lg:px-6 pt-3 pb-2 bg-background/90 backdrop-blur-xl border-b border-border">
+    <div className="sticky top-0 lg:top-0 z-20 px-3 lg:px-6 pt-2 pb-1.5 bg-background/90 backdrop-blur-xl border-b border-border">
       <div className="flex gap-1 p-1 rounded-xl bg-surface/60 border border-border w-full overflow-x-auto">
         {items.map((it) => {
           const Icon = it.icon;

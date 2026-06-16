@@ -55,25 +55,42 @@ export function ClubsTab() {
 
   const joined = clubs.filter((c) => memberships.has(c.id));
   const discover = clubs.filter((c) => !memberships.has(c.id));
+  const atLimit = memberships.size >= 1;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-6 lg:pt-10 pb-10">
+    <div className="max-w-5xl mx-auto px-4 pt-4 lg:pt-10 pb-10">
       <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Clubs</h1>
-          <p className="text-sm text-muted-foreground mt-1">Communities and live text channels.</p>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl lg:text-4xl font-black tracking-tight">Clubs</h1>
+          <p className="text-xs lg:text-sm text-muted-foreground mt-0.5">Communities and live text channels.</p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="gap-1.5">
+        <Button
+          onClick={() => {
+            if (atLimit) {
+              toast.error("You're already in a club", { description: "Leave it first — max 1 club per account." });
+              return;
+            }
+            setShowCreate(true);
+          }}
+          className="gap-1.5"
+          variant={atLimit ? "outline" : "default"}
+        >
           <Plus className="h-4 w-4" /> Create Club
         </Button>
       </div>
+
+      {atLimit && (
+        <p className="mt-3 text-[11px] text-muted-foreground rounded-lg bg-surface/60 border border-border px-3 py-2">
+          Max 1 club per account. Leave your current club to join or create another.
+        </p>
+      )}
 
       {loading ? (
         <div className="py-16 grid place-items-center text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
       ) : (
-        <div className="mt-6">
+        <div className="mt-5">
           {joined.length > 0 && (
             <>
               <SectionLabel>Your clubs</SectionLabel>
@@ -94,14 +111,25 @@ export function ClubsTab() {
                   key={c.id}
                   club={c}
                   joined={false}
+                  disabled={atLimit}
                   onOpen={() => setSelected(c.id)}
                   onJoin={async () => {
                     if (!user) return;
+                    if (atLimit) {
+                      toast.error("You're already in a club", { description: "Leave your current club first." });
+                      return;
+                    }
                     const { error } = await supabase
                       .from("club_members")
                       .insert({ club_id: c.id, user_id: user.id, role: "member" });
-                    if (error) toast.error(error.message);
-                    else toast.success(`Joined ${c.name}`);
+                    if (error) {
+                      const msg = /already belong to a club/i.test(error.message)
+                        ? "You're already in a club — leave it first."
+                        : error.message;
+                      toast.error(msg);
+                    } else {
+                      toast.success(`Joined ${c.name}`);
+                    }
                   }}
                 />
               ))}
@@ -132,11 +160,13 @@ function ClubCard({
   joined,
   onOpen,
   onJoin,
+  disabled,
 }: {
   club: Club;
   joined: boolean;
   onOpen: () => void;
   onJoin?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div
@@ -160,12 +190,14 @@ function ClubCard({
           {!joined && onJoin && (
             <Button
               size="sm"
+              variant={disabled ? "outline" : "default"}
               onClick={(e) => {
                 e.stopPropagation();
                 onJoin();
               }}
+              title={disabled ? "Leave your current club first" : undefined}
             >
-              Join
+              {disabled ? "Locked" : "Join"}
             </Button>
           )}
           {joined && <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Joined</span>}
@@ -199,7 +231,10 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
       .single();
     setBusy(false);
     if (error) {
-      toast.error(error.message);
+      const msg = /already belong to a club/i.test(error.message)
+        ? "You're already in a club — leave it first (max 1 per account)."
+        : error.message;
+      toast.error(msg);
       return;
     }
     toast.success("Club created");
