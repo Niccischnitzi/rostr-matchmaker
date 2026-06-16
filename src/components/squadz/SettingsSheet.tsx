@@ -202,3 +202,31 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
     </Row>
   );
 }
+
+function AvatarPickerRow() {
+  const { user } = useAuth();
+  const [current, setCurrent] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
+      .then(({ data }) => setCurrent((data as any)?.avatar_url ?? null));
+  }, [user]);
+  async function pick(url: string) {
+    setCurrent(url);
+    if (!user) return;
+    const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+    if (error) toast.error(error.message);
+    else toast.success("Profile picture updated");
+  }
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="h-14 w-14 rounded-2xl overflow-hidden border-2 border-primary/60 bg-surface-2">
+          {current ? <img src={current} alt="" className="h-full w-full object-cover" /> : null}
+        </div>
+        <p className="text-xs text-muted-foreground">Pick a preset — saved instantly.</p>
+      </div>
+      <AvatarPicker value={current} onChange={pick} />
+    </div>
+  );
+}
