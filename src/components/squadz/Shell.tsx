@@ -306,11 +306,14 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabFrame({ visible, tabKey, children }: { visible: boolean; tabKey: string; children: ReactNode }) {
-  if (!visible) return null;
+function TabFrame({ active, tabKey, children }: { active: boolean; tabKey: string; children: ReactNode }) {
   return (
-    <div key={tabKey} className="arcade-enter relative overflow-hidden">
-      <div className="arcade-sweep" aria-hidden />
+    <div
+      key={tabKey}
+      aria-hidden={!active}
+      className={active ? "tab-mounted-show relative overflow-hidden" : "tab-mounted-hidden"}
+    >
+      {active && <div className="arcade-sweep" aria-hidden />}
       {children}
     </div>
   );
