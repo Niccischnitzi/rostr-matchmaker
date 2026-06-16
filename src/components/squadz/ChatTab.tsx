@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Send, Gamepad2, MessageSquarePlus, Loader2, Search, Phone, Paperclip } from "lucide-react";
+import { ArrowLeft, Send, Gamepad2, MessageSquarePlus, Loader2, Search, Phone, Video, Paperclip } from "lucide-react";
+import { ringPeer } from "./IncomingCallListener";
 import { sfx } from "@/lib/sfx";
 
 import { Button } from "@/components/ui/button";
