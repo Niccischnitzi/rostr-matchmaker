@@ -74,7 +74,7 @@ export function TournamentsTab() {
             const pot = Math.floor(t.entry_fee * tEntries.length * (1 - Number(t.rake_pct) / 100));
             return (
               <div key={t.id} className="rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors">
-                <div className="h-24 bg-gradient-to-br from-primary via-orange-600 to-accent" />
+                <div className="h-24 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent" />
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -183,7 +183,7 @@ function TournamentDetail({ tournament, onBack }: { tournament: Tournament; onBa
     <div className="max-w-3xl mx-auto px-4 pt-6 lg:pt-10">
       <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground mb-4">← Back</button>
       <div className="rounded-3xl border border-border bg-card overflow-hidden">
-        <div className="h-32 bg-gradient-to-br from-primary via-orange-600 to-accent" />
+        <div className="h-32 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent" />
         <div className="p-6">
           <h2 className="font-display text-2xl font-black">{tournament.name}</h2>
           <p className="text-sm text-muted-foreground mt-1">{tournament.game}{tournament.format ? ` · ${tournament.format}` : ""}</p>

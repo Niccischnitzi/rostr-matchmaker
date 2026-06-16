@@ -53,7 +53,7 @@ export function FindTab() {
         age: 21,
         gender: "NB",
         country: r.country ?? "",
-        games: (r.lfg_games ?? []).slice(0, 4).map((g) => ({ name: g, rank: "", color: "#ff5722" })),
+        games: (r.lfg_games ?? []).slice(0, 4).map((g) => ({ name: g, rank: "", color: "var(--primary)" })),
         traits: [] as Trait[],
         isLfg: true,
         lfgTitle: r.lfg_title,
@@ -169,7 +169,7 @@ export function FindTab() {
       <div className="relative">
         {top ? (
           <div key={top.id} className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-2xl flex flex-col soft-rise">
-            <div className="relative h-32 sm:h-40 bg-gradient-to-br from-primary via-orange-600 to-accent">
+            <div className="relative h-32 sm:h-40 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent">
               <div className="absolute inset-0 opacity-30 overflow-hidden" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
               <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
                 {top.isLfg && (

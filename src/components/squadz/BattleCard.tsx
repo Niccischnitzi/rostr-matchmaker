@@ -25,7 +25,7 @@ const BADGES = [
   { key: "verified", label: "Verified", icon: ShieldCheck, color: "from-sky-500 to-blue-600" },
   { key: "toxic-free", label: "Toxic-free", icon: Trophy, color: "from-emerald-500 to-green-600" },
   { key: "tryhard", label: "Tryhard", icon: Flame, color: "from-rose-500 to-red-600" },
-  { key: "coach", label: "Coach", icon: Award, color: "from-amber-500 to-orange-600" },
+  { key: "coach", label: "Coach", icon: Award, color: "from-primary to-primary-glow" },
 ];
 
 export function BattleCard({ username, linkedPlatforms, loading = false }: Props) {
