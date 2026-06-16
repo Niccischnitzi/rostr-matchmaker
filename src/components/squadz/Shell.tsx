@@ -11,6 +11,7 @@ import { CrewsTab } from "./CrewsTab";
 import { SettingsSheet } from "./SettingsSheet";
 import { OnboardingWizard } from "./OnboardingWizard";
 import { RostrMark } from "./RostrMark";
+import { IncomingCallListener } from "./IncomingCallListener";
 import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
@@ -34,6 +35,9 @@ export function Shell() {
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [swipeDx, setSwipeDx] = useState(0);
+  // Track which tabs have ever been visited so we mount them once and just toggle visibility.
+  const [mounted, setMounted] = useState<Set<TabKey>>(() => new Set<TabKey>(["find"]));
+  useEffect(() => { setMounted((m) => m.has(tab) ? m : new Set([...m, tab])); }, [tab]);
 
   useEffect(() => { sfx.nav(); }, [tab]);
   useEffect(() => {
@@ -208,34 +212,38 @@ export function Shell() {
           }}
         >
 
-          <TabFrame visible={tab === "find"} tabKey={`find-${findSub}`}>
-            <SubNav
-              items={[
-                { key: "players", label: "Players", icon: Users },
-                { key: "1v1", label: "1v1 Challenges", icon: Swords },
-              ]}
-              value={findSub}
-              onChange={(v) => setFindSub(v as FindSub)}
-            />
-            {findSub === "players" ? <FindTab /> : <ChallengesTab />}
-          </TabFrame>
-          
-          <TabFrame visible={tab === "clans"} tabKey={`clans-${clansSub}`}>
-            <SubNav
-              items={[
-                { key: "crews", label: "Crews", icon: Shield },
-                { key: "cups", label: "Cups", icon: Trophy },
-              ]}
-              value={clansSub}
-              onChange={(v) => setClansSub(v as ClansSub)}
-            />
-            {clansSub === "crews" && <CrewsTab />}
-            {clansSub === "cups" && <TournamentsTab />}
-          </TabFrame>
+          {/* Tabs are mounted once visited and toggled with display:none — keeps state, eliminates remount jank. */}
+          {mounted.has("find") && (
+            <TabFrame active={tab === "find"} tabKey="find">
+              <SubNav
+                items={[
+                  { key: "players", label: "Players", icon: Users },
+                  { key: "1v1", label: "1v1 Challenges", icon: Swords },
+                ]}
+                value={findSub}
+                onChange={(v) => setFindSub(v as FindSub)}
+              />
+              {findSub === "players" ? <FindTab /> : <ChallengesTab />}
+            </TabFrame>
+          )}
+          {mounted.has("clans") && (
+            <TabFrame active={tab === "clans"} tabKey="clans">
+              <SubNav
+                items={[
+                  { key: "crews", label: "Crews", icon: Shield },
+                  { key: "cups", label: "Cups", icon: Trophy },
+                ]}
+                value={clansSub}
+                onChange={(v) => setClansSub(v as ClansSub)}
+              />
+              {clansSub === "crews" && <CrewsTab />}
+              {clansSub === "cups" && <TournamentsTab />}
+            </TabFrame>
+          )}
+          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"><ChatTab /></TabFrame>}
+          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"><MediaTab /></TabFrame>}
+          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>}
 
-          <TabFrame visible={tab === "chat"} tabKey="chat"><ChatTab /></TabFrame>
-          <TabFrame visible={tab === "media"} tabKey="media"><MediaTab /></TabFrame>
-          <TabFrame visible={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>
 
         </div>
 
@@ -279,6 +287,7 @@ export function Shell() {
       </main>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <OnboardingWizard />
+      <IncomingCallListener />
     </div>
   );
 }
@@ -299,11 +308,14 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabFrame({ visible, tabKey, children }: { visible: boolean; tabKey: string; children: ReactNode }) {
-  if (!visible) return null;
+function TabFrame({ active, tabKey, children }: { active: boolean; tabKey: string; children: ReactNode }) {
   return (
-    <div key={tabKey} className="arcade-enter relative overflow-hidden">
-      <div className="arcade-sweep" aria-hidden />
+    <div
+      key={tabKey}
+      aria-hidden={!active}
+      className={active ? "tab-mounted-show relative overflow-hidden" : "tab-mounted-hidden"}
+    >
+      {active && <div className="arcade-sweep" aria-hidden />}
       {children}
     </div>
   );

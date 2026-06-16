@@ -187,3 +187,47 @@
 }
 
 
+
+/* ---------- Personalized background & motion ---------- */
+body {
+  background-image: var(--app-bg-image, none);
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: background-image 400ms ease;
+}
+
+[data-anim="reduced"] *,
+[data-anim="reduced"] *::before,
+[data-anim="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+[data-density="compact"] {
+  --space-scale: 0.92;
+}
+
+/* GPU-friendly performance class for off-screen tabs we keep mounted */
+@utility tab-mounted-hidden {
+  display: none !important;
+}
+@utility tab-mounted-show {
+  animation: arcade-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  contain: layout paint style;
+}
+
+/* Limit paint cost of long off-screen content (lists, decks, etc.) */
+@utility cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+
+/* Smooth scrolling globally; respected unless OS prefers-reduced-motion */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Smoother button presses */
+button, [role="button"] { transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 200ms ease; }
+button:active, [role="button"]:active { transform: scale(0.97); }
