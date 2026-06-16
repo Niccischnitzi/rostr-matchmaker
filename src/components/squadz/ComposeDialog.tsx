@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { uploadCost, fetchUploadsToday, probeVideo, FREE_RESOLUTION_HEIGHT, PRO_RESOLUTION_HEIGHT } from "@/lib/uploadPricing";
+import { useSubscription } from "@/hooks/use-subscription";
 
 // Free limits
 const FREE_SECS = 15;
@@ -15,7 +17,7 @@ const FREE_BYTES = 25 * 1024 * 1024; // 25 MB
 const MAX_SECS = 300;                 // hard cap 5 min
 const MAX_BYTES = 250 * 1024 * 1024;  // hard cap 250 MB
 
-// 10 tokens per extra 10s beyond free
+// Legacy helper retained for callers that don't use the exponential model.
 export function tokensForDuration(seconds: number) {
   if (seconds <= FREE_SECS) return 0;
   return Math.ceil((seconds - FREE_SECS) / 10) * 10;
@@ -38,8 +40,11 @@ export function ComposeDialog({
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [duration, setDuration] = useState<number>(0);
+  const [resHeight, setResHeight] = useState<number>(0);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { isPro } = useSubscription();
+  const resCap = isPro ? PRO_RESOLUTION_HEIGHT : FREE_RESOLUTION_HEIGHT;
 
   // Wallet balance for token math
   const { data: balance = 0 } = useQuery({
@@ -51,25 +56,37 @@ export function ComposeDialog({
     },
   });
 
+  // Exponential daily upload count → cost = 5 * 2^n (capped 320).
+  const { data: uploadsToday = 0 } = useQuery({
+    queryKey: ["media-uploads-today", userId],
+    enabled: !!userId && open,
+    queryFn: () => fetchUploadsToday(userId),
+  });
+
   useEffect(() => {
     if (!open) {
-      setKind("video"); setTitle(""); setGame(""); setBody(""); setUrl(""); setFile(null); setDuration(0);
+      setKind("video"); setTitle(""); setGame(""); setBody(""); setUrl(""); setFile(null); setDuration(0); setResHeight(0);
     }
   }, [open]);
 
-  const tokensNeeded = file ? tokensForDuration(duration) : 0;
+  const tokensNeeded = file ? uploadCost(uploadsToday) : 0;
   const overSizeFree = !!file && file.size > FREE_BYTES;
   const canPay = balance >= tokensNeeded;
   const tooBig = !!file && file.size > MAX_BYTES;
   const tooLong = !!file && duration > MAX_SECS;
+  const overRes = !!file && resHeight > 0 && resHeight > resCap;
 
-  const pickFile = (f: File) => {
+  const pickFile = async (f: File) => {
     setFile(f);
     setDuration(0);
-    const v = document.createElement("video");
-    v.preload = "metadata";
-    v.onloadedmetadata = () => { setDuration(Math.round(v.duration)); URL.revokeObjectURL(v.src); };
-    v.src = URL.createObjectURL(f);
+    setResHeight(0);
+    try {
+      const meta = await probeVideo(f);
+      setDuration(meta.duration);
+      setResHeight(meta.height);
+    } catch {
+      toast.error("Could not read video metadata");
+    }
   };
 
   const submit = async () => {
