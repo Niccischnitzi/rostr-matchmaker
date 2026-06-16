@@ -105,17 +105,44 @@ export function ClubWars({ club, isOfficer }: { club: Club; isOfficer: boolean }
     else toast.success("War updated");
   }
 
+  const completedCount = useMemo(() => history.filter((h) => h.status === "completed").length, [history]);
+  const winsCount = useMemo(() => history.filter((h) => h.status === "completed" && h.winner_club_id === club.id).length, [history, club.id]);
+  const winRate = completedCount > 0 ? Math.round((winsCount / completedCount) * 100) : 0;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Swords className="h-5 w-5 text-primary" />
-          <h3 className="font-display text-xl font-black">Club Wars</h3>
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/10 to-transparent" />
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 15% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 65%, white 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+        <div className="relative p-5 sm:p-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-primary">
+              <Swords className="h-5 w-5" />
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold">Club Wars</p>
+            </div>
+            <h3 className="font-display text-2xl sm:text-3xl font-black mt-1">{club.name}</h3>
+            <p className="text-xs text-muted-foreground mt-1">Challenge rivals. Stake tokens. Earn glory.</p>
+          </div>
+          <div className="flex gap-2">
+            <StatPill label="Active" value={active.length} icon={Flame} />
+            <StatPill label="Wins" value={winsCount} icon={Trophy} />
+            <StatPill label="Win %" value={`${winRate}%`} icon={null} />
+          </div>
         </div>
         {isOfficer && (
-          <Button size="sm" className="gap-1.5" onClick={() => setShowChallenge(true)}>
-            <Plus className="h-4 w-4" /> Challenge a club
-          </Button>
+          <div className="relative px-5 sm:px-6 pb-5">
+            <Button size="sm" className="gap-1.5 rounded-full glow-orange" onClick={() => setShowChallenge(true)}>
+              <Plus className="h-4 w-4" /> Challenge a club
+            </Button>
+          </div>
         )}
       </div>
 
@@ -231,6 +258,18 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
       {message}
+    </div>
+  );
+}
+
+function StatPill({ label, value, icon: Icon }: { label: string; value: number | string; icon: React.ComponentType<{ className?: string }> | null }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background/70 backdrop-blur px-3 py-2 text-center min-w-[64px]">
+      <div className="flex items-center justify-center gap-1 text-primary">
+        {Icon && <Icon className="h-3.5 w-3.5" />}
+        <span className="font-display text-lg font-black leading-none">{value}</span>
+      </div>
+      <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-1">{label}</p>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Rostr — Your gaming social hub" },
-      { name: "description", content: "Find squads, join clubs, share clips, and link every gaming platform in one passport." },
+      { name: "description", content: "Build your rostr, join clubs, share clips, and link every gaming platform in one passport." },
     ],
   }),
   component: Index,

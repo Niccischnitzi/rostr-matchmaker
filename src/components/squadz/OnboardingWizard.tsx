@@ -12,6 +12,10 @@ import { sfx } from "@/lib/sfx";
 const TRAITS = ["Toxic-free", "Tryhard", "Chill", "Shot-caller", "Night Owl", "Funny", "Mic'd up"];
 const GAMES = ["Valorant", "Apex", "CS2", "Fortnite", "League", "Rocket League", "Overwatch", "Warzone", "Minecraft", "Other"];
 
+const AVATAR_SEEDS = ["nova", "ghost", "kairo", "lyric", "vexen", "halcyon", "blaze", "pixel", "echo", "raven", "zenith", "frost"];
+const presetAvatar = (seed: string) =>
+  `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${seed}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`;
+
 export function OnboardingWizard() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -23,6 +27,7 @@ export function OnboardingWizard() {
   const [country, setCountry] = useState("");
   const [bio, setBio] = useState("");
   const [dob, setDob] = useState("");
+  const [avatarSeed, setAvatarSeed] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +65,7 @@ export function OnboardingWizard() {
         date_of_birth: dob || null,
         onboarded_at: new Date().toISOString(),
         lfg_games: games,
+        ...(avatarSeed ? { avatar_url: presetAvatar(avatarSeed) } : {}),
       } as any).eq("id", user.id);
       if (error) throw error;
       sfx.win();
@@ -74,14 +80,38 @@ export function OnboardingWizard() {
 
   const steps = [
     {
-      title: "Welcome to ostr",
+      title: "Welcome to Rostr",
       icon: Sparkles,
       body: (
         <div className="text-center">
           <RostrMark size={96} className="mx-auto rounded-2xl" />
           <p className="mt-4 text-sm text-muted-foreground">
-            Let's get you set up so you find your squad fast. Takes 30 seconds.
+            Let's get you set up so you build your rostr fast. Takes 30 seconds.
           </p>
+        </div>
+      ),
+    },
+    {
+      title: "Pick a starter avatar",
+      icon: Sparkles,
+      body: (
+        <div>
+          <p className="text-xs text-muted-foreground mb-3">Choose a preset look — you can upload your own later.</p>
+          <div className="grid grid-cols-4 gap-3">
+            {AVATAR_SEEDS.map((seed) => {
+              const on = avatarSeed === seed;
+              return (
+                <button
+                  key={seed}
+                  type="button"
+                  onClick={() => { sfx.tap(); setAvatarSeed(seed); }}
+                  className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all ${on ? "border-primary ring-2 ring-primary/40 scale-105" : "border-border hover:border-primary/50"}`}
+                >
+                  <img src={presetAvatar(seed)} alt={seed} className="h-full w-full object-cover" />
+                </button>
+              );
+            })}
+          </div>
         </div>
       ),
     },

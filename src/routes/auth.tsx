@@ -11,7 +11,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Rostr" },
-      { name: "description", content: "Sign in or create your Rostr account to find your squad." },
+      { name: "description", content: "Sign in or create your Rostr account to find your players." },
     ],
   }),
   component: AuthPage,
