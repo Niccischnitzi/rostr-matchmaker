@@ -1,23 +1,54 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ACCENTS, BACKGROUNDS, FONT_FAMILIES,
-  loadCustomization, saveCustomization,
+  loadCustomization, saveCustomization, previewCustomization, applyCustomization,
   type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey,
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw } from "lucide-react";
+import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sfx } from "@/lib/sfx";
+import { toast } from "sonner";
 
 export function ThemeCustomizer() {
-  const [c, setC] = useState<Customization>(() => loadCustomization());
-  const [ready, setReady] = useState(false);
-  useEffect(() => { setC(loadCustomization()); setReady(true); }, []);
-  useEffect(() => { if (ready) saveCustomization(c); }, [c, ready]);
+  const [saved, setSaved] = useState<Customization>(() => loadCustomization());
+  const [draft, setDraft] = useState<Customization>(() => loadCustomization());
 
-  const set = <K extends keyof Customization>(k: K, v: Customization[K]) => { sfx.tap(); setC((p) => ({ ...p, [k]: v })); };
+  useEffect(() => {
+    const loaded = loadCustomization();
+    setSaved(loaded);
+    setDraft(loaded);
+  }, []);
+
+  // Live preview while editing — never persists.
+  useEffect(() => { previewCustomization(draft); }, [draft]);
+
+  const dirty = useMemo(() => JSON.stringify(saved) !== JSON.stringify(draft), [saved, draft]);
+
+  const set = <K extends keyof Customization>(k: K, v: Customization[K]) => {
+    sfx.tap();
+    setDraft((p) => ({ ...p, [k]: v }));
+  };
+
+  const handleSave = () => {
+    saveCustomization(draft);
+    setSaved(draft);
+    sfx.tap();
+    toast.success("Theme saved — applied everywhere");
+  };
+
+  const handleDiscard = () => {
+    setDraft(saved);
+    applyCustomization(saved);
+    sfx.tap();
+  };
+
+  const handleReset = () => {
+    setDraft(DEFAULT_CUSTOMIZATION);
+    sfx.tap();
+  };
 
   return (
     <div className="space-y-5">
@@ -25,7 +56,7 @@ export function ThemeCustomizer() {
         <div className="grid grid-cols-4 gap-2">
           {(Object.keys(ACCENTS) as AccentKey[]).map((k) => {
             const a = ACCENTS[k];
-            const on = c.accent === k;
+            const on = draft.accent === k;
             return (
               <button
                 key={k}
@@ -49,7 +80,7 @@ export function ThemeCustomizer() {
         <div className="grid grid-cols-3 gap-2">
           {(Object.keys(BACKGROUNDS) as BackgroundKey[]).map((k) => {
             const b = BACKGROUNDS[k];
-            const on = c.background === k;
+            const on = draft.background === k;
             return (
               <button
                 key={k}
@@ -72,7 +103,7 @@ export function ThemeCustomizer() {
         <div className="grid grid-cols-2 gap-2">
           {(Object.keys(FONT_FAMILIES) as FontKey[]).map((k) => {
             const f = FONT_FAMILIES[k];
-            const on = c.font === k;
+            const on = draft.font === k;
             return (
               <button
                 key={k}
@@ -96,7 +127,7 @@ export function ThemeCustomizer() {
             <button
               key={k}
               onClick={() => set("density", k)}
-              className={cn("px-3 py-2.5 rounded-xl border-2 text-sm font-bold capitalize transition-all", c.density === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
+              className={cn("px-3 py-2.5 rounded-xl border-2 text-sm font-bold capitalize transition-all", draft.density === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
             >{k}</button>
           ))}
         </div>
@@ -108,17 +139,42 @@ export function ThemeCustomizer() {
             <button
               key={k}
               onClick={() => set("anim", k)}
-              className={cn("px-2 py-2 rounded-xl border-2 text-xs font-bold capitalize transition-all", c.anim === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
+              className={cn("px-2 py-2 rounded-xl border-2 text-xs font-bold capitalize transition-all", draft.anim === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
             >{k}</button>
           ))}
         </div>
       </Group>
 
-      <Group icon={Wand2} title={`Corner radius — ${c.radius}px`}>
-        <Slider min={2} max={28} step={1} value={[c.radius]} onValueChange={(v) => set("radius", v[0])} />
+      <Group icon={Wand2} title={`Corner radius — ${draft.radius}px`}>
+        <Slider min={2} max={28} step={1} value={[draft.radius]} onValueChange={(v) => set("radius", v[0])} />
       </Group>
 
-      <Button variant="outline" className="w-full" onClick={() => { sfx.tap(); setC(DEFAULT_CUSTOMIZATION); }}>
+      {/* Sticky action bar */}
+      <div className="sticky bottom-0 -mx-1 pt-3">
+        <div className={cn(
+          "rounded-2xl border bg-surface/90 backdrop-blur-xl p-3 flex items-center gap-2 transition-all",
+          dirty ? "border-primary shadow-[0_10px_40px_-10px_color-mix(in_oklab,var(--primary)_50%,transparent)]" : "border-border"
+        )}>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold">
+              {dirty ? "Unsaved changes" : "All changes saved"}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              {dirty ? "Preview is live — save to keep across refresh." : "Theme applied across every tab."}
+            </p>
+          </div>
+          {dirty && (
+            <Button variant="ghost" size="sm" onClick={handleDiscard} className="h-9">
+              <Undo2 className="h-4 w-4 mr-1" /> Discard
+            </Button>
+          )}
+          <Button size="sm" onClick={handleSave} disabled={!dirty} className="h-9 font-bold">
+            <Check className="h-4 w-4 mr-1" /> Save changes
+          </Button>
+        </div>
+      </div>
+
+      <Button variant="outline" className="w-full" onClick={handleReset}>
         <RotateCcw className="h-4 w-4 mr-2" /> Reset to defaults
       </Button>
     </div>

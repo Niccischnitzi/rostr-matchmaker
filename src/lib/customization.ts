@@ -107,7 +107,13 @@ export function loadCustomization(): Customization {
 export function saveCustomization(c: Customization) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(c));
+  applyCustomization(c);
   window.dispatchEvent(new Event("rostr:custom-changed"));
+}
+
+// Live preview without persisting — used by the customizer panel.
+export function previewCustomization(c: Customization) {
+  applyCustomization(c);
 }
 
 export function applyCustomization(c: Customization = loadCustomization()) {
