@@ -85,6 +85,14 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
+          <Section icon={UserCircle} title="Profile picture">
+            <AvatarPickerRow />
+          </Section>
+
+          <Section icon={Wand2} title="Customize your Rostr">
+            <ThemeCustomizer />
+          </Section>
+
           <Section icon={Palette} title="Appearance">
             <Row label="Theme">
               <Select value={prefs.theme} onValueChange={(v) => set("theme", v as Prefs["theme"])}>
