@@ -471,6 +471,7 @@ export type Database = {
       }
       clubs: {
         Row: {
+          accent: string | null
           banner_url: string | null
           created_at: string
           description: string | null
@@ -479,9 +480,11 @@ export type Database = {
           name: string
           owner_id: string
           tag: string | null
+          tagline: string | null
           updated_at: string
         }
         Insert: {
+          accent?: string | null
           banner_url?: string | null
           created_at?: string
           description?: string | null
@@ -490,9 +493,11 @@ export type Database = {
           name: string
           owner_id: string
           tag?: string | null
+          tagline?: string | null
           updated_at?: string
         }
         Update: {
+          accent?: string | null
           banner_url?: string | null
           created_at?: string
           description?: string | null
@@ -501,6 +506,7 @@ export type Database = {
           name?: string
           owner_id?: string
           tag?: string | null
+          tagline?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1567,9 +1573,11 @@ export type Database = {
       }
       user_reports: {
         Row: {
+          context: Json | null
           created_at: string
           details: string | null
           id: string
+          proof_url: string | null
           reason: string
           reporter_id: string
           resolved_at: string | null
@@ -1579,9 +1587,11 @@ export type Database = {
           target_type: Database["public"]["Enums"]["report_target"]
         }
         Insert: {
+          context?: Json | null
           created_at?: string
           details?: string | null
           id?: string
+          proof_url?: string | null
           reason: string
           reporter_id: string
           resolved_at?: string | null
@@ -1591,9 +1601,11 @@ export type Database = {
           target_type: Database["public"]["Enums"]["report_target"]
         }
         Update: {
+          context?: Json | null
           created_at?: string
           details?: string | null
           id?: string
+          proof_url?: string | null
           reason?: string
           reporter_id?: string
           resolved_at?: string | null
@@ -1751,6 +1763,8 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      media_upload_cost: { Args: { _user: string }; Returns: number }
+      media_uploads_today: { Args: { _user: string }; Returns: number }
       record_daily_login: {
         Args: never
         Returns: {
