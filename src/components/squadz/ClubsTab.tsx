@@ -160,11 +160,13 @@ function ClubCard({
   joined,
   onOpen,
   onJoin,
+  disabled,
 }: {
   club: Club;
   joined: boolean;
   onOpen: () => void;
   onJoin?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div
