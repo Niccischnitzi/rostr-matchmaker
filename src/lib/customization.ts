@@ -120,16 +120,21 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   const accent = ACCENTS[c.accent] ?? ACCENTS.orange;
-  // Core accent tokens — override BOTH light and dark palettes so every
-  // utility (bg-primary, text-primary, ring-primary, bg-accent, etc.) shifts.
-  root.style.setProperty("--primary", accent.primary);
-  root.style.setProperty("--primary-foreground", "oklch(0.08 0 0)");
-  root.style.setProperty("--primary-glow", accent.glow);
-  root.style.setProperty("--ring", accent.ring);
-  // Soft accent surface derived from the chosen accent so accent-colored
-  // chips/badges follow the palette in both light and dark mode.
-  root.style.setProperty("--accent", `color-mix(in oklab, ${accent.primary} 18%, var(--background))`);
-  root.style.setProperty("--accent-foreground", accent.primary);
+
+  // Apply accent tokens to <html> AND every `.dark` wrapper element. Some
+  // routes wrap their tree in <div className="dark"> (see routes/index.tsx),
+  // and CSS variables on a closer ancestor would otherwise beat ours.
+  const targets: HTMLElement[] = [root, ...Array.from(document.querySelectorAll<HTMLElement>(".dark"))];
+  const accentSurface = `color-mix(in oklab, ${accent.primary} 18%, var(--background))`;
+  for (const el of targets) {
+    el.style.setProperty("--primary", accent.primary);
+    el.style.setProperty("--primary-foreground", "oklch(0.08 0 0)");
+    el.style.setProperty("--primary-glow", accent.glow);
+    el.style.setProperty("--ring", accent.ring);
+    el.style.setProperty("--accent", accentSurface);
+    el.style.setProperty("--accent-foreground", accent.primary);
+  }
+
   root.style.setProperty("--radius", `${c.radius / 16}rem`);
   root.style.setProperty("--font-display", FONT_FAMILIES[c.font].family);
 
