@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthCallbackProviderRouteImport } from './routes/auth.callback.$provider'
+import { Route as ApiPublicSteamReturnRouteImport } from './routes/api/public/steam.return'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const PricingRoute = PricingRouteImport.update({
@@ -47,6 +48,11 @@ const AuthCallbackProviderRoute = AuthCallbackProviderRouteImport.update({
   path: '/callback/$provider',
   getParentRoute: () => AuthRoute,
 } as any)
+const ApiPublicSteamReturnRoute = ApiPublicSteamReturnRouteImport.update({
+  id: '/api/public/steam/return',
+  path: '/api/public/steam/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -81,6 +89,7 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -92,6 +101,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
+    | '/api/public/steam/return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
+    | '/api/public/steam/return'
   id:
     | '__root__'
     | '/'
@@ -110,6 +121,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
+    | '/api/public/steam/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicSteamReturnRoute: typeof ApiPublicSteamReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackProviderRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/api/public/steam/return': {
+      id: '/api/public/steam/return'
+      path: '/api/public/steam/return'
+      fullPath: '/api/public/steam/return'
+      preLoaderRoute: typeof ApiPublicSteamReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -192,6 +212,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicSteamReturnRoute: ApiPublicSteamReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
