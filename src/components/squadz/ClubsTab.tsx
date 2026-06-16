@@ -231,7 +231,10 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
       .single();
     setBusy(false);
     if (error) {
-      toast.error(error.message);
+      const msg = /already belong to a club/i.test(error.message)
+        ? "You're already in a club — leave it first (max 1 per account)."
+        : error.message;
+      toast.error(msg);
       return;
     }
     toast.success("Club created");
