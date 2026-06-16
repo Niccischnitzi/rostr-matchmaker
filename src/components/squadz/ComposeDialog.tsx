@@ -97,6 +97,7 @@ export function ComposeDialog({
       if (kind === "video") {
         if (!file) { toast.error("Pick a video file"); return; }
         if (tooBig || tooLong) { toast.error("File exceeds 5 min / 250 MB hard cap"); return; }
+        if (overRes) { toast.error(`Resolution capped at ${resCap}p${isPro ? "" : " — upgrade to Pro for 1080p"}`); return; }
         if (tokensNeeded > 0 && !canPay) {
           toast.error(`Needs ${tokensNeeded} tokens — you have ${balance}`);
           return;
@@ -178,13 +179,15 @@ export function ComposeDialog({
               {file ? (
                 <div className="text-center">
                   <p className="font-bold text-sm truncate max-w-xs">{file.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024 / 1024).toFixed(1)} MB · {duration || "?"}s</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(file.size / 1024 / 1024).toFixed(1)} MB · {duration || "?"}s{resHeight ? ` · ${resHeight}p` : ""}
+                  </p>
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
                   <Upload className="h-6 w-6 mx-auto" />
                   <p className="text-sm font-semibold mt-1">Choose video</p>
-                  <p className="text-[10px]">MP4 / WebM / MOV</p>
+                  <p className="text-[10px]">MP4 / WebM / MOV · {resCap}p max{isPro ? "" : " (Pro: 1080p)"}</p>
                 </div>
               )}
             </button>
@@ -198,14 +201,20 @@ export function ComposeDialog({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5 font-semibold">
                     <Coins className="h-3.5 w-3.5 text-primary" />
-                    {tokensNeeded === 0 ? "Free — under 15s" : `${tokensNeeded} tokens`}
+                    {tokensNeeded === 0 ? "Free upload" : `${tokensNeeded} tokens`}
                   </span>
                   <span className="text-muted-foreground">Balance: {balance}</span>
                 </div>
-                {overSizeFree && (
-                  <p className="mt-1 text-muted-foreground">
-                    Over 25 MB. Pro membership lifts this — for now tokens cover it.
+                <p className="mt-1 text-muted-foreground">
+                  Daily cost doubles per upload (5 → 10 → 20 …), capped at 320. You've posted {uploadsToday} today.
+                </p>
+                {overRes && (
+                  <p className="mt-1 text-destructive">
+                    {resHeight}p exceeds your {resCap}p cap.{isPro ? "" : " Upgrade to Pro for 1080p."}
                   </p>
+                )}
+                {overSizeFree && (
+                  <p className="mt-1 text-muted-foreground">Over 25 MB.</p>
                 )}
                 {tooBig && <p className="mt-1 text-destructive">Over 250 MB hard cap.</p>}
                 {tooLong && <p className="mt-1 text-destructive">Over 5 min hard cap.</p>}
