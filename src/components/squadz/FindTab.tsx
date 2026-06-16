@@ -70,6 +70,8 @@ export function FindTab() {
   ];
 
   const filtered = deck.filter((p) => {
+    // Extra safety: hide your own LFG ad
+    if (p.isLfg && user?.id && p.realId === user.id) return false;
     // Skip age/trait filters for LFG cards (no real data)
     if (p.isLfg) {
       if (countryFilter && !p.country.toLowerCase().includes(countryFilter.toLowerCase())) return false;
