@@ -271,11 +271,11 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
+                    "flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5 transition-transform duration-300", active && "scale-110")} />
+                  <Icon className={cn("h-[18px] w-[18px] transition-transform duration-300", active && "scale-110")} />
                   {t.label}
                 </button>
               );
