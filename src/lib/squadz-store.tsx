@@ -34,7 +34,7 @@ type Ctx = {
 
 
   linked: LinkedAccount[];
-  status: "Online" | "In-Game" | "Busy" | "Looking for Squad";
+  status: "Online" | "In-Game" | "Busy" | "Looking for Rostr";
   setStatus: (s: Ctx["status"]) => void;
 };
 

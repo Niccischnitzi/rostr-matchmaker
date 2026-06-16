@@ -34,7 +34,7 @@ export function FindTab() {
   const handle = (dir: "skip" | "squad") => {
     if (!top) return;
     swipe(top.id, dir);
-    if (dir === "squad") { sfx.like(); toast.success(`Squad request sent to ${top.username}!`, { description: "They'll get notified instantly." }); }
+    if (dir === "squad") { sfx.like(); toast.success(`Added ${top.username} to your rostr!`, { description: "They'll get notified instantly." }); }
     else sfx.tap();
   };
 
@@ -43,7 +43,7 @@ export function FindTab() {
     <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10">
       <div className="flex items-end justify-between gap-3 mb-6">
         <div>
-          <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Find your <span className="text-gradient-orange">squad</span></h1>
+          <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Find your <span className="text-gradient-orange">rostr</span></h1>
           <p className="text-sm text-muted-foreground mt-1">Swipe through players matched to your playstyle.</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -172,7 +172,7 @@ export function FindTab() {
 
       {connected.length > 0 && (
         <div className="mt-8">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Your squad ({connected.length})</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Your rostr ({connected.length})</p>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
             {connected.map((c) => (
               <div key={c.id} className="shrink-0 w-20 text-center">
