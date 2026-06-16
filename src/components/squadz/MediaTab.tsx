@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { ComposeDialog } from "./ComposeDialog";
 import { sfx } from "@/lib/sfx";
 import { UserSafetyActions } from "./UserSafetyActions";
+import { ReelsView } from "./ReelsView";
 
 type MediaPost = {
   id: string;
@@ -32,7 +33,7 @@ export function MediaTab() {
   const qc = useQueryClient();
   const { clips, likeClip, likedClips } = useSquadz();
   const [composeOpen, setComposeOpen] = useState(false);
-  const [tab, setTab] = useState<"feed" | "saved">("feed");
+  const [tab, setTab] = useState<"feed" | "reels" | "saved">("feed");
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
 
   const { data: userId } = useQuery({
@@ -261,7 +262,7 @@ export function MediaTab() {
       </div>
 
       <div className="inline-flex rounded-full bg-surface p-1 border border-border mb-5">
-        {([["feed", "Feed"], ["saved", `Saved (${mySaves.size})`]] as const).map(([k, l]) => (
+        {([["feed", "Feed"], ["reels", "Reels"], ["saved", `Saved (${mySaves.size})`]] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setTab(k); sfx.tap(); }}
             className={cn("px-4 py-1.5 rounded-full text-sm font-semibold transition-colors",
               tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
@@ -270,7 +271,9 @@ export function MediaTab() {
         ))}
       </div>
 
-      {isLoading ? (
+      {tab === "reels" ? <ReelsView /> : null}
+
+      {tab === "reels" ? null : isLoading ? (
         <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
       ) : visiblePosts.length > 0 ? (
         <section className="mb-10">
