@@ -91,6 +91,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
+        // Sprint 5 — let Stripe surface Twint in CH. Stripe ignores unsupported
+        // methods per region, so this is safe globally. Requires Twint to be
+        // activated in the Stripe dashboard for the connected account.
+        payment_method_types: ["card", "twint"],
         ...(!isRecurring && {
           payment_intent_data: { description: productDescription, metadata },
         }),
