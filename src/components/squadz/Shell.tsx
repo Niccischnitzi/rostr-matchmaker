@@ -165,9 +165,9 @@ export function Shell() {
 
         <div
           className="flex-1 pb-20 lg:pb-0 touch-pan-y"
-          onTouchStart={touch.onTouchStart}
-          onTouchMove={touch.onTouchMove}
-          onTouchEnd={touch.onTouchEnd}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           style={{
             transform: swipeDx ? `translateX(${swipeDx}px)` : undefined,
             transition: swipeDx === 0 ? "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
