@@ -189,12 +189,18 @@
 
 
 /* ---------- Personalized background & motion ---------- */
-body {
+/* Paint the custom background on <html> behind everything so it shows through
+   in every tab (light + dark), regardless of wrapper bg-* utilities. */
+html {
+  background-color: var(--color-background);
   background-image: var(--app-bg-image, none);
   background-attachment: fixed;
   background-size: cover;
   background-repeat: no-repeat;
-  transition: background-image 400ms ease;
+  transition: background-image 400ms ease, background-color 300ms ease;
+}
+body {
+  background-color: transparent;
 }
 
 [data-anim="reduced"] *,
