@@ -12,6 +12,10 @@ import { sfx } from "@/lib/sfx";
 const TRAITS = ["Toxic-free", "Tryhard", "Chill", "Shot-caller", "Night Owl", "Funny", "Mic'd up"];
 const GAMES = ["Valorant", "Apex", "CS2", "Fortnite", "League", "Rocket League", "Overwatch", "Warzone", "Minecraft", "Other"];
 
+const AVATAR_SEEDS = ["nova", "ghost", "kairo", "lyric", "vexen", "halcyon", "blaze", "pixel", "echo", "raven", "zenith", "frost"];
+const presetAvatar = (seed: string) =>
+  `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${seed}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`;
+
 export function OnboardingWizard() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -23,6 +27,7 @@ export function OnboardingWizard() {
   const [country, setCountry] = useState("");
   const [bio, setBio] = useState("");
   const [dob, setDob] = useState("");
+  const [avatarSeed, setAvatarSeed] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +65,7 @@ export function OnboardingWizard() {
         date_of_birth: dob || null,
         onboarded_at: new Date().toISOString(),
         lfg_games: games,
+        ...(avatarSeed ? { avatar_url: presetAvatar(avatarSeed) } : {}),
       } as any).eq("id", user.id);
       if (error) throw error;
       sfx.win();
