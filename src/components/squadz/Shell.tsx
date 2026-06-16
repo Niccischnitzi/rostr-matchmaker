@@ -33,6 +33,7 @@ export function Shell() {
   const [findSub, setFindSub] = useState<FindSub>("players");
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [swipeDx, setSwipeDx] = useState(0);
 
   useEffect(() => { sfx.nav(); }, [tab]);
   useEffect(() => {
@@ -40,6 +41,66 @@ export function Shell() {
       if (r) toast.success(`Day ${r.streak} streak! +${r.reward} tokens`, { description: "Login bonus credited." });
     });
   }, []);
+
+  const goTab = (dir: 1 | -1) => {
+    const idx = tabs.findIndex((t) => t.key === tab);
+    const next = tabs[(idx + dir + tabs.length) % tabs.length];
+    if (next) setTab(next.key);
+  };
+
+  // Touch swipe (mobile/tablet)
+  const touch = (() => {
+    let startX = 0; let startY = 0; let active = false;
+    return {
+      onTouchStart: (e: React.TouchEvent) => {
+        const t = e.touches[0]; startX = t.clientX; startY = t.clientY; active = true; setSwipeDx(0);
+      },
+      onTouchMove: (e: React.TouchEvent) => {
+        if (!active) return;
+        const t = e.touches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          setSwipeDx(Math.max(-120, Math.min(120, dx * 0.4)));
+        }
+      },
+      onTouchEnd: (e: React.TouchEvent) => {
+        if (!active) return;
+        active = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        setSwipeDx(0);
+        if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          goTab(dx < 0 ? 1 : -1);
+        }
+      },
+    };
+  })();
+
+  // Trackpad horizontal wheel (desktop/laptop)
+  useEffect(() => {
+    let cooldown = false;
+    const onWheel = (e: WheelEvent) => {
+      // Only trigger on dominantly horizontal gestures
+      if (Math.abs(e.deltaX) < 40 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.2) return;
+      // Ignore wheel events over horizontally scrollable elements (chat lists etc)
+      const target = e.target as HTMLElement | null;
+      let el: HTMLElement | null = target;
+      while (el && el !== document.body) {
+        const style = window.getComputedStyle(el);
+        if ((style.overflowX === "auto" || style.overflowX === "scroll") && el.scrollWidth > el.clientWidth) return;
+        el = el.parentElement;
+      }
+      if (cooldown) return;
+      cooldown = true;
+      goTab(e.deltaX > 0 ? 1 : -1);
+      setTimeout(() => { cooldown = false; }, 450);
+    };
+    window.addEventListener("wheel", onWheel, { passive: true });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [tab]);
+
 
 
 
@@ -102,7 +163,18 @@ export function Shell() {
           </div>
         </header>
 
-        <div className="flex-1 pb-20 lg:pb-0">
+        <div
+          className="flex-1 pb-20 lg:pb-0 touch-pan-y"
+          onTouchStart={touch.onTouchStart}
+          onTouchMove={touch.onTouchMove}
+          onTouchEnd={touch.onTouchEnd}
+          style={{
+            transform: swipeDx ? `translateX(${swipeDx}px)` : undefined,
+            transition: swipeDx === 0 ? "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)" : undefined,
+            willChange: "transform",
+          }}
+        >
+
           <TabFrame visible={tab === "find"} tabKey={`find-${findSub}`}>
             <SubNav
               items={[
