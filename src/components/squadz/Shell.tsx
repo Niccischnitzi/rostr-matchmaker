@@ -320,7 +320,7 @@ function SubNav({
   onChange: (v: string) => void;
 }) {
   return (
-    <div data-swipe-tabbar="true" className="sticky top-0 lg:top-0 z-20 px-4 lg:px-6 pt-3 pb-2 bg-background/90 backdrop-blur-xl border-b border-border">
+    <div className="sticky top-0 lg:top-0 z-20 px-4 lg:px-6 pt-3 pb-2 bg-background/90 backdrop-blur-xl border-b border-border">
       <div className="flex gap-1 p-1 rounded-xl bg-surface/60 border border-border w-full overflow-x-auto">
         {items.map((it) => {
           const Icon = it.icon;
