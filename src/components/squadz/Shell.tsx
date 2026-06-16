@@ -240,8 +240,21 @@ export function Shell() {
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-          <div className="grid grid-cols-5">
+        <nav
+          data-swipe-tabbar="true"
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl"
+        >
+          <div className="relative grid grid-cols-5">
+            {/* Animated active indicator */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute top-0 h-[2px] bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.6)]"
+              style={{
+                width: `${100 / tabs.length}%`,
+                left: `${(tabs.findIndex(t => t.key === tab) * 100) / tabs.length}%`,
+                transition: "left 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            />
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.key;
@@ -250,19 +263,18 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
-                    active ? "text-primary" : "text-muted-foreground"
+                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <div className={cn("relative", active && "after:absolute after:-top-2.5 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-6 after:rounded-full after:bg-primary")}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+                  <Icon className={cn("h-5 w-5 transition-transform duration-300", active && "scale-110")} />
                   {t.label}
                 </button>
               );
             })}
           </div>
         </nav>
+
 
       </main>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
