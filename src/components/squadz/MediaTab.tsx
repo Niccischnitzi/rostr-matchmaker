@@ -9,6 +9,7 @@ import { ComposeDialog } from "./ComposeDialog";
 import { sfx } from "@/lib/sfx";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { ReelsView } from "./ReelsView";
+import { useVisibleVideo } from "@/hooks/use-visible-video";
 
 type MediaPost = {
   id: string;
@@ -247,24 +248,24 @@ export function MediaTab() {
   const rest = clips.slice(1);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-6 lg:pt-10 pb-10">
-      <div className="flex items-start justify-between gap-3 mb-6">
-        <div>
-          <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Media</h1>
-          <p className="text-sm text-muted-foreground mt-1">Clips, posts, and the weekly featured drop.</p>
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 lg:pt-10 pb-10">
+      <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight truncate">Media</h1>
+          <p className="hidden sm:block text-sm text-muted-foreground mt-1">Clips, posts, and the weekly featured drop.</p>
         </div>
         <button
           onClick={() => { sfx.tap(); setComposeOpen(true); }}
-          className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 glow-orange hover:opacity-90"
+          className="shrink-0 h-10 px-3 sm:px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 glow-orange hover:opacity-90"
         >
-          <Plus className="h-4 w-4" /> New post
+          <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New post</span><span className="sm:hidden">Post</span>
         </button>
       </div>
 
-      <div className="inline-flex rounded-full bg-surface p-1 border border-border mb-5">
+      <div className="inline-flex rounded-full bg-surface p-1 border border-border mb-4 sm:mb-5 text-xs sm:text-sm">
         {([["feed", "Feed"], ["reels", "Reels"], ["saved", `Saved (${mySaves.size})`]] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setTab(k); sfx.tap(); }}
-            className={cn("px-4 py-1.5 rounded-full text-sm font-semibold transition-colors",
+            className={cn("px-3 sm:px-4 py-1.5 rounded-full font-semibold transition-colors",
               tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
             {l}
           </button>
@@ -421,7 +422,7 @@ function PostCard({
       {post.kind === "video" && (
         <div className="aspect-video bg-black">
           {signedUrl ? (
-            <video src={signedUrl} controls className="w-full h-full" preload="metadata" />
+            <AutoPauseVideo src={signedUrl} />
           ) : (
             <div className="w-full h-full grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
           )}
@@ -549,5 +550,22 @@ function KindBadge({ kind }: { kind: MediaPost["kind"] }) {
     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary">
       <Icon className="h-3 w-3" /> {label}
     </span>
+  );
+}
+
+function AutoPauseVideo({ src }: { src: string }) {
+  // Autoplays muted when visible, pauses when scrolled away or tab hidden.
+  const { ref } = useVisibleVideo({ threshold: 0.5, autoplay: true });
+  return (
+    <video
+      ref={ref}
+      src={src}
+      controls
+      muted
+      playsInline
+      loop
+      preload="metadata"
+      className="w-full h-full"
+    />
   );
 }
