@@ -287,6 +287,7 @@ export function Shell() {
       </main>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <OnboardingWizard />
+      <IncomingCallListener />
     </div>
   );
 }
