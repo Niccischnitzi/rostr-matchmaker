@@ -422,7 +422,7 @@ function PostCard({
       {post.kind === "video" && (
         <div className="aspect-video bg-black">
           {signedUrl ? (
-            <video src={signedUrl} controls className="w-full h-full" preload="metadata" />
+            <AutoPauseVideo src={signedUrl} />
           ) : (
             <div className="w-full h-full grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
           )}
