@@ -1,5 +1,7 @@
 // Theme controller: reads pref from localStorage and applies `.dark` class to <html>.
-// Pref values: "dark" | "light" | "system". Default: "system".
+// Also bootstraps the customization (accent/background/font/density) layer.
+
+import { initCustomizationListeners } from "./customization";
 
 const SETTINGS_KEY = "rostr:settings";
 type Pref = "dark" | "light" | "system";
@@ -34,6 +36,7 @@ export function applyTheme() {
 export function initThemeListeners() {
   if (typeof window === "undefined") return () => {};
   applyTheme();
+  const offCustom = initCustomizationListeners();
   const onSettings = () => applyTheme();
   window.addEventListener("rostr:settings-changed", onSettings);
   const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -42,5 +45,6 @@ export function initThemeListeners() {
   return () => {
     window.removeEventListener("rostr:settings-changed", onSettings);
     mq?.removeEventListener?.("change", onSystem);
+    offCustom();
   };
 }
