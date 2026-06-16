@@ -418,15 +418,34 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         </div>
         <UserSafetyActions targetId={peer?.id} targetLabel={peer?.display_name ?? peer?.username} onBlocked={onBack} />
         <button
-          onClick={() => { sfx.nav(); setCallOpen(true); }}
-          className="h-9 w-9 rounded-full bg-success/15 text-success grid place-items-center hover:bg-success/25 transition"
-          aria-label="Call"
-          title="Start voice call"
+          onClick={() => {
+            sfx.nav();
+            setCallMode("audio");
+            setCallOpen(true);
+            if (peer) ringPeer({ peerId: peer.id, from: user.id, conversationId, mode: "audio" });
+          }}
+          className="h-9 w-9 rounded-full bg-success/15 text-success grid place-items-center hover:bg-success/25 hover:scale-110 active:scale-95 transition-all"
+          aria-label="Voice call"
+          title="Voice call"
         >
           <Phone className="h-4 w-4" />
         </button>
+        <button
+          onClick={() => {
+            sfx.nav();
+            setCallMode("video");
+            setCallOpen(true);
+            if (peer) ringPeer({ peerId: peer.id, from: user.id, conversationId, mode: "video" });
+          }}
+          className="h-9 w-9 rounded-full bg-primary/15 text-primary grid place-items-center hover:bg-primary/25 hover:scale-110 active:scale-95 transition-all"
+          aria-label="Video call"
+          title="Video call"
+        >
+          <Video className="h-4 w-4" />
+        </button>
       </div>
-      <CallSheet open={callOpen} onClose={() => setCallOpen(false)} peer={peer} conversationId={conversationId} selfId={user.id} />
+      <CallSheet open={callOpen} onClose={() => setCallOpen(false)} peer={peer} conversationId={conversationId} selfId={user.id} role="caller" mode={callMode} />
+
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
