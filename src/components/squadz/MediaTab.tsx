@@ -9,6 +9,7 @@ import { ComposeDialog } from "./ComposeDialog";
 import { sfx } from "@/lib/sfx";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { ReelsView } from "./ReelsView";
+import { useVisibleVideo } from "@/hooks/use-visible-video";
 
 type MediaPost = {
   id: string;
