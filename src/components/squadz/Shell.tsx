@@ -48,54 +48,87 @@ export function Shell() {
     if (next) setTab(next.key);
   };
 
-  // Touch swipe (mobile/tablet) — use refs so state survives re-renders
-  const touchStart = useRef({ x: 0, y: 0, active: false });
+  // Helper: walk up the DOM to see if a target sits inside a horizontally scrollable container
+  const insideHorizontalScroller = (target: EventTarget | null) => {
+    let el = target as HTMLElement | null;
+    while (el && el !== document.body) {
+      if (el.dataset?.swipeIgnore === "true") return true;
+      const style = window.getComputedStyle(el);
+      if ((style.overflowX === "auto" || style.overflowX === "scroll") && el.scrollWidth > el.clientWidth + 2) return true;
+      el = el.parentElement;
+    }
+    return false;
+  };
+
+  // Touch swipe (mobile/tablet) — refs so state survives re-renders, plus velocity tracking
+  const touchStart = useRef({ x: 0, y: 0, t: 0, active: false, locked: false, blocked: false });
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY, active: true };
+    touchStart.current = {
+      x: t.clientX,
+      y: t.clientY,
+      t: performance.now(),
+      active: true,
+      locked: false,
+      blocked: insideHorizontalScroller(e.target),
+    };
     setSwipeDx(0);
   };
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart.current.active) return;
+    const s = touchStart.current;
+    if (!s.active || s.blocked) return;
     const t = e.touches[0];
-    const dx = t.clientX - touchStart.current.x;
-    const dy = t.clientY - touchStart.current.y;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
-      setSwipeDx(Math.max(-120, Math.min(120, dx * 0.4)));
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (!s.locked) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+        s.blocked = true;
+        setSwipeDx(0);
+        return;
+      }
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.1) s.locked = true;
+    }
+    if (s.locked) {
+      const damped = Math.sign(dx) * Math.pow(Math.abs(dx), 0.88) * 0.55;
+      setSwipeDx(Math.max(-140, Math.min(140, damped)));
     }
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart.current.active) return;
-    const start = touchStart.current;
-    touchStart.current = { x: 0, y: 0, active: false };
+    const s = touchStart.current;
+    if (!s.active) return;
+    touchStart.current = { x: 0, y: 0, t: 0, active: false, locked: false, blocked: false };
+    if (s.blocked) { setSwipeDx(0); return; }
     const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    const dt = Math.max(1, performance.now() - s.t);
+    const vx = dx / dt;
     setSwipeDx(0);
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+    if (Math.abs(dx) > Math.abs(dy) * 1.2 && (Math.abs(dx) > 48 || Math.abs(vx) > 0.45)) {
       goTab(dx < 0 ? 1 : -1);
     }
   };
 
 
-  // Trackpad horizontal wheel (desktop/laptop)
+  // Trackpad / shift+wheel horizontal (desktop). Vertical wheel over the tab bar pages tabs too.
   useEffect(() => {
     let cooldown = false;
-    const onWheel = (e: WheelEvent) => {
-      // Only trigger on dominantly horizontal gestures
-      if (Math.abs(e.deltaX) < 40 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.2) return;
-      // Ignore wheel events over horizontally scrollable elements (chat lists etc)
-      const target = e.target as HTMLElement | null;
-      let el: HTMLElement | null = target;
-      while (el && el !== document.body) {
-        const style = window.getComputedStyle(el);
-        if ((style.overflowX === "auto" || style.overflowX === "scroll") && el.scrollWidth > el.clientWidth) return;
-        el = el.parentElement;
-      }
+    const trigger = (dir: 1 | -1) => {
       if (cooldown) return;
       cooldown = true;
-      goTab(e.deltaX > 0 ? 1 : -1);
-      setTimeout(() => { cooldown = false; }, 450);
+      goTab(dir);
+      setTimeout(() => { cooldown = false; }, 380);
+    };
+    const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      const overTabBar = !!target?.closest?.("[data-swipe-tabbar='true']");
+      if (overTabBar && Math.abs(e.deltaY) > 8 && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        trigger(e.deltaY > 0 ? 1 : -1);
+        return;
+      }
+      if (Math.abs(e.deltaX) < 32 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.2) return;
+      if (insideHorizontalScroller(target)) return;
+      trigger(e.deltaX > 0 ? 1 : -1);
     };
     window.addEventListener("wheel", onWheel, { passive: true });
     return () => window.removeEventListener("wheel", onWheel);
