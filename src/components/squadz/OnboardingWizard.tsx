@@ -92,6 +92,30 @@ export function OnboardingWizard() {
       ),
     },
     {
+      title: "Pick a starter avatar",
+      icon: Sparkles,
+      body: (
+        <div>
+          <p className="text-xs text-muted-foreground mb-3">Choose a preset look — you can upload your own later.</p>
+          <div className="grid grid-cols-4 gap-3">
+            {AVATAR_SEEDS.map((seed) => {
+              const on = avatarSeed === seed;
+              return (
+                <button
+                  key={seed}
+                  type="button"
+                  onClick={() => { sfx.tap(); setAvatarSeed(seed); }}
+                  className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all ${on ? "border-primary ring-2 ring-primary/40 scale-105" : "border-border hover:border-primary/50"}`}
+                >
+                  <img src={presetAvatar(seed)} alt={seed} className="h-full w-full object-cover" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ),
+    },
+    {
       title: "Pick your main games",
       icon: Gamepad2,
       body: (
