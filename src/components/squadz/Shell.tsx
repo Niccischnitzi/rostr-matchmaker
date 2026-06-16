@@ -142,7 +142,7 @@ export function Shell() {
 
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="min-h-screen text-foreground flex bg-transparent">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 shrink-0 border-r border-border flex-col p-5 sticky top-0 h-screen bg-surface/40">
         <Brand />

@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils";
 import { sfx } from "@/lib/sfx";
 
 export function ThemeCustomizer() {
-  const [c, setC] = useState<Customization>(DEFAULT_CUSTOMIZATION);
-  useEffect(() => { setC(loadCustomization()); }, []);
-  useEffect(() => { saveCustomization(c); }, [c]);
+  const [c, setC] = useState<Customization>(() => loadCustomization());
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setC(loadCustomization()); setReady(true); }, []);
+  useEffect(() => { if (ready) saveCustomization(c); }, [c, ready]);
 
   const set = <K extends keyof Customization>(k: K, v: Customization[K]) => { sfx.tap(); setC((p) => ({ ...p, [k]: v })); };
 
