@@ -182,20 +182,20 @@ export function Shell() {
 
       {/* Main area */}
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-border bg-background/80 backdrop-blur-xl">
+        {/* Mobile header — ultra-compact */}
+        <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-3 py-2 border-b border-border bg-background/85 backdrop-blur-xl">
           <Brand compact />
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-success pulse-ring" />
-              <span className="text-xs text-muted-foreground">Online</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-success pulse-ring" />
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Online</span>
             </span>
             <button
               onClick={() => setSettingsOpen(true)}
-              className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
+              className="h-7 w-7 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
               aria-label="Settings"
             >
-              <SettingsIcon className="h-4 w-4" />
+              <SettingsIcon className="h-3.5 w-3.5" />
             </button>
           </div>
         </header>
