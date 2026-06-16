@@ -201,7 +201,7 @@ export function Shell() {
         </header>
 
         <div
-          className="flex-1 pb-20 lg:pb-0 touch-pan-y"
+          className="flex-1 pb-16 lg:pb-0 touch-pan-y"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
