@@ -4,6 +4,7 @@ import { SquadzProvider } from "@/lib/squadz-store";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider } from "@/hooks/use-auth";
+import { SteamClaimListener } from "@/components/squadz/SteamClaimListener";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -28,6 +29,7 @@ function Index() {
     <div className="dark">
       <AuthProvider>
         <SquadzProvider>
+          <SteamClaimListener />
           <Shell />
           <Toaster theme="dark" position="top-center" />
         </SquadzProvider>
