@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield, Swords } from "lucide-react";
+import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield, Swords, Palette } from "lucide-react";
+import { ClubAppearance } from "./ClubAppearance";
 import { ClubWars } from "./ClubWars";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -282,6 +283,7 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [view, setView] = useState<"channel" | "members" | "wars">("channel");
   const [loading, setLoading] = useState(true);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -307,7 +309,8 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
   }, [clubId, user]);
 
   const myMembership = members.find((m) => m.user_id === user?.id);
-  const isOwnerOrOfficer = myMembership?.role === "owner" || myMembership?.role === "officer";
+  const isOwner = myMembership?.role === "owner";
+  const isOwnerOrOfficer = isOwner || myMembership?.role === "officer";
 
   async function leave() {
     if (!user) return;
@@ -338,13 +341,19 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-6 lg:pt-10 pb-10">
+    <div
+      className="max-w-5xl mx-auto px-4 pt-6 lg:pt-10 pb-10"
+      style={(club as any).accent ? ({ ["--primary" as any]: (club as any).accent, ["--ring" as any]: (club as any).accent } as React.CSSProperties) : undefined}
+    >
       <button onClick={onBack} className="text-sm text-muted-foreground flex items-center gap-1.5 mb-4 hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to Clubs
+        <ArrowLeft className="h-4 w-4" /> Back to Crews
       </button>
 
       <div className="rounded-3xl border border-border bg-card overflow-hidden">
-        <div className="h-28 bg-gradient-to-br from-primary/40 to-primary/10" />
+        <div
+          className="h-28 bg-gradient-to-br from-primary/40 to-primary/10 bg-cover bg-center"
+          style={(club as any).banner_url ? { backgroundImage: `url(${(club as any).banner_url})` } : undefined}
+        />
         <div className="p-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
@@ -358,13 +367,23 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
                 <Users className="h-3.5 w-3.5" />
                 {club.member_count} member{club.member_count === 1 ? "" : "s"}
               </p>
+              {(club as any).tagline && (
+                <p className="text-xs text-primary font-semibold mt-1">{(club as any).tagline}</p>
+              )}
               {club.description && <p className="mt-3 text-sm text-muted-foreground max-w-xl">{club.description}</p>}
             </div>
-            {myMembership && (
-              <Button variant="outline" size="sm" onClick={leave} disabled={myMembership.role === "owner"}>
-                {myMembership.role === "owner" ? "You're the owner" : "Leave"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isOwner && (
+                <Button variant="outline" size="sm" onClick={() => setAppearanceOpen(true)} className="gap-1.5">
+                  <Palette className="h-3.5 w-3.5" /> Appearance
+                </Button>
+              )}
+              {myMembership && (
+                <Button variant="outline" size="sm" onClick={leave} disabled={isOwner}>
+                  {isOwner ? "You're the owner" : "Leave"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -439,6 +458,20 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
           </div>
         </div>
       </div>
+
+      {isOwner && (
+        <ClubAppearance
+          open={appearanceOpen}
+          onOpenChange={setAppearanceOpen}
+          clubId={clubId}
+          initial={{
+            accent: (club as any).accent ?? null,
+            banner_url: (club as any).banner_url ?? null,
+            tagline: (club as any).tagline ?? null,
+          }}
+          onSaved={(next) => setClub((prev) => (prev ? ({ ...prev, ...next } as any) : prev))}
+        />
+      )}
     </div>
   );
 }

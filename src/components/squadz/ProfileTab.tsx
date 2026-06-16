@@ -11,6 +11,7 @@ import { AvailabilityGrid } from "./AvailabilityGrid";
 import { BattleCard } from "./BattleCard";
 import { PurchasesSection } from "./PurchasesSection";
 import { LfgAdStats } from "./LfgAdStats";
+import { SteamConnectButton } from "./SteamConnectButton";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
@@ -500,9 +501,12 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
     <Modal title="Add platform" onClose={onClose}>
       <div className="space-y-4">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Quick connect (mock)</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Quick connect</p>
           <div className="grid grid-cols-3 gap-2">
-            {(["Steam", "Discord", "Tracker.gg"] as const).map((p) => (
+            <div className="col-span-3">
+              <SteamConnectButton className="w-full justify-center" />
+            </div>
+            {(["Discord", "Tracker.gg"] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => quickConnect(p)}
@@ -512,13 +516,13 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
                 {connecting === p ? (
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 ) : (
-                  <span className="text-lg">{p === "Steam" ? "🎮" : p === "Discord" ? "💬" : "📊"}</span>
+                  <span className="text-lg">{p === "Discord" ? "💬" : "📊"}</span>
                 )}
                 <span>{p}</span>
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2">Mock OAuth — real Steam/Discord/Tracker.gg integration coming soon.</p>
+          <p className="text-[10px] text-muted-foreground mt-2">Steam uses live OpenID. Discord & Tracker.gg are mock for now.</p>
         </div>
 
         <div className="flex items-center gap-2">

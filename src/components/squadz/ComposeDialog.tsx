@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { uploadCost, fetchUploadsToday, probeVideo, FREE_RESOLUTION_HEIGHT, PRO_RESOLUTION_HEIGHT } from "@/lib/uploadPricing";
+import { useSubscription } from "@/hooks/use-subscription";
 
 // Free limits
 const FREE_SECS = 15;
@@ -15,7 +17,7 @@ const FREE_BYTES = 25 * 1024 * 1024; // 25 MB
 const MAX_SECS = 300;                 // hard cap 5 min
 const MAX_BYTES = 250 * 1024 * 1024;  // hard cap 250 MB
 
-// 10 tokens per extra 10s beyond free
+// Legacy helper retained for callers that don't use the exponential model.
 export function tokensForDuration(seconds: number) {
   if (seconds <= FREE_SECS) return 0;
   return Math.ceil((seconds - FREE_SECS) / 10) * 10;
@@ -38,8 +40,11 @@ export function ComposeDialog({
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [duration, setDuration] = useState<number>(0);
+  const [resHeight, setResHeight] = useState<number>(0);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { isPro } = useSubscription();
+  const resCap = isPro ? PRO_RESOLUTION_HEIGHT : FREE_RESOLUTION_HEIGHT;
 
   // Wallet balance for token math
   const { data: balance = 0 } = useQuery({
@@ -51,25 +56,37 @@ export function ComposeDialog({
     },
   });
 
+  // Exponential daily upload count → cost = 5 * 2^n (capped 320).
+  const { data: uploadsToday = 0 } = useQuery({
+    queryKey: ["media-uploads-today", userId],
+    enabled: !!userId && open,
+    queryFn: () => fetchUploadsToday(userId),
+  });
+
   useEffect(() => {
     if (!open) {
-      setKind("video"); setTitle(""); setGame(""); setBody(""); setUrl(""); setFile(null); setDuration(0);
+      setKind("video"); setTitle(""); setGame(""); setBody(""); setUrl(""); setFile(null); setDuration(0); setResHeight(0);
     }
   }, [open]);
 
-  const tokensNeeded = file ? tokensForDuration(duration) : 0;
+  const tokensNeeded = file ? uploadCost(uploadsToday) : 0;
   const overSizeFree = !!file && file.size > FREE_BYTES;
   const canPay = balance >= tokensNeeded;
   const tooBig = !!file && file.size > MAX_BYTES;
   const tooLong = !!file && duration > MAX_SECS;
+  const overRes = !!file && resHeight > 0 && resHeight > resCap;
 
-  const pickFile = (f: File) => {
+  const pickFile = async (f: File) => {
     setFile(f);
     setDuration(0);
-    const v = document.createElement("video");
-    v.preload = "metadata";
-    v.onloadedmetadata = () => { setDuration(Math.round(v.duration)); URL.revokeObjectURL(v.src); };
-    v.src = URL.createObjectURL(f);
+    setResHeight(0);
+    try {
+      const meta = await probeVideo(f);
+      setDuration(meta.duration);
+      setResHeight(meta.height);
+    } catch {
+      toast.error("Could not read video metadata");
+    }
   };
 
   const submit = async () => {
@@ -80,6 +97,7 @@ export function ComposeDialog({
       if (kind === "video") {
         if (!file) { toast.error("Pick a video file"); return; }
         if (tooBig || tooLong) { toast.error("File exceeds 5 min / 250 MB hard cap"); return; }
+        if (overRes) { toast.error(`Resolution capped at ${resCap}p${isPro ? "" : " — upgrade to Pro for 1080p"}`); return; }
         if (tokensNeeded > 0 && !canPay) {
           toast.error(`Needs ${tokensNeeded} tokens — you have ${balance}`);
           return;
@@ -161,13 +179,15 @@ export function ComposeDialog({
               {file ? (
                 <div className="text-center">
                   <p className="font-bold text-sm truncate max-w-xs">{file.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024 / 1024).toFixed(1)} MB · {duration || "?"}s</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(file.size / 1024 / 1024).toFixed(1)} MB · {duration || "?"}s{resHeight ? ` · ${resHeight}p` : ""}
+                  </p>
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
                   <Upload className="h-6 w-6 mx-auto" />
                   <p className="text-sm font-semibold mt-1">Choose video</p>
-                  <p className="text-[10px]">MP4 / WebM / MOV</p>
+                  <p className="text-[10px]">MP4 / WebM / MOV · {resCap}p max{isPro ? "" : " (Pro: 1080p)"}</p>
                 </div>
               )}
             </button>
@@ -181,14 +201,20 @@ export function ComposeDialog({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5 font-semibold">
                     <Coins className="h-3.5 w-3.5 text-primary" />
-                    {tokensNeeded === 0 ? "Free — under 15s" : `${tokensNeeded} tokens`}
+                    {tokensNeeded === 0 ? "Free upload" : `${tokensNeeded} tokens`}
                   </span>
                   <span className="text-muted-foreground">Balance: {balance}</span>
                 </div>
-                {overSizeFree && (
-                  <p className="mt-1 text-muted-foreground">
-                    Over 25 MB. Pro membership lifts this — for now tokens cover it.
+                <p className="mt-1 text-muted-foreground">
+                  Daily cost doubles per upload (5 → 10 → 20 …), capped at 320. You've posted {uploadsToday} today.
+                </p>
+                {overRes && (
+                  <p className="mt-1 text-destructive">
+                    {resHeight}p exceeds your {resCap}p cap.{isPro ? "" : " Upgrade to Pro for 1080p."}
                   </p>
+                )}
+                {overSizeFree && (
+                  <p className="mt-1 text-muted-foreground">Over 25 MB.</p>
                 )}
                 {tooBig && <p className="mt-1 text-destructive">Over 250 MB hard cap.</p>}
                 {tooLong && <p className="mt-1 text-destructive">Over 5 min hard cap.</p>}
