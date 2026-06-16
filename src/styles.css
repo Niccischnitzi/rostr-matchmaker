@@ -74,21 +74,19 @@
   --card-foreground: oklch(0.98 0 0);
   --popover: oklch(0.18 0.006 270);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.72 0.22 38);
-  --primary-foreground: oklch(0.1 0 0);
+  /* NOTE: --primary, --primary-foreground, --primary-glow, --ring, --accent,
+     --accent-foreground are intentionally NOT set here — they are controlled
+     globally by src/lib/customization.ts so the user's accent choice wins
+     inside any `.dark` wrapper (e.g. routes/index.tsx). */
   --secondary: oklch(0.24 0.008 270);
   --secondary-foreground: oklch(0.98 0 0);
   --muted: oklch(0.24 0.008 270);
   --muted-foreground: oklch(0.7 0.01 270);
-  --accent: oklch(0.32 0.08 38);
-  --accent-foreground: oklch(0.95 0.05 38);
   --destructive: oklch(0.65 0.22 27);
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.72 0.18 152);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.72 0.22 38);
-  --primary-glow: oklch(0.78 0.18 55);
 }
 
 @layer base {
