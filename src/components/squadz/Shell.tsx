@@ -1,4 +1,4 @@
-import { useState, type ReactNode, useEffect } from "react";
+import { useState, type ReactNode, useEffect, useRef } from "react";
 import { Users, MessageCircle, Film, UserCircle, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
@@ -48,35 +48,35 @@ export function Shell() {
     if (next) setTab(next.key);
   };
 
-  // Touch swipe (mobile/tablet)
-  const touch = (() => {
-    let startX = 0; let startY = 0; let active = false;
-    return {
-      onTouchStart: (e: React.TouchEvent) => {
-        const t = e.touches[0]; startX = t.clientX; startY = t.clientY; active = true; setSwipeDx(0);
-      },
-      onTouchMove: (e: React.TouchEvent) => {
-        if (!active) return;
-        const t = e.touches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          setSwipeDx(Math.max(-120, Math.min(120, dx * 0.4)));
-        }
-      },
-      onTouchEnd: (e: React.TouchEvent) => {
-        if (!active) return;
-        active = false;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
-        setSwipeDx(0);
-        if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          goTab(dx < 0 ? 1 : -1);
-        }
-      },
-    };
-  })();
+  // Touch swipe (mobile/tablet) — use refs so state survives re-renders
+  const touchStart = useRef({ x: 0, y: 0, active: false });
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY, active: true };
+    setSwipeDx(0);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current.active) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
+      setSwipeDx(Math.max(-120, Math.min(120, dx * 0.4)));
+    }
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current.active) return;
+    const start = touchStart.current;
+    touchStart.current = { x: 0, y: 0, active: false };
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    setSwipeDx(0);
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+      goTab(dx < 0 ? 1 : -1);
+    }
+  };
+
 
   // Trackpad horizontal wheel (desktop/laptop)
   useEffect(() => {
