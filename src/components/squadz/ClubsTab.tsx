@@ -458,6 +458,20 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
           </div>
         </div>
       </div>
+
+      {isOwner && (
+        <ClubAppearance
+          open={appearanceOpen}
+          onOpenChange={setAppearanceOpen}
+          clubId={clubId}
+          initial={{
+            accent: (club as any).accent ?? null,
+            banner_url: (club as any).banner_url ?? null,
+            tagline: (club as any).tagline ?? null,
+          }}
+          onSaved={(next) => setClub((prev) => (prev ? ({ ...prev, ...next } as any) : prev))}
+        />
+      )}
     </div>
   );
 }
