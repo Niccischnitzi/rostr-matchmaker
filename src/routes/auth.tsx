@@ -81,7 +81,7 @@ function AuthPage() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="h-11 w-11 rounded-xl bg-primary grid place-items-center glow-orange">
