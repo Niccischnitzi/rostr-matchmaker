@@ -552,3 +552,20 @@ function KindBadge({ kind }: { kind: MediaPost["kind"] }) {
     </span>
   );
 }
+
+function AutoPauseVideo({ src }: { src: string }) {
+  // Autoplays muted when visible, pauses when scrolled away or tab hidden.
+  const { ref } = useVisibleVideo({ threshold: 0.5, autoplay: true });
+  return (
+    <video
+      ref={ref}
+      src={src}
+      controls
+      muted
+      playsInline
+      loop
+      preload="metadata"
+      className="w-full h-full"
+    />
+  );
+}
