@@ -11,6 +11,7 @@ import { CrewsTab } from "./CrewsTab";
 import { SettingsSheet } from "./SettingsSheet";
 import { OnboardingWizard } from "./OnboardingWizard";
 import { RostrMark } from "./RostrMark";
+import { IncomingCallListener } from "./IncomingCallListener";
 import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
