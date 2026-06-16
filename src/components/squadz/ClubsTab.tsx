@@ -190,12 +190,14 @@ function ClubCard({
           {!joined && onJoin && (
             <Button
               size="sm"
+              variant={disabled ? "outline" : "default"}
               onClick={(e) => {
                 e.stopPropagation();
                 onJoin();
               }}
+              title={disabled ? "Leave your current club first" : undefined}
             >
-              Join
+              {disabled ? "Locked" : "Join"}
             </Button>
           )}
           {joined && <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Joined</span>}
