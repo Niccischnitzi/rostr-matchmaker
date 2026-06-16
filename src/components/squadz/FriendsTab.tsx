@@ -107,7 +107,7 @@ export function FriendsTab() {
       <div className="flex items-end justify-between gap-3 mb-6">
         <div>
           <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Friends</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your squad, requests, and incoming pings.</p>
+          <p className="text-sm text-muted-foreground mt-1">Your rostr, requests, and incoming pings.</p>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export function FriendsTab() {
             </Section>
           )}
 
-          <Section title={`Squad (${accepted.length})`} icon={Users}>
+          <Section title={`Rostr (${accepted.length})`} icon={Users}>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input

@@ -50,7 +50,7 @@ export function SquadzProvider({ children }: { children: ReactNode }) {
   const [clips, setClips] = useState(initialClips);
   const [linked] = useState(initialLinked);
   const [likedClips, setLikedClips] = useState<Set<string>>(() => new Set());
-  const [status, setStatus] = useState<Ctx["status"]>("Looking for Squad");
+  const [status, setStatus] = useState<Ctx["status"]>("Looking for Rostr");
 
 
   const swipe: Ctx["swipe"] = (id, dir) => {

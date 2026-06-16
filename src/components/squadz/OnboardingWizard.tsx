@@ -74,13 +74,13 @@ export function OnboardingWizard() {
 
   const steps = [
     {
-      title: "Welcome to ostr",
+      title: "Welcome to Rostr",
       icon: Sparkles,
       body: (
         <div className="text-center">
           <RostrMark size={96} className="mx-auto rounded-2xl" />
           <p className="mt-4 text-sm text-muted-foreground">
-            Let's get you set up so you find your squad fast. Takes 30 seconds.
+            Let's get you set up so you build your rostr fast. Takes 30 seconds.
           </p>
         </div>
       ),
