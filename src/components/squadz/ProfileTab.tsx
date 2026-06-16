@@ -17,7 +17,7 @@ const statusColors: Record<string, string> = {
   "Online": "bg-success",
   "In-Game": "bg-primary",
   "Busy": "bg-destructive",
-  "Looking for Squad": "bg-orange-500",
+  "Looking for Squad": "bg-primary",
 };
 
 const PLATFORMS = ["Steam", "PSN", "Xbox", "Riot", "BattleNet", "Faceit"] as const;
@@ -27,7 +27,7 @@ const platformMeta: Record<string, { icon: string; color: string }> = {
   Xbox:      { icon: "🟢", color: "#107C10" },
   Riot:      { icon: "⚡", color: "#D32936" },
   BattleNet: { icon: "⚔️", color: "#148EFF" },
-  Faceit:    { icon: "🔥", color: "#FF5500" },
+  Faceit:    { icon: "🔥", color: "var(--primary)" },
 };
 
 type Profile = {
@@ -185,7 +185,7 @@ export function ProfileTab() {
     <div className="max-w-5xl mx-auto px-4 pt-6 lg:pt-10 pb-10">
       {/* Header card */}
       <div className="rounded-3xl border border-border bg-card overflow-hidden">
-        <div className="h-32 bg-gradient-to-br from-primary via-orange-600 to-accent relative">
+        <div className="h-32 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent relative">
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 30% 30%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
           <button
             onClick={onSignOut}
