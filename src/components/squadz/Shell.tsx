@@ -48,54 +48,87 @@ export function Shell() {
     if (next) setTab(next.key);
   };
 
-  // Touch swipe (mobile/tablet) — use refs so state survives re-renders
-  const touchStart = useRef({ x: 0, y: 0, active: false });
+  // Helper: walk up the DOM to see if a target sits inside a horizontally scrollable container
+  const insideHorizontalScroller = (target: EventTarget | null) => {
+    let el = target as HTMLElement | null;
+    while (el && el !== document.body) {
+      if (el.dataset?.swipeIgnore === "true") return true;
+      const style = window.getComputedStyle(el);
+      if ((style.overflowX === "auto" || style.overflowX === "scroll") && el.scrollWidth > el.clientWidth + 2) return true;
+      el = el.parentElement;
+    }
+    return false;
+  };
+
+  // Touch swipe (mobile/tablet) — refs so state survives re-renders, plus velocity tracking
+  const touchStart = useRef({ x: 0, y: 0, t: 0, active: false, locked: false, blocked: false });
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY, active: true };
+    touchStart.current = {
+      x: t.clientX,
+      y: t.clientY,
+      t: performance.now(),
+      active: true,
+      locked: false,
+      blocked: insideHorizontalScroller(e.target),
+    };
     setSwipeDx(0);
   };
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart.current.active) return;
+    const s = touchStart.current;
+    if (!s.active || s.blocked) return;
     const t = e.touches[0];
-    const dx = t.clientX - touchStart.current.x;
-    const dy = t.clientY - touchStart.current.y;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
-      setSwipeDx(Math.max(-120, Math.min(120, dx * 0.4)));
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (!s.locked) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+        s.blocked = true;
+        setSwipeDx(0);
+        return;
+      }
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.1) s.locked = true;
+    }
+    if (s.locked) {
+      const damped = Math.sign(dx) * Math.pow(Math.abs(dx), 0.88) * 0.55;
+      setSwipeDx(Math.max(-140, Math.min(140, damped)));
     }
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart.current.active) return;
-    const start = touchStart.current;
-    touchStart.current = { x: 0, y: 0, active: false };
+    const s = touchStart.current;
+    if (!s.active) return;
+    touchStart.current = { x: 0, y: 0, t: 0, active: false, locked: false, blocked: false };
+    if (s.blocked) { setSwipeDx(0); return; }
     const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    const dt = Math.max(1, performance.now() - s.t);
+    const vx = dx / dt;
     setSwipeDx(0);
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+    if (Math.abs(dx) > Math.abs(dy) * 1.2 && (Math.abs(dx) > 48 || Math.abs(vx) > 0.45)) {
       goTab(dx < 0 ? 1 : -1);
     }
   };
 
 
-  // Trackpad horizontal wheel (desktop/laptop)
+  // Trackpad / shift+wheel horizontal (desktop). Vertical wheel over the tab bar pages tabs too.
   useEffect(() => {
     let cooldown = false;
-    const onWheel = (e: WheelEvent) => {
-      // Only trigger on dominantly horizontal gestures
-      if (Math.abs(e.deltaX) < 40 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.2) return;
-      // Ignore wheel events over horizontally scrollable elements (chat lists etc)
-      const target = e.target as HTMLElement | null;
-      let el: HTMLElement | null = target;
-      while (el && el !== document.body) {
-        const style = window.getComputedStyle(el);
-        if ((style.overflowX === "auto" || style.overflowX === "scroll") && el.scrollWidth > el.clientWidth) return;
-        el = el.parentElement;
-      }
+    const trigger = (dir: 1 | -1) => {
       if (cooldown) return;
       cooldown = true;
-      goTab(e.deltaX > 0 ? 1 : -1);
-      setTimeout(() => { cooldown = false; }, 450);
+      goTab(dir);
+      setTimeout(() => { cooldown = false; }, 380);
+    };
+    const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      const overTabBar = !!target?.closest?.("[data-swipe-tabbar='true']");
+      if (overTabBar && Math.abs(e.deltaY) > 8 && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        trigger(e.deltaY > 0 ? 1 : -1);
+        return;
+      }
+      if (Math.abs(e.deltaX) < 32 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.2) return;
+      if (insideHorizontalScroller(target)) return;
+      trigger(e.deltaX > 0 ? 1 : -1);
     };
     window.addEventListener("wheel", onWheel, { passive: true });
     return () => window.removeEventListener("wheel", onWheel);
@@ -109,7 +142,7 @@ export function Shell() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 shrink-0 border-r border-border flex-col p-5 sticky top-0 h-screen bg-surface/40">
         <Brand />
-        <nav className="mt-8 flex flex-col gap-1">
+        <nav data-swipe-tabbar="true" className="mt-8 flex flex-col gap-1">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
@@ -207,8 +240,21 @@ export function Shell() {
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-          <div className="grid grid-cols-5">
+        <nav
+          data-swipe-tabbar="true"
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl"
+        >
+          <div className="relative grid grid-cols-5">
+            {/* Animated active indicator */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute top-0 h-[2px] bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.6)]"
+              style={{
+                width: `${100 / tabs.length}%`,
+                left: `${(tabs.findIndex(t => t.key === tab) * 100) / tabs.length}%`,
+                transition: "left 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            />
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.key;
@@ -217,19 +263,18 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
-                    active ? "text-primary" : "text-muted-foreground"
+                    "flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <div className={cn("relative", active && "after:absolute after:-top-2.5 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-6 after:rounded-full after:bg-primary")}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+                  <Icon className={cn("h-5 w-5 transition-transform duration-300", active && "scale-110")} />
                   {t.label}
                 </button>
               );
             })}
           </div>
         </nav>
+
 
       </main>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
