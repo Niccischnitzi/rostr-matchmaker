@@ -211,34 +211,38 @@ export function Shell() {
           }}
         >
 
-          <TabFrame visible={tab === "find"} tabKey={`find-${findSub}`}>
-            <SubNav
-              items={[
-                { key: "players", label: "Players", icon: Users },
-                { key: "1v1", label: "1v1 Challenges", icon: Swords },
-              ]}
-              value={findSub}
-              onChange={(v) => setFindSub(v as FindSub)}
-            />
-            {findSub === "players" ? <FindTab /> : <ChallengesTab />}
-          </TabFrame>
-          
-          <TabFrame visible={tab === "clans"} tabKey={`clans-${clansSub}`}>
-            <SubNav
-              items={[
-                { key: "crews", label: "Crews", icon: Shield },
-                { key: "cups", label: "Cups", icon: Trophy },
-              ]}
-              value={clansSub}
-              onChange={(v) => setClansSub(v as ClansSub)}
-            />
-            {clansSub === "crews" && <CrewsTab />}
-            {clansSub === "cups" && <TournamentsTab />}
-          </TabFrame>
+          {/* Tabs are mounted once visited and toggled with display:none — keeps state, eliminates remount jank. */}
+          {mounted.has("find") && (
+            <TabFrame active={tab === "find"} tabKey="find">
+              <SubNav
+                items={[
+                  { key: "players", label: "Players", icon: Users },
+                  { key: "1v1", label: "1v1 Challenges", icon: Swords },
+                ]}
+                value={findSub}
+                onChange={(v) => setFindSub(v as FindSub)}
+              />
+              {findSub === "players" ? <FindTab /> : <ChallengesTab />}
+            </TabFrame>
+          )}
+          {mounted.has("clans") && (
+            <TabFrame active={tab === "clans"} tabKey="clans">
+              <SubNav
+                items={[
+                  { key: "crews", label: "Crews", icon: Shield },
+                  { key: "cups", label: "Cups", icon: Trophy },
+                ]}
+                value={clansSub}
+                onChange={(v) => setClansSub(v as ClansSub)}
+              />
+              {clansSub === "crews" && <CrewsTab />}
+              {clansSub === "cups" && <TournamentsTab />}
+            </TabFrame>
+          )}
+          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"><ChatTab /></TabFrame>}
+          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"><MediaTab /></TabFrame>}
+          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>}
 
-          <TabFrame visible={tab === "chat"} tabKey="chat"><ChatTab /></TabFrame>
-          <TabFrame visible={tab === "media"} tabKey="media"><MediaTab /></TabFrame>
-          <TabFrame visible={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>
 
         </div>
 
