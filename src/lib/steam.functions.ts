@@ -20,8 +20,8 @@ export const linkSteam = createServerFn({ method: "POST" })
     const { data: existing } = await supabase
       .from("linked_accounts")
       .select("user_id")
-      .eq("provider", "steam")
-      .eq("external_id", data.external_id)
+      .eq("platform", "steam")
+      .eq("external_uid", data.external_id)
       .maybeSingle();
     if (existing && existing.user_id !== userId) {
       return { error: "This Steam account is already linked to another rostr profile." };
@@ -32,12 +32,13 @@ export const linkSteam = createServerFn({ method: "POST" })
       .upsert(
         {
           user_id: userId,
-          provider: "steam",
-          external_id: data.external_id,
-          display_name: data.display_name ?? null,
-          avatar_url: data.avatar_url ?? null,
-        },
-        { onConflict: "user_id,provider" }
+          platform: "steam",
+          external_uid: data.external_id,
+          gamertag: data.display_name ?? data.external_id,
+          verified: true,
+          aggregated_stats: { avatar_url: data.avatar_url ?? null },
+        } as any,
+        { onConflict: "user_id,platform" } as any
       );
     if (error) return { error: error.message };
     return { ok: true as const };

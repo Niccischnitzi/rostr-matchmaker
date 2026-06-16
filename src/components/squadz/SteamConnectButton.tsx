@@ -1,8 +1,8 @@
 // Sprint 4 — Steam OpenID 2.0 sign-in initiation.
 // The redirect lands on /api/public/steam/return which performs
 // check_authentication against steamcommunity.com/openid/login,
-// then calls a server function that writes to linked_accounts using
-// STEAM_WEB_API_KEY to fetch the persona / avatar.
+// then a client-side claim using linkSteam server fn writes to linked_accounts
+// scoped to the signed-in user.
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Gamepad2, Check } from "lucide-react";
@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const STEAM_OPENID = "https://steamcommunity.com/openid/login";
 
-type LinkedSteam = { external_id: string; display_name: string | null; avatar_url: string | null };
+type LinkedSteam = { external_uid: string | null; gamertag: string; aggregated_stats: any };
 
 export function SteamConnectButton({ className }: { className?: string }) {
   const [linked, setLinked] = useState<LinkedSteam | null>(null);
@@ -23,10 +23,10 @@ export function SteamConnectButton({ className }: { className?: string }) {
       const uid = u.user?.id;
       if (!uid) { setLoading(false); return; }
       const { data } = await supabase
-        .from("linked_accounts" as any)
-        .select("external_id,display_name,avatar_url")
+        .from("linked_accounts")
+        .select("external_uid,gamertag,aggregated_stats")
         .eq("user_id", uid)
-        .eq("provider", "steam")
+        .eq("platform", "steam")
         .maybeSingle();
       if (!cancelled) {
         setLinked((data as any) ?? null);
@@ -55,10 +55,11 @@ export function SteamConnectButton({ className }: { className?: string }) {
   }
 
   if (linked) {
+    const avatar = linked.aggregated_stats?.avatar_url as string | undefined;
     return (
       <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-success/40 bg-success/5 text-xs font-semibold ${className ?? ""}`}>
-        {linked.avatar_url && <img src={linked.avatar_url} className="h-6 w-6 rounded-full" alt="" />}
-        <Check className="h-3.5 w-3.5 text-success" /> Steam · {linked.display_name ?? linked.external_id}
+        {avatar && <img src={avatar} className="h-6 w-6 rounded-full" alt="" />}
+        <Check className="h-3.5 w-3.5 text-success" /> Steam · {linked.gamertag}
       </div>
     );
   }
