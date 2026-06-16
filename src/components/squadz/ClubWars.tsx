@@ -262,6 +262,18 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
+function StatPill({ label, value, icon: Icon }: { label: string; value: number | string; icon: React.ComponentType<{ className?: string }> | null }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background/70 backdrop-blur px-3 py-2 text-center min-w-[64px]">
+      <div className="flex items-center justify-center gap-1 text-primary">
+        {Icon && <Icon className="h-3.5 w-3.5" />}
+        <span className="font-display text-lg font-black leading-none">{value}</span>
+      </div>
+      <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-1">{label}</p>
+    </div>
+  );
+}
+
 function WarRow({
   war,
   myClubId,
