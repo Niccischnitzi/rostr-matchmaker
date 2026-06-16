@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { AvailabilityGrid } from "./AvailabilityGrid";
 import { BattleCard } from "./BattleCard";
 import { PurchasesSection } from "./PurchasesSection";
+import { LfgAdStats } from "./LfgAdStats";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
@@ -326,13 +327,9 @@ export function ProfileTab() {
       {/* Purchases */}
       <PurchasesSection userId={userId!} />
 
-      {/* LFG ad shortcut */}
-      <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="font-display text-lg font-black">Looking for squad?</p>
-          <p className="text-xs text-muted-foreground">Toggle your profile public and post an LFG ad from the Find page.</p>
-        </div>
-      </div>
+      {/* LFG ad stats */}
+      <LfgAdStats userId={userId!} />
+
 
 
       {/* Showcase */}
