@@ -34,6 +34,9 @@ export function Shell() {
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [swipeDx, setSwipeDx] = useState(0);
+  // Track which tabs have ever been visited so we mount them once and just toggle visibility.
+  const [mounted, setMounted] = useState<Set<TabKey>>(() => new Set<TabKey>(["find"]));
+  useEffect(() => { setMounted((m) => m.has(tab) ? m : new Set([...m, tab])); }, [tab]);
 
   useEffect(() => { sfx.nav(); }, [tab]);
   useEffect(() => {
