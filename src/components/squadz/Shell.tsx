@@ -142,7 +142,7 @@ export function Shell() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 shrink-0 border-r border-border flex-col p-5 sticky top-0 h-screen bg-surface/40">
         <Brand />
-        <nav className="mt-8 flex flex-col gap-1">
+        <nav data-swipe-tabbar="true" className="mt-8 flex flex-col gap-1">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
