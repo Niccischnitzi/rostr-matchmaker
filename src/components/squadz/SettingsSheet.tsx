@@ -9,6 +9,11 @@ import { signOut } from "@/hooks/use-auth";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeCustomizer } from "./ThemeCustomizer";
+import { AvatarPicker } from "./AvatarPicker";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { UserCircle, Wand2 } from "lucide-react";
 
 type Prefs = {
   theme: "dark" | "light" | "system";
