@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /auth
+Disallow: /auth/
+Disallow: /moderation
+Disallow: /checkout/
+Disallow: /api/
+
+Sitemap: https://rostr-matchmaker.lovable.app/sitemap.xml
