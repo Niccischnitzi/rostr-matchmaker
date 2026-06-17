@@ -1,12 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { Shell } from "@/components/squadz/Shell";
 import { SquadzProvider } from "@/lib/squadz-store";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SteamClaimListener } from "@/components/squadz/SteamClaimListener";
-import { initThemeMode, getResolvedThemeMode } from "@/lib/theme-mode";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -35,14 +34,13 @@ function subscribeTheme(cb: () => void) {
     mq.removeEventListener("change", cb);
   };
 }
+function readMode(): "dark" | "light" {
+  if (typeof document === "undefined") return "dark";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
 
 function Index() {
-  useEffect(() => initThemeMode(), []);
-  const mode = useSyncExternalStore(
-    subscribeTheme,
-    () => getResolvedThemeMode(),
-    () => "dark" as const,
-  );
+  const mode = useSyncExternalStore(subscribeTheme, readMode, () => "dark" as const);
   return (
     <AuthProvider>
       <SquadzProvider>
