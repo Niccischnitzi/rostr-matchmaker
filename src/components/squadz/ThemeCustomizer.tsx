@@ -121,17 +121,36 @@ export function ThemeCustomizer() {
         </div>
       </Group>
 
-      <Group icon={Gauge} title="Density">
+      <Group icon={Gauge} title="Text density">
         <div className="grid grid-cols-2 gap-2">
           {(["comfy", "compact"] as DensityKey[]).map((k) => (
             <button
               key={k}
-              onClick={() => set("density", k)}
-              className={cn("px-3 py-2.5 rounded-xl border-2 text-sm font-bold capitalize transition-all", draft.density === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
-            >{k}</button>
+              onClick={() => set("fontDensity", k)}
+              className={cn("px-3 py-2.5 rounded-xl border-2 text-sm font-bold capitalize transition-all", draft.fontDensity === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
+            >
+              <span className="block">{k}</span>
+              <span className="block text-[10px] font-normal text-muted-foreground normal-case">{k === "compact" ? "Smaller text, more on screen" : "Standard, easier to read"}</span>
+            </button>
           ))}
         </div>
       </Group>
+
+      <Group icon={Gauge} title="Layout density">
+        <div className="grid grid-cols-2 gap-2">
+          {(["comfy", "compact"] as DensityKey[]).map((k) => (
+            <button
+              key={k}
+              onClick={() => { set("layoutDensity", k); set("density", k); }}
+              className={cn("px-3 py-2.5 rounded-xl border-2 text-sm font-bold capitalize transition-all", draft.layoutDensity === k ? "border-primary bg-primary/10" : "border-border hover:border-primary/60")}
+            >
+              <span className="block">{k}</span>
+              <span className="block text-[10px] font-normal text-muted-foreground normal-case">{k === "compact" ? "Tight padding & gaps" : "Spacious & relaxed"}</span>
+            </button>
+          ))}
+        </div>
+      </Group>
+
 
       <Group icon={Sparkles} title="Animation feel">
         <div className="grid grid-cols-3 gap-2">

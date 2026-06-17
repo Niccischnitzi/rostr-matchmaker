@@ -136,7 +136,7 @@ export function ReelsView() {
   return (
     <>
       <div
-        className="h-[calc(100svh-180px)] sm:h-[80vh] rounded-3xl overflow-y-auto snap-y snap-mandatory bg-black border border-border"
+        className="h-[calc(100svh-180px)] sm:h-[calc(100svh-140px)] overflow-y-auto snap-y snap-mandatory bg-black"
         style={{ scrollSnapStop: "always" as React.CSSProperties["scrollSnapStop"] }}
       >
         {posts.map((p, i) => (
@@ -168,6 +168,7 @@ export function ReelsView() {
   );
 }
 
+
 function Reel({
   post, src, eager, muted, onToggleMute,
   liked, saved, likeCount, commentCount,
@@ -189,9 +190,11 @@ function Reel({
   const { ref, playing, setPlaying } = useVisibleVideo({ threshold: 0.6 });
   const [tapPause, setTapPause] = useState(false);
 
+  const [errored, setErrored] = useState(false);
+
   return (
     <div className="relative h-full w-full snap-start snap-always grid place-items-center" style={{ willChange: "transform" }}>
-      {src ? (
+      {src && !errored ? (
         <video
           ref={ref}
           src={src}
@@ -200,14 +203,20 @@ function Reel({
           playsInline
           preload={eager ? "auto" : "metadata"}
           className="h-full w-full object-contain bg-black"
+          onError={() => setErrored(true)}
           onClick={() => {
             const el = ref.current; if (!el) return;
-            if (el.paused) { el.play(); setPlaying(true); setTapPause(false); }
+            if (el.paused) { el.play().catch(() => {}); setPlaying(true); setTapPause(false); }
             else { el.pause(); setPlaying(false); setTapPause(true); }
           }}
         />
+      ) : errored ? (
+        <div className="text-white/70 text-sm text-center px-6">
+          <p>Couldn't load this clip.</p>
+          <button onClick={() => setErrored(false)} className="mt-2 text-primary font-bold">Retry</button>
+        </div>
       ) : (
-        <div className="text-white/60 text-sm">Loading…</div>
+        <div className="h-12 w-12 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
       )}
 
       {!playing && tapPause && (
@@ -217,6 +226,7 @@ function Reel({
           </div>
         </div>
       )}
+
 
       {/* Bottom info */}
       <div className="absolute inset-x-0 bottom-0 p-3 pr-16 bg-gradient-to-t from-black/85 to-transparent text-white">
@@ -300,10 +310,11 @@ function CommentsSheet({
 
   return (
     <Sheet open={!!postId} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="h-[70svh] flex flex-col p-0">
-        <SheetHeader className="p-4 border-b border-border">
-          <SheetTitle>{comments.length} comments</SheetTitle>
+      <SheetContent side="bottom" className="h-[55svh] max-h-[55svh] flex flex-col p-0 rounded-t-3xl border-t border-border">
+        <SheetHeader className="p-3 border-b border-border">
+          <SheetTitle className="text-sm">{comments.length} comments</SheetTitle>
         </SheetHeader>
+
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {comments.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Be the first to comment.</p>}
           {comments.map((c) => {

@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useSyncExternalStore } from "react";
 import { Shell } from "@/components/squadz/Shell";
 import { SquadzProvider } from "@/lib/squadz-store";
 import { Toaster } from "@/components/ui/sonner";
@@ -24,16 +25,29 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+function subscribeTheme(cb: () => void) {
+  window.addEventListener("rostr:settings-changed", cb);
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", cb);
+  return () => {
+    window.removeEventListener("rostr:settings-changed", cb);
+    mq.removeEventListener("change", cb);
+  };
+}
+function readMode(): "dark" | "light" {
+  if (typeof document === "undefined") return "dark";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 function Index() {
+  const mode = useSyncExternalStore(subscribeTheme, readMode, () => "dark" as const);
   return (
-    <div className="dark">
-      <AuthProvider>
-        <SquadzProvider>
-          <SteamClaimListener />
-          <Shell />
-          <Toaster theme="dark" position="top-center" />
-        </SquadzProvider>
-      </AuthProvider>
-    </div>
+    <AuthProvider>
+      <SquadzProvider>
+        <SteamClaimListener />
+        <Shell />
+        <Toaster theme={mode} position="top-center" />
+      </SquadzProvider>
+    </AuthProvider>
   );
 }
