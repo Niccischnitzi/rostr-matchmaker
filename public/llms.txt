@@ -1,0 +1,15 @@
+# Rostr
+
+> Rostr is a gaming social hub and player passport — find teammates, build your roster, join clubs, share clips, and link every gaming platform in one profile.
+
+Rostr brings together the social pieces of gaming that are normally scattered across Discord, Steam, console friend lists, and group chats. Players create a single passport that links their accounts, then use it to find teammates (LFG), join clubs and clans, share short clips and reels, run cups and club wars, and chat with people they actually want to play with.
+
+## Pages
+
+- [Home](/): Overview of Rostr, the gaming social hub and player passport.
+- [Pricing](/pricing): Token packs, Rostr Pro subscription, and paid cup entry tiers.
+- [Find gaming friends guide](/guides/finding-gamers): How to find gaming friends and the best sites for gamers.
+
+## Optional
+
+- [Sign in](/auth): Sign in or create a Rostr account.
