@@ -212,8 +212,8 @@ body {
 }
 
 /* ---------- Density engine: separate font + layout scales ---------- */
-/* Tailwind v4 derives every p-*/m-*/gap-* utility from `--spacing`.
-   Overriding it on <html> rescales spacing app-wide without touching markup. */
+/* Tailwind v4 derives every spacing utility (p-, m-, gap-, etc.) from
+   `--spacing`. Overriding it on <html> rescales spacing app-wide. */
 html[data-layout-density="compact"] { --spacing: 0.215rem; }
 html[data-layout-density="comfy"]   { --spacing: 0.27rem; }
 
