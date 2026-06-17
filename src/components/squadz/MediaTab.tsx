@@ -272,7 +272,12 @@ export function MediaTab() {
         ))}
       </div>
 
-      {tab === "reels" ? <ReelsView /> : null}
+      {tab === "reels" ? (
+        <div className="-mx-3 sm:-mx-4">
+          <ReelsView />
+        </div>
+      ) : null}
+
 
       {tab === "reels" ? null : isLoading ? (
         <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
@@ -555,7 +560,20 @@ function KindBadge({ kind }: { kind: MediaPost["kind"] }) {
 
 function AutoPauseVideo({ src }: { src: string }) {
   // Autoplays muted when visible, pauses when scrolled away or tab hidden.
+  // Wrapped in error state so a single bad clip never crashes the whole feed.
   const { ref } = useVisibleVideo({ threshold: 0.5, autoplay: true });
+  const [errored, setErrored] = useState(false);
+  if (errored) {
+    return (
+      <div className="w-full h-full grid place-items-center text-xs text-muted-foreground bg-surface">
+        <div className="text-center px-4">
+          <VideoIcon className="h-6 w-6 mx-auto mb-2 opacity-50" />
+          <p>Clip unavailable</p>
+          <button onClick={() => setErrored(false)} className="mt-2 text-primary font-semibold">Retry</button>
+        </div>
+      </div>
+    );
+  }
   return (
     <video
       ref={ref}
@@ -566,6 +584,12 @@ function AutoPauseVideo({ src }: { src: string }) {
       loop
       preload="metadata"
       className="w-full h-full"
+      onError={() => setErrored(true)}
+      onStalled={(e) => {
+        // Don't crash on transient network stalls — just keep showing the poster.
+        e.preventDefault();
+      }}
     />
   );
 }
+
