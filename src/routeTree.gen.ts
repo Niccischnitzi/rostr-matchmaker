@@ -14,6 +14,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuidesFindingGamersRouteImport } from './routes/guides.finding-gamers'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthCallbackProviderRouteImport } from './routes/auth.callback.$provider'
 import { Route as ApiPublicSteamReturnRouteImport } from './routes/api/public/steam.return'
@@ -42,6 +43,11 @@ const AuthRoute = AuthRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesFindingGamersRoute = GuidesFindingGamersRouteImport.update({
+  id: '/guides/finding-gamers',
+  path: '/guides/finding-gamers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/guides/finding-gamers': typeof GuidesFindingGamersRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/guides/finding-gamers': typeof GuidesFindingGamersRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/guides/finding-gamers': typeof GuidesFindingGamersRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/sitemap.xml'
     | '/checkout/return'
+    | '/guides/finding-gamers'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/sitemap.xml'
     | '/checkout/return'
+    | '/guides/finding-gamers'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/sitemap.xml'
     | '/checkout/return'
+    | '/guides/finding-gamers'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  GuidesFindingGamersRoute: typeof GuidesFindingGamersRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSteamReturnRoute: typeof ApiPublicSteamReturnRoute
 }
@@ -182,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/finding-gamers': {
+      id: '/guides/finding-gamers'
+      path: '/guides/finding-gamers'
+      fullPath: '/guides/finding-gamers'
+      preLoaderRoute: typeof GuidesFindingGamersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  GuidesFindingGamersRoute: GuidesFindingGamersRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSteamReturnRoute: ApiPublicSteamReturnRoute,
 }
