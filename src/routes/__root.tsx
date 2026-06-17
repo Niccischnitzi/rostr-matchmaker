@@ -79,20 +79,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Rostr" },
-      { name: "description", content: "Find your Rostr" },
+      { title: "Rostr — Gaming Social Hub & Player Passport" },
+      {
+        name: "description",
+        content:
+          "Rostr is your gaming social hub to build your roster, join clubs, share clips, and link every gaming platform in one passport.",
+      },
       { name: "author", content: "Rostr" },
-      { property: "og:title", content: "Rostr" },
-      { property: "og:description", content: "Find your Rostr" },
+      { property: "og:site_name", content: "Rostr" },
+      { property: "og:title", content: "Rostr — Gaming Social Hub & Player Passport" },
+      {
+        property: "og:description",
+        content:
+          "Rostr is your gaming social hub to build your roster, join clubs, share clips, and link every gaming platform in one passport.",
+      },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: ROSTR_LOGO_URL },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://rostr-matchmaker.lovable.app/" },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/011204cd-6614-4702-b52c-892afbb61667/id-preview-7b1d46bd--d0c91221-1d8a-4b41-873d-75e62af876ea.lovable.app-1781684820855.png",
+      },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Rostr" },
-      { name: "twitter:image", content: ROSTR_LOGO_URL },
-      { name: "twitter:title", content: "Rostr" },
-      { name: "twitter:description", content: "Find your Rostr" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/011204cd-6614-4702-b52c-892afbb61667/id-preview-7b1d46bd--d0c91221-1d8a-4b41-873d-75e62af876ea.lovable.app-1781684820855.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/011204cd-6614-4702-b52c-892afbb61667/id-preview-7b1d46bd--d0c91221-1d8a-4b41-873d-75e62af876ea.lovable.app-1781684820855.png" },
+      { name: "twitter:title", content: "Rostr — Gaming Social Hub & Player Passport" },
+      {
+        name: "twitter:description",
+        content:
+          "Rostr is your gaming social hub to build your roster, join clubs, share clips, and link every gaming platform in one passport.",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/011204cd-6614-4702-b52c-892afbb61667/id-preview-7b1d46bd--d0c91221-1d8a-4b41-873d-75e62af876ea.lovable.app-1781684820855.png",
+      },
     ],
     links: [
       { rel: "icon", type: "image/png", href: ROSTR_LOGO_URL },
@@ -101,6 +121,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" },
       { rel: "stylesheet", href: appCss },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Rostr",
+              url: "https://rostr-matchmaker.lovable.app",
+              logo: ROSTR_LOGO_URL,
+            },
+            {
+              "@type": "WebSite",
+              name: "Rostr",
+              url: "https://rostr-matchmaker.lovable.app",
+            },
+          ],
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,

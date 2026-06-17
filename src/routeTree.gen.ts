@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -18,6 +19,11 @@ import { Route as AuthCallbackProviderRouteImport } from './routes/auth.callback
 import { Route as ApiPublicSteamReturnRouteImport } from './routes/api/public/steam.return'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/moderation'
     | '/pricing'
+    | '/sitemap.xml'
     | '/checkout/return'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/moderation'
     | '/pricing'
+    | '/sitemap.xml'
     | '/checkout/return'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/moderation'
     | '/pricing'
+    | '/sitemap.xml'
     | '/checkout/return'
     | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   ModerationRoute: typeof ModerationRoute
   PricingRoute: typeof PricingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSteamReturnRoute: typeof ApiPublicSteamReturnRoute
@@ -136,6 +149,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -210,6 +230,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ModerationRoute: ModerationRoute,
   PricingRoute: PricingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSteamReturnRoute: ApiPublicSteamReturnRoute,

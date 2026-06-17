@@ -12,6 +12,25 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
   errorComponent: () => <div className="p-6">Failed to load pricing.</div>,
   notFoundComponent: () => <div className="p-6">Not found.</div>,
+  head: () => ({
+    meta: [
+      { title: "Pricing & Power-ups — Rostr" },
+      {
+        name: "description",
+        content:
+          "Power up your gaming experience with Rostr Pro, token packs for LFG boosts, and entry to paid tournaments and club wars.",
+      },
+      { property: "og:title", content: "Pricing & Power-ups — Rostr" },
+      {
+        property: "og:description",
+        content:
+          "Power up your gaming experience with Rostr Pro, token packs for LFG boosts, and entry to paid tournaments and club wars.",
+      },
+      { property: "og:url", content: "https://rostr-matchmaker.lovable.app/pricing" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://rostr-matchmaker.lovable.app/pricing" }],
+  }),
 });
 
 type Tab = "tokens" | "pro" | "tournaments";
