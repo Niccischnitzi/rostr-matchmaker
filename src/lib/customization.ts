@@ -10,7 +10,9 @@ export type AnimKey = "smooth" | "snappy" | "reduced";
 export type Customization = {
   accent: AccentKey;
   background: BackgroundKey;
-  density: DensityKey;
+  density: DensityKey; // legacy combined density (kept for backwards-compat)
+  fontDensity: DensityKey; // controls text size scale
+  layoutDensity: DensityKey; // controls padding/gap scale
   font: FontKey;
   anim: AnimKey;
   radius: number; // px, base radius
@@ -20,6 +22,8 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   accent: "orange",
   background: "void",
   density: "comfy",
+  fontDensity: "comfy",
+  layoutDensity: "comfy",
   font: "grotesk",
   anim: "smooth",
   radius: 14,
@@ -149,6 +153,8 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   root.style.setProperty("--motion-scale", speed);
 
   root.dataset.density = c.density;
+  root.dataset.fontDensity = c.fontDensity ?? c.density;
+  root.dataset.layoutDensity = c.layoutDensity ?? c.density;
   root.dataset.anim = c.anim;
   root.dataset.accent = c.accent;
 }

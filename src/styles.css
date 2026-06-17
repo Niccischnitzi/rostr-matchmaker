@@ -211,6 +211,18 @@ body {
   transition-duration: 0.001ms !important;
 }
 
+/* ---------- Density engine: separate font + layout scales ---------- */
+/* Tailwind v4 derives every p-*/m-*/gap-* utility from `--spacing`.
+   Overriding it on <html> rescales spacing app-wide without touching markup. */
+html[data-layout-density="compact"] { --spacing: 0.215rem; }
+html[data-layout-density="comfy"]   { --spacing: 0.27rem; }
+
+/* Font density rescales rem-based text. Body fallback covers absolute sizes. */
+html[data-font-density="compact"] { font-size: 14px; }
+html[data-font-density="compact"] body { font-size: 0.875rem; }
+html[data-font-density="comfy"]   { font-size: 16.5px; }
+html[data-font-density="comfy"]   body { font-size: 1rem; }
+
 [data-density="compact"] {
   --space-scale: 0.92;
 }
