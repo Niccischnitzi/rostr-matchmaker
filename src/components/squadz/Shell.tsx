@@ -32,6 +32,8 @@ type ClansSub = "crews" | "cups";
 
 export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
+  const [tabDir, setTabDir] = useState<1 | -1>(1);
+  const prevTabRef = useRef<TabKey>("find");
   const [findSub, setFindSub] = useState<FindSub>("players");
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -39,6 +41,17 @@ export function Shell() {
   // Track which tabs have ever been visited so we mount them once and just toggle visibility.
   const [mounted, setMounted] = useState<Set<TabKey>>(() => new Set<TabKey>(["find"]));
   useEffect(() => { setMounted((m) => m.has(tab) ? m : new Set([...m, tab])); }, [tab]);
+
+  // Derive direction from previous tab index and play a soft swoosh.
+  useEffect(() => {
+    const prevIdx = tabs.findIndex((t) => t.key === prevTabRef.current);
+    const nextIdx = tabs.findIndex((t) => t.key === tab);
+    if (prevIdx !== -1 && nextIdx !== -1 && prevIdx !== nextIdx) {
+      setTabDir(nextIdx > prevIdx ? 1 : -1);
+      sfx.swoosh?.();
+    }
+    prevTabRef.current = tab;
+  }, [tab]);
 
   useEffect(() => { sfx.nav(); }, [tab]);
   useEffect(() => {
