@@ -394,6 +394,90 @@ button:active, [role="button"]:active { transform: scale(0.97); }
   &:active { animation: chroma-pulse 520ms ease-out; }
 }
 
+/* ============================================================
+   Extra animation utilities — sprinkle delight everywhere.
+   ============================================================ */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes glow-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--ring-c1, var(--primary)) 0%, transparent); }
+  50%      { box-shadow: 0 0 28px -4px color-mix(in oklab, var(--ring-c1, var(--primary)) 45%, transparent); }
+}
+@keyframes shimmer-sweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes tilt-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-1.2deg); }
+  75%      { transform: rotate(1.2deg); }
+}
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.9) translateY(6px); }
+  60%  { opacity: 1; transform: scale(1.02) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes hue-rotate {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+@utility float-soft   { animation: float-y 4.2s ease-in-out infinite; }
+@utility glow-breathe { animation: glow-breathe 3.4s ease-in-out infinite; }
+@utility pop-in       { animation: pop-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@utility wobble-hover { transition: transform 240ms ease; &:hover { animation: tilt-wobble 520ms ease-in-out; } }
+@utility hue-spin     { animation: hue-rotate 8s linear infinite; }
+
+@utility shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--foreground) 0%,
+    var(--ring-c1, var(--primary)) 40%,
+    var(--ring-c2, var(--primary-glow)) 60%,
+    var(--foreground) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 3.6s linear infinite;
+}
+
+/* Stagger children fade-in — apply to a list container. */
+@utility stagger-children {
+  & > * {
+    opacity: 0;
+    animation: pop-in 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  & > *:nth-child(1) { animation-delay: 40ms; }
+  & > *:nth-child(2) { animation-delay: 90ms; }
+  & > *:nth-child(3) { animation-delay: 140ms; }
+  & > *:nth-child(4) { animation-delay: 190ms; }
+  & > *:nth-child(5) { animation-delay: 240ms; }
+  & > *:nth-child(6) { animation-delay: 290ms; }
+  & > *:nth-child(7) { animation-delay: 340ms; }
+  & > *:nth-child(8) { animation-delay: 390ms; }
+  & > *:nth-child(n+9) { animation-delay: 440ms; }
+}
+
+/* Press feedback for any interactive element. */
+@utility press-pop {
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  &:active { transform: scale(0.96); }
+}
+
+/* Respect reduced motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 @utility lift-hover {
   transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 280ms ease;
   will-change: transform;
