@@ -323,12 +323,14 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabFrame({ active, tabKey, children }: { active: boolean; tabKey: string; children: ReactNode }) {
+function TabFrame({ active, tabKey, dir = 1, children }: { active: boolean; tabKey: string; dir?: 1 | -1; children: ReactNode }) {
   return (
     <div
-      key={tabKey}
+      key={tabKey + (active ? `:${dir}` : "")}
       aria-hidden={!active}
-      className={active ? "tab-mounted-show relative overflow-hidden" : "tab-mounted-hidden"}
+      className={active
+        ? `tab-mounted-show ${dir === 1 ? "tab-swap-right" : "tab-swap-left"} relative overflow-hidden`
+        : "tab-mounted-hidden"}
     >
       {active && <div className="arcade-sweep" aria-hidden />}
       <TabErrorBoundary label={tabKey}>{children}</TabErrorBoundary>
