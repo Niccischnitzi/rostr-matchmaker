@@ -154,14 +154,6 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
     return <p className="text-center text-sm text-muted-foreground py-16">No reels yet — be the first.</p>;
   }
 
-  // ESC closes
-  useEffect(() => {
-    if (!onClose) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   // Portal to <body> so `position: fixed` is NOT trapped by an ancestor
   // with `will-change: transform` (the Shell swipe wrapper creates a
   // containing block, which collapsed our fullscreen reel viewport).
