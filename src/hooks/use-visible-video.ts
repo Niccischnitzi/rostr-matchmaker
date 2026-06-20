@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from "react";
  *  - unmount race (sets state on dead component)
  *  - rapid IntersectionObserver chatter (debounced)
  */
-export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean }) {
+export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean; onAutoplayMuted?: () => void }) {
   const threshold = opts?.threshold ?? 0.6;
   const autoplay = opts?.autoplay ?? true;
+  const onAutoplayMuted = opts?.onAutoplayMuted;
   const ref = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const visibleRef = useRef(false);
@@ -33,8 +34,17 @@ export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean 
         await p;
         safeSet(true);
       } catch {
-        // AbortError / NotAllowedError — swallow, keep UI sane.
-        safeSet(false);
+        // Autoplay with sound is often blocked — fall back to muted playback.
+        try {
+          el.muted = true;
+          onAutoplayMuted?.();
+          const p2 = el.play();
+          pendingPlayRef.current = p2 as Promise<void>;
+          await p2;
+          safeSet(true);
+        } catch {
+          safeSet(false);
+        }
       } finally {
         pendingPlayRef.current = null;
       }
@@ -81,7 +91,7 @@ export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean 
       document.removeEventListener("visibilitychange", onVis);
       void doPause();
     };
-  }, [threshold, autoplay]);
+  }, [threshold, autoplay, onAutoplayMuted]);
 
   return { ref, playing, setPlaying };
 }

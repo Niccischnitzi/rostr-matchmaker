@@ -24,7 +24,7 @@ type MediaComment = { id: string; post_id: string; user_id: string; body: string
 
 export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
   const qc = useQueryClient();
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
 
   // Fullscreen mode: lock body scroll + flag for hiding bottom nav.
@@ -180,6 +180,7 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
             eager={i < 2}
             muted={muted}
             onToggleMute={() => setMuted((m) => !m)}
+            onAutoplayMuted={() => setMuted(true)}
             liked={myLikes.has(p.id)}
             saved={mySaves.has(p.id)}
             likeCount={likeCounts.get(p.id) ?? 0}
@@ -209,7 +210,7 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
 
 
 function Reel({
-  post, src, eager, muted, onToggleMute,
+  post, src, eager, muted, onToggleMute, onAutoplayMuted,
   liked, saved, likeCount, commentCount,
   onLike, onSave, onComment,
 }: {
@@ -218,6 +219,7 @@ function Reel({
   eager: boolean;
   muted: boolean;
   onToggleMute: () => void;
+  onAutoplayMuted: () => void;
   liked: boolean;
   saved: boolean;
   likeCount: number;
@@ -226,7 +228,7 @@ function Reel({
   onSave: () => void;
   onComment: () => void;
 }) {
-  const { ref, playing, setPlaying } = useVisibleVideo({ threshold: 0.6 });
+  const { ref, playing, setPlaying } = useVisibleVideo({ threshold: 0.6, onAutoplayMuted });
   const [tapPause, setTapPause] = useState(false);
 
   const [errored, setErrored] = useState(false);
