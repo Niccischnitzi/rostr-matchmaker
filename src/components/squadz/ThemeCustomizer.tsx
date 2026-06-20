@@ -105,6 +105,35 @@ export function ThemeCustomizer() {
         </div>
       </Group>
 
+      <Group icon={Sparkles} title="Hover hue">
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(HOVER_HUES) as HoverHueKey[]).map((k) => {
+            const h = HOVER_HUES[k];
+            const on = (draft.hoverHue ?? "auto") === k;
+            const gradient = h.swatches.length
+              ? `conic-gradient(from 180deg, ${h.swatches.join(", ")}, ${h.swatches[0]})`
+              : "conic-gradient(from 180deg, var(--primary), var(--primary-glow), var(--primary))";
+            return (
+              <button
+                key={k}
+                onClick={() => set("hoverHue", k)}
+                className={cn(
+                  "group relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all hover:scale-[1.03]",
+                  on ? "border-foreground scale-[1.04]" : "border-border hover:border-primary/60"
+                )}
+                title={h.name}
+              >
+                <div
+                  className="h-10 w-full rounded-lg mb-1 ring-1 ring-white/10 transition-transform duration-700 group-hover:rotate-[40deg]"
+                  style={{ backgroundImage: gradient }}
+                />
+                <p className="text-[10px] font-bold leading-tight">{h.name}</p>
+              </button>
+            );
+          })}
+        </div>
+      </Group>
+
       <Group icon={Wand2} title="Background">
         <div className="grid grid-cols-3 gap-2">
           {(Object.keys(BACKGROUNDS) as BackgroundKey[]).map((k) => {
