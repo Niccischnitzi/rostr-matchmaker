@@ -251,6 +251,7 @@ export function Shell() {
         {/* Mobile bottom nav */}
         <nav
           data-swipe-tabbar="true"
+          data-mobile-tabbar="true"
           className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl"
         >
           <div className="relative grid grid-cols-5">
