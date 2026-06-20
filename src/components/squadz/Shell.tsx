@@ -257,21 +257,6 @@ export function Shell() {
           {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"    dir={tabDir}><ChatTab /></TabFrame>}
           {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"   dir={tabDir}><MediaTab /></TabFrame>}
           {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile" dir={tabDir}><ProfileTab /></TabFrame>}
-              <SubNav
-                items={[
-                  { key: "crews", label: "Crews", icon: Shield },
-                  { key: "cups", label: "Cups", icon: Trophy },
-                ]}
-                value={clansSub}
-                onChange={(v) => setClansSub(v as ClansSub)}
-              />
-              {clansSub === "crews" && <CrewsTab />}
-              {clansSub === "cups" && <TournamentsTab />}
-            </TabFrame>
-          )}
-          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"><ChatTab /></TabFrame>}
-          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"><MediaTab /></TabFrame>}
-          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>}
 
 
         </div>
