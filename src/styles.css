@@ -304,17 +304,16 @@ html[data-font-density="comfy"]   body { font-size: 1rem; }
   overflow: hidden;
   background: color-mix(in oklab, var(--muted) 80%, transparent);
   border-radius: 0.75rem;
-}
-@utility skeleton-shine::after,
-.skeleton-shine::after {
-  content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(110deg,
-    transparent 25%,
-    color-mix(in oklab, var(--primary) 22%, transparent) 50%,
-    transparent 75%);
-  background-size: 220% 100%;
-  animation: shimmer-sweep 1.5s linear infinite;
+  &::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(110deg,
+      transparent 25%,
+      color-mix(in oklab, var(--primary) 22%, transparent) 50%,
+      transparent 75%);
+    background-size: 220% 100%;
+    animation: shimmer-sweep 1.5s linear infinite;
+  }
 }
 
 /* Limit paint cost of long off-screen content (lists, decks, etc.) */
