@@ -1,71 +1,52 @@
-# Remaining sprints for rostr
+# rostr Master Update — Phased Plan
 
-Sprint 1 (layout + theme + 1-club lock) is shipped. Below is everything left from the master prompt, grouped so each sprint is independently shippable and you can stop me between any of them.
+Scope is too large for one turn. I'll ship in 5 phases. After each phase you confirm it works, then I move on. This avoids regressions and keeps credits sane.
 
-## Sprint 2 — Reporting infrastructure + admin email
+## Phase 1 — Critical bug fixes (frontend-only, ships first)
 
-**Scope**
-- `ReportDialog` component: reason category (Cheating, Harassment, Sexual, Hate, Spam, Underage, Other), free-text details (≤1000 chars), optional proof attachment (image/clip upload to existing `dm-attachments` bucket), captured context (route, target id, target type, app version, user agent).
-- Wire the dialog into ProfileTab, MediaTab post menu, ChatTab message long-press, and CrewsTab card menu (currently `reportTarget` is used in only one place).
-- Server function `submitReport` (`createServerFn` + `requireSupabaseAuth`) that:
-  1. inserts into `user_reports` with the structured payload,
-  2. enqueues an admin email to `nicolas.amacker2010@gmail.com` via the Lovable Emails queue.
-- React Email template `report-alert.tsx` with reporter handle, target link, reason, details, attached proof URL, and a deep-link into `/moderation`.
-- Toast UX: "Thanks — our moderators have been notified."
+- **Tab-switch crash**: add `AbortController` + `isMounted` ref in `Shell.tsx` tab effects and every async fetch in `ClubsTab`, `MediaTab`, `FriendsTab`, `ChatTab`, `ProfileTab`. Cancel in-flight Supabase queries on unmount.
+- **Media buffering crash**: wrap `ReelsView` and `MediaTab` video players in an ErrorBoundary that renders a skeleton instead of the white "page didn't load" screen. Debounce `play()` calls; swallow `AbortError`.
+- **Auth loop**: audit `use-auth.tsx` — already filters event types, but verify `router.invalidate()` isn't fighting the `_authenticated` gate. Add `INITIAL_SESSION` ignore.
+- **Avatar fallback**: central `<Avatar>` wrapper that swaps to initials on `onError`. Apply across all consumers.
+- **Friend mutations**: read `friends` table policies, fix the insert/accept RPC if mutation is rejected.
+- **Payment null state**: guard `StripeEmbeddedCheckout` against missing `clientSecret`.
 
-**Prereq (you must action)**
-The Lovable Emails domain is not configured yet. I'll trigger the setup dialog at the start of this sprint; once you complete it, I continue automatically. If you'd rather not configure a domain today, I'll ship the DB + dialog and stub the email call so it activates the moment a domain is live.
+## Phase 2 — Theme engine, fonts, palettes, light mode
 
-## Sprint 3 — Reels tab + 720p free-tier cap + exponential upload cost
+- Install via `bun add @fontsource-variable/plus-jakarta-sans @fontsource/bebas-neue @fontsource-variable/geist`. Neue Haas Grotesk is proprietary — substitute with **Inter Tight** (closest free analog) and label it "Neue Haas" in the picker, or skip if you want strict licensing.
+- Extend `customization.ts` with `FONT_FAMILIES` = {jakarta, neueHaas, bebas, geist} and `BACKGROUNDS` palette set: Crimson Cobalt, Neon Navy, Purple Cream, Party Pinky, Cyber Mint, Midnight Obsidian, Slate Minimal. Each palette ships paired dark+light tokens.
+- Rewrite light-mode tokens in `styles.css` so every surface/border/text variable has a tested contrast pair. Use `oklch` with L≥0.95 for surfaces and L≤0.25 for foregrounds.
+- Settings → `ThemeCustomizer` already wires `applyCustomization`; verify propagation by tagging `<html>` with `data-palette` and reading from CSS vars only (no hard-coded `text-white`).
 
-**Scope**
-- New `ReelsTab` (vertical snap-scroll feed) added under Media as a second sub-tab; reuses `media_posts` filtered by `aspect_ratio < 1`.
-- Client-side video probe before upload: reject >720p for non-Pro users, allow up to 1080p for Pro.
-- Exponential token cost per upload in the same UTC day: `cost(n) = 5 * 2^n` capped at 320. New `media_uploads_today` RPC counts today's posts; `spend_tokens` already enforces balance.
-- UI: cost preview in the upload sheet ("Next upload: 20 tokens — you've posted 2 today").
-- GPU-smooth snap container with `scroll-snap-stop: always`, `will-change: transform`, prefetch next 2 videos.
+## Phase 3 — Signature gradients + 360° hover + micro-interactions
 
-**No external prereq.**
+- 5 gradient utilities in `styles.css`: `@utility gradient-dusk/arctic/solar-flare/neon-tide/quantum-void`.
+- `@utility rotating-border`: conic-gradient mask, 6s linear infinite rotate. Applied to `<Card variant="hot">` and primary buttons.
+- Chromatic pulse `@keyframes` on `:active` for toggle/like buttons.
+- Spring transitions via existing framer-motion (or CSS cubic-bezier presets).
 
-## Sprint 4 — Steam OpenID (live) + linked account display
+## Phase 4 — Full-screen reels + bottom tabs + comment tray + density
 
-**Scope**
-- Server route `/api/public/steam/return` performing the OpenID 2.0 `check_authentication` round-trip against `https://steamcommunity.com/openid/login`.
-- Server function `linkSteam` that, after verification, hits `ISteamUser/GetPlayerSummaries` with the Steam Web API key and writes `provider='steam'`, `external_id`, `display_name`, `avatar_url` into `linked_accounts`.
-- `SteamConnectButton` in SettingsSheet + ProfileTab; shows linked Steam persona + avatar once connected.
-- One-club-style guard: a Steam id can only link to one rostr account.
+- `ReelsView`: `h-[100dvh] w-screen fixed inset-0`, snap-y mandatory. Hide Shell chrome when reels active.
+- Shell bottom nav: shrink to `h-12`, `text-[10px]`, overlay with `backdrop-blur` over reels.
+- Comments: slide-up `<Sheet side="bottom">` at 60vh, scrollable, doesn't push video.
+- Density: `data-layout-density` already wired (`styles.css` line ~240). Audit components still using hardcoded `p-4`/`gap-4` and switch to `p-(--spacing)`-driven utilities.
 
-**Prereq (you must action)**
-I'll add the secret request for `STEAM_WEB_API_KEY` at the start of this sprint. You'll also need to register the production domain (https://project--d0c91221-1d8a-4b41-873d-75e62af876ea.lovable.app and your custom domain when live) at https://steamcommunity.com/dev/apikey. The route will work in preview but Steam's allowlist gates the live domain.
+## Phase 5 — Backend (Steam, calls, payments, reports)
 
-## Sprint 5 — Twint via Stripe + club customization
-
-**Twint**
-- Add `payment_method_types: ['card', 'twint']` to the CH checkout session in `payments.functions.ts` (Stripe handles the rest).
-- Detect CH user via existing `cf-ipcountry` probe and surface Twint as the default option.
-
-**Prereq (you must action)**
-Twint must be activated on your Stripe account (Stripe Dashboard → Settings → Payment methods → Twint → Turn on). Until you do, sessions with `twint` will 400.
-
-**Club customization**
-- Owner-only "Club appearance" sheet: club accent color, banner image (Storage `avatars` bucket), short tagline, motto.
-- New `clubs.accent`, `clubs.banner_url`, `clubs.tagline` columns + migration with GRANTs.
-- ClubsTab card + ClubWars header use the club accent as a local CSS-var override scoped to the club view (does not change the user's global theme).
-
-**No further external prereq beyond Stripe Twint activation.**
-
----
+- **Steam OAuth**: requires `STEAM_WEB_API_KEY` secret. I'll request it via `add_secret` and wire `/api/public/steam.return.ts` (file already exists). Ship a hardcoded top-100 Steam game catalog JSON for selection.
+- **WebRTC calls**: peer connection via Supabase Realtime channel for SDP/ICE signaling. Google STUN. Reuse existing `CallSheet.tsx`.
+- **Club governance**: SQL trigger `enforce_single_club_membership` already exists — verify it's active. Add banner upload to `clubs` table + storage. Resign/Draw fields on `club_wars`.
+- **Reporting**: `user_reports` table exists. Extend `ReportDialog` with reason categories + chat-log attachment. **No email** (per your choice) — admin views via moderation route.
+- **Payments**: 720p cap already in `uploadPricing.ts`. Add PayPal + Twint via Stripe Checkout `payment_method_types: ['card','paypal','twint']`. Exponential cost helper already exists server-side.
 
 ## Technical notes
-- All new server functions use `createServerFn` + `requireSupabaseAuth` (per server-side-modern rules); webhooks (Steam return) live under `/api/public/*`.
-- All DB migrations include `GRANT` blocks per public-schema-grants rule.
-- React Email template body bg stays `#ffffff` per email guide.
-- Theme stays global; club customization is scoped via a nested CSS-var override only inside the club view, not via the global `applyCustomization`.
 
-## Proposed execution order
-1. Sprint 2 (Reports + Email) — needs email domain setup from you.
-2. Sprint 3 (Reels + pricing) — no prereqs, fastest.
-3. Sprint 4 (Steam live) — needs Steam Web API key from you.
-4. Sprint 5 (Twint + club customization) — needs Twint enabled in Stripe.
+- Neue Haas Grotesk: no free webfont exists. Confirm substitute with **Inter Tight** or pay for license elsewhere.
+- WebRTC group calls (>2 peers) need an SFU; I'll ship 1:1 only.
+- Twint requires the Stripe account to be in CH and enabled in Stripe Dashboard — I'll wire the code, but it won't show up at checkout until the user enables it on their Stripe side.
+- Steam OAuth requires you (the developer) to register at https://steamcommunity.com/dev/apikey and paste the key when prompted.
 
-Tell me to "start" and I'll begin Sprint 2 with the email-domain dialog. If you'd rather reorder (e.g. "do Sprint 3 first while I get the email domain ready"), say so and I'll switch.
+## Order of execution
+
+I'll start **Phase 1 immediately** on your approval. Reply "go" or specify a different starting phase.

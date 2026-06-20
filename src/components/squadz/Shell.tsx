@@ -15,6 +15,7 @@ import { IncomingCallListener } from "./IncomingCallListener";
 import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
+import { TabErrorBoundary } from "./TabErrorBoundary";
 
 export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
 
@@ -316,7 +317,7 @@ function TabFrame({ active, tabKey, children }: { active: boolean; tabKey: strin
       className={active ? "tab-mounted-show relative overflow-hidden" : "tab-mounted-hidden"}
     >
       {active && <div className="arcade-sweep" aria-hidden />}
-      {children}
+      <TabErrorBoundary label={tabKey}>{children}</TabErrorBoundary>
     </div>
   );
 }
