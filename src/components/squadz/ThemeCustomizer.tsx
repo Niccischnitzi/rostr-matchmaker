@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ACCENTS, BACKGROUNDS, FONT_FAMILIES,
+  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
-  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey,
+  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey,
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2 } from "lucide-react";
+import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sfx } from "@/lib/sfx";
