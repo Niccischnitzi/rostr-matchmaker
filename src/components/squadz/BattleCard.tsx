@@ -43,7 +43,7 @@ export function BattleCard({ username, linkedPlatforms, loading = false }: Props
   const isLoading = loading || hydrating;
 
   return (
-    <div className="rounded-3xl border border-border bg-gradient-to-br from-card via-card to-surface overflow-hidden relative shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)]">
+    <div className="hover-spin-ring rounded-3xl border border-border bg-gradient-to-br from-card via-card to-surface overflow-hidden relative shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] animate-fade-in">
       {/* dotted backdrop */}
       <div
         className="absolute inset-0 opacity-[0.06] pointer-events-none"
