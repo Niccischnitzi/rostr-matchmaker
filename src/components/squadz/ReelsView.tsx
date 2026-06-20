@@ -24,6 +24,9 @@ type MediaComment = { id: string; post_id: string; user_id: string; body: string
 
 export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
   const qc = useQueryClient();
+  const [muted, setMuted] = useState(true);
+  const [commentsFor, setCommentsFor] = useState<string | null>(null);
+
   // Fullscreen mode: lock body scroll + flag for hiding bottom nav.
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -34,8 +37,15 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
       delete document.documentElement.dataset.reelsFullscreen;
     };
   }, []);
-  const [muted, setMuted] = useState(true);
-  const [commentsFor, setCommentsFor] = useState<string | null>(null);
+
+  // ESC closes
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
 
   const { data: userId } = useQuery({
     queryKey: ["auth-user-id"],
