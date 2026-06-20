@@ -107,6 +107,25 @@ export const PALETTES: Record<PaletteKey, PalettePreset> = {
   "sunset-arcade":     { name: "Sunset Arcade",     mode: "dark",  accent: "orange",  background: "sunset", gradient: "linear-gradient(135deg, #fde047 0%, #ff7849 50%, #f43f5e 100%)" },
 };
 
+// Hover hue presets — drive the spinning conic ring colors. "auto" defers to
+// the active palette/accent. Any other value overrides those vars globally.
+export const HOVER_HUES: Record<HoverHueKey, { name: string; swatches: string[] }> = {
+  auto:           { name: "Auto",           swatches: [] },
+  rainbow:        { name: "Rainbow",        swatches: ["#f43f5e", "#f59e0b", "#a3e635", "#22d3ee", "#8b5cf6"] },
+  magma:          { name: "Magma",          swatches: ["#fde047", "#ff7849", "#f43f5e", "#7c2d12"] },
+  ice:            { name: "Ice",            swatches: ["#e0f2fe", "#7dd3fc", "#38bdf8", "#1e3a8a"] },
+  candy:          { name: "Candy",          swatches: ["#fda4af", "#f472b6", "#c084fc", "#a78bfa"] },
+  toxic:          { name: "Toxic",          swatches: ["#bef264", "#84cc16", "#22d3ee", "#10b981"] },
+  ultraviolet:    { name: "Ultraviolet",    swatches: ["#a855f7", "#6366f1", "#0ea5e9", "#8b5cf6"] },
+  "gold-rush":    { name: "Gold Rush",      swatches: ["#fde047", "#f59e0b", "#fff7ed", "#b45309"] },
+  monochrome:     { name: "Monochrome",     swatches: ["#fafafa", "#a1a1aa", "#52525b", "#18181b"] },
+  sunset:         { name: "Sunset",         swatches: ["#fde047", "#fb923c", "#ec4899", "#7c3aed"] },
+  oceanic:        { name: "Oceanic",        swatches: ["#22d3ee", "#0891b2", "#1e40af", "#0f172a"] },
+  vaporwave:      { name: "Vaporwave",      swatches: ["#f472b6", "#c084fc", "#22d3ee", "#fbcfe8"] },
+  "emerald-fire": { name: "Emerald Fire",   swatches: ["#10b981", "#22c55e", "#fde047", "#f97316"] },
+  "blood-moon":   { name: "Blood Moon",     swatches: ["#7f1d1d", "#dc2626", "#fb923c", "#1f2937"] },
+};
+
 // Curated avatar presets used everywhere a profile picture is chosen.
 export const AVATAR_PACKS = {
   bots: ["nova", "ghost", "kairo", "lyric", "vexen", "halcyon", "blaze", "pixel"],
