@@ -34,8 +34,17 @@ export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean;
         await p;
         safeSet(true);
       } catch {
-        // AbortError / NotAllowedError — swallow, keep UI sane.
-        safeSet(false);
+        // Autoplay with sound is often blocked — fall back to muted playback.
+        try {
+          el.muted = true;
+          onAutoplayMuted?.();
+          const p2 = el.play();
+          pendingPlayRef.current = p2 as Promise<void>;
+          await p2;
+          safeSet(true);
+        } catch {
+          safeSet(false);
+        }
       } finally {
         pendingPlayRef.current = null;
       }
