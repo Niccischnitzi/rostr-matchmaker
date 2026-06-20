@@ -87,18 +87,18 @@ export type PalettePreset = {
   mode: "dark" | "light";
   accent: AccentKey;
   background: BackgroundKey;
-  swatches: [string, string, string];
+  gradient: string;
 };
 
 export const PALETTES: Record<PaletteKey, PalettePreset> = {
-  "crimson-cobalt":    { name: "Crimson Cobalt",    mode: "dark",  accent: "rose",    background: "aurora", swatches: ["#f43f5e", "#6366f1", "#0b0b14"] },
-  "neon-navy":         { name: "Neon Navy",         mode: "dark",  accent: "cyan",    background: "grid",   swatches: ["#22d3ee", "#1e3a8a", "#0a0f1f"] },
-  "purple-cream":      { name: "Purple Cream",      mode: "light", accent: "violet",  background: "noise",  swatches: ["#8b5cf6", "#fdf4ff", "#1a0b2e"] },
-  "party-pinky":       { name: "Party Pinky",       mode: "dark",  accent: "rose",    background: "sunset", swatches: ["#f43f5e", "#f59e0b", "#1a0a14"] },
-  "cyber-mint":        { name: "Cyber Mint",        mode: "dark",  accent: "emerald", background: "matrix", swatches: ["#10b981", "#0fffbe", "#031a12"] },
-  "midnight-obsidian": { name: "Midnight Obsidian", mode: "dark",  accent: "indigo",  background: "void",   swatches: ["#6366f1", "#0a0a0a", "#1f1f23"] },
-  "slate-minimal":     { name: "Slate Minimal",     mode: "light", accent: "indigo",  background: "noise",  swatches: ["#6366f1", "#f8fafc", "#1e293b"] },
-  "sunset-arcade":     { name: "Sunset Arcade",     mode: "dark",  accent: "orange",  background: "sunset", swatches: ["#ff7849", "#f59e0b", "#1a0e0a"] },
+  "crimson-cobalt":    { name: "Crimson Cobalt",    mode: "dark",  accent: "rose",    background: "aurora", gradient: "linear-gradient(135deg, #f43f5e 0%, #8b5cf6 50%, #6366f1 100%)" },
+  "neon-navy":         { name: "Neon Navy",         mode: "dark",  accent: "cyan",    background: "grid",   gradient: "linear-gradient(135deg, #22d3ee 0%, #3b82f6 55%, #1e3a8a 100%)" },
+  "purple-cream":      { name: "Purple Cream",      mode: "light", accent: "violet",  background: "noise",  gradient: "linear-gradient(135deg, #8b5cf6 0%, #c4b5fd 55%, #fdf4ff 100%)" },
+  "party-pinky":       { name: "Party Pinky",       mode: "dark",  accent: "rose",    background: "sunset", gradient: "linear-gradient(135deg, #ff7849 0%, #f43f5e 50%, #ec4899 100%)" },
+  "cyber-mint":        { name: "Cyber Mint",        mode: "dark",  accent: "emerald", background: "matrix", gradient: "linear-gradient(135deg, #0fffbe 0%, #10b981 55%, #0f766e 100%)" },
+  "midnight-obsidian": { name: "Midnight Obsidian", mode: "dark",  accent: "indigo",  background: "void",   gradient: "linear-gradient(135deg, #1f1f23 0%, #4338ca 60%, #6366f1 100%)" },
+  "slate-minimal":     { name: "Slate Minimal",     mode: "light", accent: "indigo",  background: "noise",  gradient: "linear-gradient(135deg, #e2e8f0 0%, #94a3b8 55%, #6366f1 100%)" },
+  "sunset-arcade":     { name: "Sunset Arcade",     mode: "dark",  accent: "orange",  background: "sunset", gradient: "linear-gradient(135deg, #fde047 0%, #ff7849 50%, #f43f5e 100%)" },
 };
 
 // Curated avatar presets used everywhere a profile picture is chosen.
