@@ -184,6 +184,27 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   root.dataset.layoutDensity = c.layoutDensity ?? c.density;
   root.dataset.anim = c.anim;
   root.dataset.accent = c.accent;
+  root.dataset.background = c.background;
+  root.dataset.font = c.font;
+  if (c.palette) root.dataset.palette = c.palette; else delete root.dataset.palette;
+}
+
+/** Apply a named palette preset: theme mode + accent + background atomically. */
+export function applyPalettePreset(key: PaletteKey) {
+  if (typeof window === "undefined") return;
+  const preset = PALETTES[key];
+  if (!preset) return;
+  try {
+    const raw = localStorage.getItem("rostr:settings");
+    const parsed = raw ? JSON.parse(raw) : {};
+    parsed.theme = preset.mode;
+    localStorage.setItem("rostr:settings", JSON.stringify(parsed));
+  } catch {}
+  document.documentElement.classList.toggle("dark", preset.mode === "dark");
+  document.documentElement.style.colorScheme = preset.mode;
+  window.dispatchEvent(new Event("rostr:settings-changed"));
+  const current = loadCustomization();
+  saveCustomization({ ...current, accent: preset.accent, background: preset.background, palette: key });
 }
 
 export function initCustomizationListeners() {
