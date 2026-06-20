@@ -167,7 +167,10 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   }
 
   root.style.setProperty("--radius", `${c.radius / 16}rem`);
-  root.style.setProperty("--font-display", FONT_FAMILIES[c.font].family);
+  // Apply chosen font GLOBALLY: --font-sans drives <body>, --font-display drives headings.
+  const fontFamily = FONT_FAMILIES[c.font].family;
+  root.style.setProperty("--font-display", fontFamily);
+  root.style.setProperty("--font-sans", fontFamily);
 
   // Background painted on <html> via CSS var.
   root.style.setProperty("--app-bg-image", BACKGROUNDS[c.background].css);
