@@ -122,7 +122,7 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-3 transition-colors min-w-0 ${
+      className={`hover-spin-ring rounded-2xl border p-3 transition-colors min-w-0 ${
         accent ? "border-primary/40 bg-primary/5" : "border-border bg-surface/60 hover:border-border/80"
       }`}
     >
