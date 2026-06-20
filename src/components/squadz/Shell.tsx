@@ -156,7 +156,7 @@ export function Shell() {
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all",
+                  "hover-spin-ring flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all",
                   active ? "bg-primary text-primary-foreground glow-orange" : "text-muted-foreground hover:bg-surface hover:text-foreground"
                 )}
               >
