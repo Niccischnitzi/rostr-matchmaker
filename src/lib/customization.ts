@@ -157,6 +157,11 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   // and CSS variables on a closer ancestor would otherwise beat ours.
   const targets: HTMLElement[] = [root, ...Array.from(document.querySelectorAll<HTMLElement>(".dark"))];
   const accentSurface = `color-mix(in oklab, ${accent.primary} 18%, var(--background))`;
+  const palette = c.palette ? PALETTES[c.palette] : null;
+  const paletteHexes = palette ? (palette.gradient.match(/#[0-9a-fA-F]{3,8}/g) ?? []) : [];
+  const ringColors: string[] = paletteHexes.length >= 2
+    ? [paletteHexes[0], paletteHexes[1] ?? paletteHexes[0], paletteHexes[2] ?? paletteHexes[0], paletteHexes[0]]
+    : [accent.primary, accent.glow, accent.primary, accent.glow];
   for (const el of targets) {
     el.style.setProperty("--primary", accent.primary);
     el.style.setProperty("--primary-foreground", "oklch(0.08 0 0)");
@@ -164,7 +169,12 @@ export function applyCustomization(c: Customization = loadCustomization()) {
     el.style.setProperty("--ring", accent.ring);
     el.style.setProperty("--accent", accentSurface);
     el.style.setProperty("--accent-foreground", accent.primary);
+    el.style.setProperty("--ring-c1", ringColors[0]);
+    el.style.setProperty("--ring-c2", ringColors[1]);
+    el.style.setProperty("--ring-c3", ringColors[2]);
+    el.style.setProperty("--ring-c4", ringColors[3]);
   }
+
 
   root.style.setProperty("--radius", `${c.radius / 16}rem`);
   // Apply chosen font GLOBALLY: --font-sans drives <body>, --font-display drives headings.
