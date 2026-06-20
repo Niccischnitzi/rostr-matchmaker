@@ -273,9 +273,7 @@ export function MediaTab() {
       </div>
 
       {tab === "reels" ? (
-        <div className="-mx-3 sm:-mx-4">
-          <ReelsView />
-        </div>
+        <ReelsView onClose={() => setTab("feed")} />
       ) : null}
 
 
