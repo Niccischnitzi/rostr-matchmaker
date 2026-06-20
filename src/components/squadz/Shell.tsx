@@ -32,6 +32,8 @@ type ClansSub = "crews" | "cups";
 
 export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
+  const [tabDir, setTabDir] = useState<1 | -1>(1);
+  const prevTabRef = useRef<TabKey>("find");
   const [findSub, setFindSub] = useState<FindSub>("players");
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -39,6 +41,17 @@ export function Shell() {
   // Track which tabs have ever been visited so we mount them once and just toggle visibility.
   const [mounted, setMounted] = useState<Set<TabKey>>(() => new Set<TabKey>(["find"]));
   useEffect(() => { setMounted((m) => m.has(tab) ? m : new Set([...m, tab])); }, [tab]);
+
+  // Derive direction from previous tab index and play a soft swoosh.
+  useEffect(() => {
+    const prevIdx = tabs.findIndex((t) => t.key === prevTabRef.current);
+    const nextIdx = tabs.findIndex((t) => t.key === tab);
+    if (prevIdx !== -1 && nextIdx !== -1 && prevIdx !== nextIdx) {
+      setTabDir(nextIdx > prevIdx ? 1 : -1);
+      sfx.swoosh?.();
+    }
+    prevTabRef.current = tab;
+  }, [tab]);
 
   useEffect(() => { sfx.nav(); }, [tab]);
   useEffect(() => {
@@ -215,7 +228,7 @@ export function Shell() {
 
           {/* Tabs are mounted once visited and toggled with display:none — keeps state, eliminates remount jank. */}
           {mounted.has("find") && (
-            <TabFrame active={tab === "find"} tabKey="find">
+            <TabFrame active={tab === "find"} tabKey="find" dir={tabDir}>
               <SubNav
                 items={[
                   { key: "players", label: "Players", icon: Users },
@@ -228,7 +241,7 @@ export function Shell() {
             </TabFrame>
           )}
           {mounted.has("clans") && (
-            <TabFrame active={tab === "clans"} tabKey="clans">
+            <TabFrame active={tab === "clans"} tabKey="clans" dir={tabDir}>
               <SubNav
                 items={[
                   { key: "crews", label: "Crews", icon: Shield },
@@ -241,9 +254,9 @@ export function Shell() {
               {clansSub === "cups" && <TournamentsTab />}
             </TabFrame>
           )}
-          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"><ChatTab /></TabFrame>}
-          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"><MediaTab /></TabFrame>}
-          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile"><ProfileTab /></TabFrame>}
+          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"    dir={tabDir}><ChatTab /></TabFrame>}
+          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"   dir={tabDir}><MediaTab /></TabFrame>}
+          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile" dir={tabDir}><ProfileTab /></TabFrame>}
 
 
         </div>
@@ -310,12 +323,14 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabFrame({ active, tabKey, children }: { active: boolean; tabKey: string; children: ReactNode }) {
+function TabFrame({ active, tabKey, dir = 1, children }: { active: boolean; tabKey: string; dir?: 1 | -1; children: ReactNode }) {
   return (
     <div
-      key={tabKey}
+      key={tabKey + (active ? `:${dir}` : "")}
       aria-hidden={!active}
-      className={active ? "tab-mounted-show relative overflow-hidden" : "tab-mounted-hidden"}
+      className={active
+        ? `tab-mounted-show ${dir === 1 ? "tab-swap-right" : "tab-swap-left"} relative overflow-hidden`
+        : "tab-mounted-hidden"}
     >
       {active && <div className="arcade-sweep" aria-hidden />}
       <TabErrorBoundary label={tabKey}>{children}</TabErrorBoundary>
