@@ -410,3 +410,9 @@ button:active, [role="button"]:active { transform: scale(0.97); }
 @media (prefers-reduced-motion: reduce) {
   [class*="rotating-border"], .shimmer { animation: none !important; }
 }
+
+/* Hide app chrome while a Reel is in fullscreen mode. */
+html[data-reels-fullscreen="true"] [data-mobile-tabbar="true"],
+html[data-reels-fullscreen="true"] [data-app-header="true"] {
+  display: none !important;
+}
