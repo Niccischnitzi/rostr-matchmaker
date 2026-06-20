@@ -2,6 +2,7 @@
 // Autoplays when visible, pauses when scrolled away or tab hidden.
 // Side rail: like, comment, save, mute. Comment sheet opens at the bottom.
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, MessageCircle, Bookmark, Volume2, VolumeX, Send, Play, X } from "lucide-react";
