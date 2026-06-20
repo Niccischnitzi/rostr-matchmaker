@@ -210,7 +210,7 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
 
 
 function Reel({
-  post, src, eager, muted, onToggleMute,
+  post, src, eager, muted, onToggleMute, onAutoplayMuted,
   liked, saved, likeCount, commentCount,
   onLike, onSave, onComment,
 }: {
@@ -219,6 +219,7 @@ function Reel({
   eager: boolean;
   muted: boolean;
   onToggleMute: () => void;
+  onAutoplayMuted: () => void;
   liked: boolean;
   saved: boolean;
   likeCount: number;
@@ -227,7 +228,7 @@ function Reel({
   onSave: () => void;
   onComment: () => void;
 }) {
-  const { ref, playing, setPlaying } = useVisibleVideo({ threshold: 0.6 });
+  const { ref, playing, setPlaying } = useVisibleVideo({ threshold: 0.6, onAutoplayMuted });
   const [tapPause, setTapPause] = useState(false);
 
   const [errored, setErrored] = useState(false);
