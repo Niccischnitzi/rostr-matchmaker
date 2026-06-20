@@ -180,6 +180,7 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
             eager={i < 2}
             muted={muted}
             onToggleMute={() => setMuted((m) => !m)}
+            onAutoplayMuted={() => setMuted(true)}
             liked={myLikes.has(p.id)}
             saved={mySaves.has(p.id)}
             likeCount={likeCounts.get(p.id) ?? 0}
