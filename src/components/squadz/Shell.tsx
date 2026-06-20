@@ -357,7 +357,7 @@ function SubNav({
           return (
             <button
               key={it.key}
-              onClick={() => onChange(it.key)}
+              onClick={() => { sfx.pop(); onChange(it.key); }}
               className={cn(
                 "hover-spin-ring flex-1 min-w-fit flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
                 active ? "bg-primary text-primary-foreground glow-orange" : "text-muted-foreground hover:text-foreground"
