@@ -52,14 +52,17 @@ export function useSubscription() {
     };
     refetch();
 
-    const channel = supabase
-      .channel(`subs:${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
-        () => refetch(),
-      )
-      .subscribe();
+    // Unique channel name per mount avoids StrictMode double-invoke reusing
+    // an already-subscribed channel, which throws "cannot add postgres_changes
+    // callbacks after subscribe()".
+    const channelName = `subs:${user.id}:${typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`;
+    const channel = supabase.channel(channelName);
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
+      () => refetch(),
+    );
+    channel.subscribe();
 
     return () => {
       cancelled = true;
