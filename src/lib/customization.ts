@@ -184,9 +184,13 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   const accentSurface = `color-mix(in oklab, ${accent.primary} 18%, var(--background))`;
   const palette = c.palette ? PALETTES[c.palette] : null;
   const paletteHexes = palette ? (palette.gradient.match(/#[0-9a-fA-F]{3,8}/g) ?? []) : [];
-  const ringColors: string[] = paletteHexes.length >= 2
-    ? [paletteHexes[0], paletteHexes[1] ?? paletteHexes[0], paletteHexes[2] ?? paletteHexes[0], paletteHexes[0]]
-    : [accent.primary, accent.glow, accent.primary, accent.glow];
+  const hue = HOVER_HUES[c.hoverHue ?? "auto"] ?? HOVER_HUES.auto;
+  const hueSwatches = hue.swatches;
+  const ringColors: string[] = hueSwatches.length >= 2
+    ? [hueSwatches[0], hueSwatches[1], hueSwatches[2] ?? hueSwatches[0], hueSwatches[3] ?? hueSwatches[1]]
+    : paletteHexes.length >= 2
+      ? [paletteHexes[0], paletteHexes[1] ?? paletteHexes[0], paletteHexes[2] ?? paletteHexes[0], paletteHexes[0]]
+      : [accent.primary, accent.glow, accent.primary, accent.glow];
   for (const el of targets) {
     el.style.setProperty("--primary", accent.primary);
     el.style.setProperty("--primary-foreground", "oklch(0.08 0 0)");
