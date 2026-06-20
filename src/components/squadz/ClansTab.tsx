@@ -90,7 +90,7 @@ export function ClansTab() {
 function ClanCard({ clan, onClick, action, mine }: { clan: Clan; onClick: () => void; action?: React.ReactNode; mine?: boolean }) {
   return (
     <button onClick={onClick} className={cn(
-      "text-left rounded-2xl border border-border bg-card p-4 hover:border-primary/40 transition-all",
+      "hover-spin-ring text-left rounded-2xl border border-border bg-card p-4 hover:border-primary/40 transition-all animate-fade-in",
       mine && "border-primary/40 bg-primary/5"
     )}>
       <div className="flex items-start justify-between gap-3">
