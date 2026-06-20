@@ -4,18 +4,22 @@
 export type AccentKey = "orange" | "violet" | "cyan" | "lime" | "rose" | "amber" | "emerald" | "indigo";
 export type BackgroundKey = "void" | "aurora" | "grid" | "noise" | "sunset" | "matrix";
 export type DensityKey = "comfy" | "compact";
-export type FontKey = "grotesk" | "mono" | "serif" | "rounded";
+export type FontKey = "grotesk" | "jakarta" | "bebas" | "serif" | "rounded" | "mono";
 export type AnimKey = "smooth" | "snappy" | "reduced";
+export type PaletteKey =
+  | "crimson-cobalt" | "neon-navy" | "purple-cream" | "party-pinky"
+  | "cyber-mint" | "midnight-obsidian" | "slate-minimal" | "sunset-arcade";
 
 export type Customization = {
   accent: AccentKey;
   background: BackgroundKey;
-  density: DensityKey; // legacy combined density (kept for backwards-compat)
-  fontDensity: DensityKey; // controls text size scale
-  layoutDensity: DensityKey; // controls padding/gap scale
+  density: DensityKey;
+  fontDensity: DensityKey;
+  layoutDensity: DensityKey;
   font: FontKey;
   anim: AnimKey;
-  radius: number; // px, base radius
+  radius: number;
+  palette?: PaletteKey | null;
 };
 
 export const DEFAULT_CUSTOMIZATION: Customization = {
@@ -27,6 +31,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   font: "grotesk",
   anim: "smooth",
   radius: 14,
+  palette: null,
 };
 
 export const ACCENTS: Record<AccentKey, { name: string; primary: string; ring: string; glow: string; swatch: string }> = {
@@ -69,9 +74,31 @@ export const BACKGROUNDS: Record<BackgroundKey, { name: string; css: string }> =
 
 export const FONT_FAMILIES: Record<FontKey, { name: string; family: string }> = {
   grotesk: { name: "Grotesk",  family: '"Space Grotesk", "Inter", sans-serif' },
-  mono:    { name: "Mono",     family: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace' },
+  jakarta: { name: "Jakarta",  family: '"Plus Jakarta Sans", "Inter", sans-serif' },
+  bebas:   { name: "Bebas",    family: '"Bebas Neue", "Inter", sans-serif' },
   serif:   { name: "Serif",    family: '"Fraunces", "Times New Roman", serif' },
   rounded: { name: "Rounded",  family: '"Nunito", "Inter", sans-serif' },
+  mono:    { name: "Mono",     family: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace' },
+};
+
+// One-click paired presets — mode + accent + background combined.
+export type PalettePreset = {
+  name: string;
+  mode: "dark" | "light";
+  accent: AccentKey;
+  background: BackgroundKey;
+  swatches: [string, string, string];
+};
+
+export const PALETTES: Record<PaletteKey, PalettePreset> = {
+  "crimson-cobalt":    { name: "Crimson Cobalt",    mode: "dark",  accent: "rose",    background: "aurora", swatches: ["#f43f5e", "#6366f1", "#0b0b14"] },
+  "neon-navy":         { name: "Neon Navy",         mode: "dark",  accent: "cyan",    background: "grid",   swatches: ["#22d3ee", "#1e3a8a", "#0a0f1f"] },
+  "purple-cream":      { name: "Purple Cream",      mode: "light", accent: "violet",  background: "noise",  swatches: ["#8b5cf6", "#fdf4ff", "#1a0b2e"] },
+  "party-pinky":       { name: "Party Pinky",       mode: "dark",  accent: "rose",    background: "sunset", swatches: ["#f43f5e", "#f59e0b", "#1a0a14"] },
+  "cyber-mint":        { name: "Cyber Mint",        mode: "dark",  accent: "emerald", background: "matrix", swatches: ["#10b981", "#0fffbe", "#031a12"] },
+  "midnight-obsidian": { name: "Midnight Obsidian", mode: "dark",  accent: "indigo",  background: "void",   swatches: ["#6366f1", "#0a0a0a", "#1f1f23"] },
+  "slate-minimal":     { name: "Slate Minimal",     mode: "light", accent: "indigo",  background: "noise",  swatches: ["#6366f1", "#f8fafc", "#1e293b"] },
+  "sunset-arcade":     { name: "Sunset Arcade",     mode: "dark",  accent: "orange",  background: "sunset", swatches: ["#ff7849", "#f59e0b", "#1a0e0a"] },
 };
 
 // Curated avatar presets used everywhere a profile picture is chosen.
