@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from "react";
  *  - unmount race (sets state on dead component)
  *  - rapid IntersectionObserver chatter (debounced)
  */
-export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean }) {
+export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean; onAutoplayMuted?: () => void }) {
   const threshold = opts?.threshold ?? 0.6;
   const autoplay = opts?.autoplay ?? true;
+  const onAutoplayMuted = opts?.onAutoplayMuted;
   const ref = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const visibleRef = useRef(false);
