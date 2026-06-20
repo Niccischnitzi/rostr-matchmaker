@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, applyPalettePreset,
+  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
-  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey,
+  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey, type HoverHueKey,
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
 import { Slider } from "@/components/ui/slider";
