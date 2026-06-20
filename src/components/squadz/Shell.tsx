@@ -156,7 +156,7 @@ export function Shell() {
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all",
+                  "hover-spin-ring flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all",
                   active ? "bg-primary text-primary-foreground glow-orange" : "text-muted-foreground hover:bg-surface hover:text-foreground"
                 )}
               >
@@ -273,7 +273,7 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
+                    "hover-spin-ring flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -344,7 +344,7 @@ function SubNav({
               key={it.key}
               onClick={() => onChange(it.key)}
               className={cn(
-                "flex-1 min-w-fit flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
+                "hover-spin-ring flex-1 min-w-fit flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
                 active ? "bg-primary text-primary-foreground glow-orange" : "text-muted-foreground hover:text-foreground"
               )}
             >

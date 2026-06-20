@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, applyPalettePreset,
+  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
-  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey,
+  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey, type HoverHueKey,
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
 import { Slider } from "@/components/ui/slider";
@@ -99,6 +99,35 @@ export function ThemeCustomizer() {
               >
                 <span className="absolute inset-x-0 bottom-0 text-[9px] font-bold uppercase tracking-wider bg-black/40 text-white py-0.5">{a.name}</span>
                 {on && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-white shadow" />}
+              </button>
+            );
+          })}
+        </div>
+      </Group>
+
+      <Group icon={Sparkles} title="Hover hue">
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(HOVER_HUES) as HoverHueKey[]).map((k) => {
+            const h = HOVER_HUES[k];
+            const on = (draft.hoverHue ?? "auto") === k;
+            const gradient = h.swatches.length
+              ? `conic-gradient(from 180deg, ${h.swatches.join(", ")}, ${h.swatches[0]})`
+              : "conic-gradient(from 180deg, var(--primary), var(--primary-glow), var(--primary))";
+            return (
+              <button
+                key={k}
+                onClick={() => set("hoverHue", k)}
+                className={cn(
+                  "group relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all hover:scale-[1.03]",
+                  on ? "border-foreground scale-[1.04]" : "border-border hover:border-primary/60"
+                )}
+                title={h.name}
+              >
+                <div
+                  className="h-10 w-full rounded-lg mb-1 ring-1 ring-white/10 transition-transform duration-700 group-hover:rotate-[40deg]"
+                  style={{ backgroundImage: gradient }}
+                />
+                <p className="text-[10px] font-bold leading-tight">{h.name}</p>
               </button>
             );
           })}

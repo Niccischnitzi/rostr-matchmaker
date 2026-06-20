@@ -9,6 +9,10 @@ export type AnimKey = "smooth" | "snappy" | "reduced";
 export type PaletteKey =
   | "crimson-cobalt" | "neon-navy" | "purple-cream" | "party-pinky"
   | "cyber-mint" | "midnight-obsidian" | "slate-minimal" | "sunset-arcade";
+export type HoverHueKey =
+  | "auto" | "rainbow" | "magma" | "ice" | "candy" | "toxic"
+  | "ultraviolet" | "gold-rush" | "monochrome" | "sunset" | "oceanic"
+  | "vaporwave" | "emerald-fire" | "blood-moon";
 
 export type Customization = {
   accent: AccentKey;
@@ -20,6 +24,7 @@ export type Customization = {
   anim: AnimKey;
   radius: number;
   palette?: PaletteKey | null;
+  hoverHue?: HoverHueKey;
 };
 
 export const DEFAULT_CUSTOMIZATION: Customization = {
@@ -32,6 +37,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   anim: "smooth",
   radius: 14,
   palette: null,
+  hoverHue: "auto",
 };
 
 export const ACCENTS: Record<AccentKey, { name: string; primary: string; ring: string; glow: string; swatch: string }> = {
@@ -101,6 +107,25 @@ export const PALETTES: Record<PaletteKey, PalettePreset> = {
   "sunset-arcade":     { name: "Sunset Arcade",     mode: "dark",  accent: "orange",  background: "sunset", gradient: "linear-gradient(135deg, #fde047 0%, #ff7849 50%, #f43f5e 100%)" },
 };
 
+// Hover hue presets — drive the spinning conic ring colors. "auto" defers to
+// the active palette/accent. Any other value overrides those vars globally.
+export const HOVER_HUES: Record<HoverHueKey, { name: string; swatches: string[] }> = {
+  auto:           { name: "Auto",           swatches: [] },
+  rainbow:        { name: "Rainbow",        swatches: ["#f43f5e", "#f59e0b", "#a3e635", "#22d3ee", "#8b5cf6"] },
+  magma:          { name: "Magma",          swatches: ["#fde047", "#ff7849", "#f43f5e", "#7c2d12"] },
+  ice:            { name: "Ice",            swatches: ["#e0f2fe", "#7dd3fc", "#38bdf8", "#1e3a8a"] },
+  candy:          { name: "Candy",          swatches: ["#fda4af", "#f472b6", "#c084fc", "#a78bfa"] },
+  toxic:          { name: "Toxic",          swatches: ["#bef264", "#84cc16", "#22d3ee", "#10b981"] },
+  ultraviolet:    { name: "Ultraviolet",    swatches: ["#a855f7", "#6366f1", "#0ea5e9", "#8b5cf6"] },
+  "gold-rush":    { name: "Gold Rush",      swatches: ["#fde047", "#f59e0b", "#fff7ed", "#b45309"] },
+  monochrome:     { name: "Monochrome",     swatches: ["#fafafa", "#a1a1aa", "#52525b", "#18181b"] },
+  sunset:         { name: "Sunset",         swatches: ["#fde047", "#fb923c", "#ec4899", "#7c3aed"] },
+  oceanic:        { name: "Oceanic",        swatches: ["#22d3ee", "#0891b2", "#1e40af", "#0f172a"] },
+  vaporwave:      { name: "Vaporwave",      swatches: ["#f472b6", "#c084fc", "#22d3ee", "#fbcfe8"] },
+  "emerald-fire": { name: "Emerald Fire",   swatches: ["#10b981", "#22c55e", "#fde047", "#f97316"] },
+  "blood-moon":   { name: "Blood Moon",     swatches: ["#7f1d1d", "#dc2626", "#fb923c", "#1f2937"] },
+};
+
 // Curated avatar presets used everywhere a profile picture is chosen.
 export const AVATAR_PACKS = {
   bots: ["nova", "ghost", "kairo", "lyric", "vexen", "halcyon", "blaze", "pixel"],
@@ -159,9 +184,13 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   const accentSurface = `color-mix(in oklab, ${accent.primary} 18%, var(--background))`;
   const palette = c.palette ? PALETTES[c.palette] : null;
   const paletteHexes = palette ? (palette.gradient.match(/#[0-9a-fA-F]{3,8}/g) ?? []) : [];
-  const ringColors: string[] = paletteHexes.length >= 2
-    ? [paletteHexes[0], paletteHexes[1] ?? paletteHexes[0], paletteHexes[2] ?? paletteHexes[0], paletteHexes[0]]
-    : [accent.primary, accent.glow, accent.primary, accent.glow];
+  const hue = HOVER_HUES[c.hoverHue ?? "auto"] ?? HOVER_HUES.auto;
+  const hueSwatches = hue.swatches;
+  const ringColors: string[] = hueSwatches.length >= 2
+    ? [hueSwatches[0], hueSwatches[1], hueSwatches[2] ?? hueSwatches[0], hueSwatches[3] ?? hueSwatches[1]]
+    : paletteHexes.length >= 2
+      ? [paletteHexes[0], paletteHexes[1] ?? paletteHexes[0], paletteHexes[2] ?? paletteHexes[0], paletteHexes[0]]
+      : [accent.primary, accent.glow, accent.primary, accent.glow];
   for (const el of targets) {
     el.style.setProperty("--primary", accent.primary);
     el.style.setProperty("--primary-foreground", "oklch(0.08 0 0)");

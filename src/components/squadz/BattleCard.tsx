@@ -43,7 +43,7 @@ export function BattleCard({ username, linkedPlatforms, loading = false }: Props
   const isLoading = loading || hydrating;
 
   return (
-    <div className="rounded-3xl border border-border bg-gradient-to-br from-card via-card to-surface overflow-hidden relative shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)]">
+    <div className="hover-spin-inset rounded-3xl border border-border bg-gradient-to-br from-card via-card to-surface overflow-hidden relative shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] animate-fade-in">
       {/* dotted backdrop */}
       <div
         className="absolute inset-0 opacity-[0.06] pointer-events-none"
@@ -122,7 +122,7 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-3 transition-colors min-w-0 ${
+      className={`hover-spin-ring rounded-2xl border p-3 transition-colors min-w-0 ${
         accent ? "border-primary/40 bg-primary/5" : "border-border bg-surface/60 hover:border-border/80"
       }`}
     >
