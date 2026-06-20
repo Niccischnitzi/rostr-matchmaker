@@ -1,10 +1,10 @@
 // Sprint 3 — vertical snap-scroll Reels feed (TikTok-style).
 // Autoplays when visible, pauses when scrolled away or tab hidden.
 // Side rail: like, comment, save, mute. Comment sheet opens at the bottom.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageCircle, Bookmark, Volume2, VolumeX, Send, Play } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Volume2, VolumeX, Send, Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVisibleVideo } from "@/hooks/use-visible-video";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
