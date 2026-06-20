@@ -228,7 +228,7 @@ export function Shell() {
 
           {/* Tabs are mounted once visited and toggled with display:none — keeps state, eliminates remount jank. */}
           {mounted.has("find") && (
-            <TabFrame active={tab === "find"} tabKey="find">
+            <TabFrame active={tab === "find"} tabKey="find" dir={tabDir}>
               <SubNav
                 items={[
                   { key: "players", label: "Players", icon: Users },
@@ -241,7 +241,22 @@ export function Shell() {
             </TabFrame>
           )}
           {mounted.has("clans") && (
-            <TabFrame active={tab === "clans"} tabKey="clans">
+            <TabFrame active={tab === "clans"} tabKey="clans" dir={tabDir}>
+              <SubNav
+                items={[
+                  { key: "crews", label: "Crews", icon: Shield },
+                  { key: "cups", label: "Cups", icon: Trophy },
+                ]}
+                value={clansSub}
+                onChange={(v) => setClansSub(v as ClansSub)}
+              />
+              {clansSub === "crews" && <CrewsTab />}
+              {clansSub === "cups" && <TournamentsTab />}
+            </TabFrame>
+          )}
+          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"    dir={tabDir}><ChatTab /></TabFrame>}
+          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"   dir={tabDir}><MediaTab /></TabFrame>}
+          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile" dir={tabDir}><ProfileTab /></TabFrame>}
               <SubNav
                 items={[
                   { key: "crews", label: "Crews", icon: Shield },
