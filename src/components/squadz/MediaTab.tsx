@@ -281,7 +281,7 @@ export function MediaTab() {
         <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
       ) : visiblePosts.length > 0 ? (
         <section className="mb-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="feed-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visiblePosts.map((p) => (
               <PostCard
                 key={p.id}
