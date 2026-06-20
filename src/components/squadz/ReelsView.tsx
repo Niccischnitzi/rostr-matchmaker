@@ -21,8 +21,18 @@ type ReelPost = {
 };
 type MediaComment = { id: string; post_id: string; user_id: string; body: string; created_at: string };
 
-export function ReelsView() {
+export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
   const qc = useQueryClient();
+  // Fullscreen mode: lock body scroll + flag for hiding bottom nav.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.dataset.reelsFullscreen = "true";
+    return () => {
+      document.body.style.overflow = prev;
+      delete document.documentElement.dataset.reelsFullscreen;
+    };
+  }, []);
   const [muted, setMuted] = useState(true);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
 
