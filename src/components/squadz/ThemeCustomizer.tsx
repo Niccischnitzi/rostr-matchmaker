@@ -72,11 +72,7 @@ export function ThemeCustomizer() {
                   on ? "border-primary scale-[1.02]" : "border-border hover:border-primary/60"
                 )}
               >
-                <div className="flex gap-1 mb-1.5">
-                  {p.swatches.map((c, i) => (
-                    <span key={i} className="h-6 flex-1 rounded-md" style={{ background: c }} />
-                  ))}
-                </div>
+                <div className="h-12 rounded-lg mb-1.5 ring-1 ring-white/10" style={{ backgroundImage: p.gradient }} />
                 <p className="text-[11px] font-bold leading-tight">{p.name}</p>
                 <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.mode}</p>
               </button>
