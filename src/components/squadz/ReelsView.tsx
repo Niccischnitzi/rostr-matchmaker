@@ -145,27 +145,38 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
 
   return (
     <>
-      <div
-        className="h-[calc(100svh-180px)] sm:h-[calc(100svh-140px)] overflow-y-auto snap-y snap-mandatory bg-black"
-        style={{ scrollSnapStop: "always" as React.CSSProperties["scrollSnapStop"] }}
-      >
-        {posts.map((p, i) => (
-          <Reel
-            key={p.id}
-            post={p}
-            src={p.media_path ? signedMap[p.media_path] : undefined}
-            eager={i < 2}
-            muted={muted}
-            onToggleMute={() => setMuted((m) => !m)}
-            liked={myLikes.has(p.id)}
-            saved={mySaves.has(p.id)}
-            likeCount={likeCounts.get(p.id) ?? 0}
-            commentCount={commentCounts.get(p.id) ?? 0}
-            onLike={() => { if (requireAuth()) toggleLike.mutate(p.id); }}
-            onSave={() => { if (requireAuth()) toggleSave.mutate(p.id); }}
-            onComment={() => setCommentsFor(p.id)}
-          />
-        ))}
+      <div className="fixed inset-0 z-[60] bg-black">
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close reels"
+            className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full bg-black/60 backdrop-blur grid place-items-center text-white hover:bg-black/80"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+        <div
+          className="h-[100svh] w-full overflow-y-auto snap-y snap-mandatory"
+          style={{ scrollSnapStop: "always" as React.CSSProperties["scrollSnapStop"] }}
+        >
+          {posts.map((p, i) => (
+            <Reel
+              key={p.id}
+              post={p}
+              src={p.media_path ? signedMap[p.media_path] : undefined}
+              eager={i < 2}
+              muted={muted}
+              onToggleMute={() => setMuted((m) => !m)}
+              liked={myLikes.has(p.id)}
+              saved={mySaves.has(p.id)}
+              likeCount={likeCounts.get(p.id) ?? 0}
+              commentCount={commentCounts.get(p.id) ?? 0}
+              onLike={() => { if (requireAuth()) toggleLike.mutate(p.id); }}
+              onSave={() => { if (requireAuth()) toggleSave.mutate(p.id); }}
+              onComment={() => setCommentsFor(p.id)}
+            />
+          ))}
+        </div>
       </div>
 
       <CommentsSheet
