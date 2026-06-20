@@ -278,7 +278,11 @@ export function MediaTab() {
 
 
       {tab === "reels" ? null : isLoading ? (
-        <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="skeleton-shine aspect-[4/5] rounded-2xl" />
+          ))}
+        </div>
       ) : visiblePosts.length > 0 ? (
         <section className="mb-10">
           <div className="feed-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

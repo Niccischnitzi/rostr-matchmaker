@@ -237,7 +237,9 @@ export function Shell() {
                 value={findSub}
                 onChange={(v) => setFindSub(v as FindSub)}
               />
-              {findSub === "players" ? <FindTab /> : <ChallengesTab />}
+              <div key={findSub} className="subpanel-swap">
+                {findSub === "players" ? <FindTab /> : <ChallengesTab />}
+              </div>
             </TabFrame>
           )}
           {mounted.has("clans") && (
@@ -250,8 +252,10 @@ export function Shell() {
                 value={clansSub}
                 onChange={(v) => setClansSub(v as ClansSub)}
               />
-              {clansSub === "crews" && <CrewsTab />}
-              {clansSub === "cups" && <TournamentsTab />}
+              <div key={clansSub} className="subpanel-swap">
+                {clansSub === "crews" && <CrewsTab />}
+                {clansSub === "cups" && <TournamentsTab />}
+              </div>
             </TabFrame>
           )}
           {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"    dir={tabDir}><ChatTab /></TabFrame>}
@@ -357,7 +361,7 @@ function SubNav({
           return (
             <button
               key={it.key}
-              onClick={() => onChange(it.key)}
+              onClick={() => { sfx.pop(); onChange(it.key); }}
               className={cn(
                 "hover-spin-ring flex-1 min-w-fit flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
                 active ? "bg-primary text-primary-foreground glow-orange" : "text-muted-foreground hover:text-foreground"
