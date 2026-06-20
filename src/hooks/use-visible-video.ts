@@ -91,7 +91,7 @@ export function useVisibleVideo(opts?: { threshold?: number; autoplay?: boolean;
       document.removeEventListener("visibilitychange", onVis);
       void doPause();
     };
-  }, [threshold, autoplay]);
+  }, [threshold, autoplay, onAutoplayMuted]);
 
   return { ref, playing, setPlaying };
 }
