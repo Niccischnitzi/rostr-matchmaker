@@ -251,3 +251,121 @@ html[data-font-density="comfy"]   body { font-size: 1rem; }
 /* Smoother button presses */
 button, [role="button"] { transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 200ms ease; }
 button:active, [role="button"]:active { transform: scale(0.97); }
+
+/* ============================================================
+   Phase 3 — Signature gradients, rotating borders, micro-fx
+   ============================================================ */
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes border-spin { to { --angle: 360deg; } }
+
+@utility bg-gradient-aurora {
+  background-image: linear-gradient(135deg,
+    color-mix(in oklab, var(--primary) 95%, transparent) 0%,
+    color-mix(in oklab, var(--primary-glow) 80%, transparent) 40%,
+    oklch(0.72 0.18 280) 80%,
+    oklch(0.78 0.16 210) 100%);
+}
+@utility bg-gradient-sunset {
+  background-image: linear-gradient(135deg, #ff7849 0%, #f43f5e 50%, #8b5cf6 100%);
+}
+@utility bg-gradient-neon {
+  background-image: linear-gradient(135deg, #22d3ee 0%, #a3e635 50%, #fde047 100%);
+}
+@utility bg-gradient-cobalt {
+  background-image: linear-gradient(135deg, #6366f1 0%, #06b6d4 60%, #14b8a6 100%);
+}
+@utility bg-gradient-mesh {
+  background-image:
+    radial-gradient(at 20% 10%, color-mix(in oklab, var(--primary) 70%, transparent) 0, transparent 50%),
+    radial-gradient(at 80% 0%,  oklch(0.72 0.22 295) 0, transparent 50%),
+    radial-gradient(at 0% 80%,  oklch(0.78 0.16 210) 0, transparent 50%),
+    radial-gradient(at 90% 90%, oklch(0.78 0.18 55)  0, transparent 50%);
+}
+
+@utility text-gradient-aurora {
+  background-image: linear-gradient(135deg, var(--primary), var(--primary-glow) 50%, oklch(0.72 0.18 280));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+@utility text-gradient-sunset {
+  background-image: linear-gradient(135deg, #ff7849, #f43f5e 50%, #8b5cf6);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+@utility text-gradient-neon {
+  background-image: linear-gradient(135deg, #22d3ee, #a3e635 60%, #fde047);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+@utility rotating-border {
+  position: relative;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    conic-gradient(from var(--angle), var(--primary), var(--primary-glow), #8b5cf6, #22d3ee, var(--primary)) border-box;
+  border: 2px solid transparent;
+  animation: border-spin 6s linear infinite;
+}
+@utility rotating-border-slow {
+  position: relative;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    conic-gradient(from var(--angle), var(--primary), var(--primary-glow), #8b5cf6, #22d3ee, var(--primary)) border-box;
+  border: 1.5px solid transparent;
+  animation: border-spin 14s linear infinite;
+}
+
+@keyframes chroma-pulse {
+  0%   { box-shadow: 0 0 0 0    color-mix(in oklab, var(--primary) 70%, transparent); }
+  60%  { box-shadow: 0 0 0 14px transparent; }
+  100% { box-shadow: 0 0 0 0    transparent; }
+}
+@utility chroma-press {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease;
+  &:active { animation: chroma-pulse 520ms ease-out; }
+}
+
+@utility lift-hover {
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 280ms ease;
+  will-change: transform;
+  &:hover {
+    transform: translateY(-3px) scale(1.012);
+    box-shadow: 0 18px 40px -16px color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+}
+
+@utility tilt-hover {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+  &:hover { transform: perspective(800px) rotateX(2deg) rotateY(-3deg) translateZ(4px); }
+}
+
+@keyframes shimmer-sweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@utility shimmer {
+  background-image: linear-gradient(110deg,
+    transparent 35%,
+    color-mix(in oklab, #ffffff 55%, transparent) 50%,
+    transparent 65%);
+  background-size: 200% 100%;
+  animation: shimmer-sweep 2.4s linear infinite;
+}
+
+@utility glow-hover {
+  transition: box-shadow 260ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  &:hover {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent),
+                0 14px 50px -10px color-mix(in oklab, var(--primary) 55%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="rotating-border"], .shimmer { animation: none !important; }
+}
