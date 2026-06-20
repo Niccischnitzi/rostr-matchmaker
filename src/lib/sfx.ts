@@ -92,4 +92,18 @@ export const sfx = {
       setTimeout(() => tone(f, 0.1, "triangle", 0.03), i * 75),
     );
   },
+  /** Airy swoosh for tab/page transitions. */
+  swoosh: () => {
+    tone(720, 0.09, "sine", 0.022);
+    setTimeout(() => tone(540, 0.08, "sine", 0.018), 35);
+  },
+  /** Subtle pop for card/list entrance or toggles. */
+  pop: () => tone(640, 0.045, "triangle", 0.022),
+  /** Light chime for success-ish moments without being shrill. */
+  chime: () => {
+    tone(880, 0.09, "sine", 0.022);
+    setTimeout(() => tone(1175, 0.1, "sine", 0.02), 70);
+  },
+  /** Soft hover tick — call sparingly. */
+  hover: () => tone(740, 0.03, "sine", 0.012),
 };
