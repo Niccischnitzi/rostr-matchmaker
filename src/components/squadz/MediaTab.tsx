@@ -334,7 +334,7 @@ export function MediaTab() {
       )}
 
       {tab === "feed" && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="feed-stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {rest.map((c) => {
             const isLiked = likedClips.has(c.id);
             return (
