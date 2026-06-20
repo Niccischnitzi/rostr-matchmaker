@@ -184,7 +184,7 @@ export function Shell() {
       {/* Main area */}
       <main className="flex-1 min-w-0 flex flex-col">
         {/* Mobile header — ultra-compact */}
-        <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-3 py-2 border-b border-border bg-background/85 backdrop-blur-xl">
+        <header data-app-header="true" className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-3 py-2 border-b border-border bg-background/85 backdrop-blur-xl">
           <Brand compact />
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1">
@@ -251,6 +251,7 @@ export function Shell() {
         {/* Mobile bottom nav */}
         <nav
           data-swipe-tabbar="true"
+          data-mobile-tabbar="true"
           className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl"
         >
           <div className="relative grid grid-cols-5">

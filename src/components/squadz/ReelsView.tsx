@@ -1,10 +1,10 @@
 // Sprint 3 — vertical snap-scroll Reels feed (TikTok-style).
 // Autoplays when visible, pauses when scrolled away or tab hidden.
 // Side rail: like, comment, save, mute. Comment sheet opens at the bottom.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageCircle, Bookmark, Volume2, VolumeX, Send, Play } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Volume2, VolumeX, Send, Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVisibleVideo } from "@/hooks/use-visible-video";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -21,8 +21,18 @@ type ReelPost = {
 };
 type MediaComment = { id: string; post_id: string; user_id: string; body: string; created_at: string };
 
-export function ReelsView() {
+export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
   const qc = useQueryClient();
+  // Fullscreen mode: lock body scroll + flag for hiding bottom nav.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.dataset.reelsFullscreen = "true";
+    return () => {
+      document.body.style.overflow = prev;
+      delete document.documentElement.dataset.reelsFullscreen;
+    };
+  }, []);
   const [muted, setMuted] = useState(true);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
 
@@ -135,27 +145,38 @@ export function ReelsView() {
 
   return (
     <>
-      <div
-        className="h-[calc(100svh-180px)] sm:h-[calc(100svh-140px)] overflow-y-auto snap-y snap-mandatory bg-black"
-        style={{ scrollSnapStop: "always" as React.CSSProperties["scrollSnapStop"] }}
-      >
-        {posts.map((p, i) => (
-          <Reel
-            key={p.id}
-            post={p}
-            src={p.media_path ? signedMap[p.media_path] : undefined}
-            eager={i < 2}
-            muted={muted}
-            onToggleMute={() => setMuted((m) => !m)}
-            liked={myLikes.has(p.id)}
-            saved={mySaves.has(p.id)}
-            likeCount={likeCounts.get(p.id) ?? 0}
-            commentCount={commentCounts.get(p.id) ?? 0}
-            onLike={() => { if (requireAuth()) toggleLike.mutate(p.id); }}
-            onSave={() => { if (requireAuth()) toggleSave.mutate(p.id); }}
-            onComment={() => setCommentsFor(p.id)}
-          />
-        ))}
+      <div className="fixed inset-0 z-[60] bg-black">
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close reels"
+            className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full bg-black/60 backdrop-blur grid place-items-center text-white hover:bg-black/80"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+        <div
+          className="h-[100svh] w-full overflow-y-auto snap-y snap-mandatory"
+          style={{ scrollSnapStop: "always" as React.CSSProperties["scrollSnapStop"] }}
+        >
+          {posts.map((p, i) => (
+            <Reel
+              key={p.id}
+              post={p}
+              src={p.media_path ? signedMap[p.media_path] : undefined}
+              eager={i < 2}
+              muted={muted}
+              onToggleMute={() => setMuted((m) => !m)}
+              liked={myLikes.has(p.id)}
+              saved={mySaves.has(p.id)}
+              likeCount={likeCounts.get(p.id) ?? 0}
+              commentCount={commentCounts.get(p.id) ?? 0}
+              onLike={() => { if (requireAuth()) toggleLike.mutate(p.id); }}
+              onSave={() => { if (requireAuth()) toggleSave.mutate(p.id); }}
+              onComment={() => setCommentsFor(p.id)}
+            />
+          ))}
+        </div>
       </div>
 
       <CommentsSheet
