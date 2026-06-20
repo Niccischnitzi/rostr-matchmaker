@@ -125,7 +125,7 @@ function AdCard({
   const name = ad.display_name ?? ad.username;
 
   return (
-    <div ref={ref} className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-lg flex flex-col soft-rise">
+    <div ref={ref} className="hover-spin-ring relative rounded-3xl border border-border bg-card overflow-hidden shadow-lg flex flex-col soft-rise animate-fade-in">
       {/* Banner */}
       <div className="relative h-20 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent">
         <div className="absolute inset-0 opacity-30 overflow-hidden" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
