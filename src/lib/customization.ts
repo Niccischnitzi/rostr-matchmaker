@@ -9,6 +9,10 @@ export type AnimKey = "smooth" | "snappy" | "reduced";
 export type PaletteKey =
   | "crimson-cobalt" | "neon-navy" | "purple-cream" | "party-pinky"
   | "cyber-mint" | "midnight-obsidian" | "slate-minimal" | "sunset-arcade";
+export type HoverHueKey =
+  | "auto" | "rainbow" | "magma" | "ice" | "candy" | "toxic"
+  | "ultraviolet" | "gold-rush" | "monochrome" | "sunset" | "oceanic"
+  | "vaporwave" | "emerald-fire" | "blood-moon";
 
 export type Customization = {
   accent: AccentKey;
@@ -20,6 +24,7 @@ export type Customization = {
   anim: AnimKey;
   radius: number;
   palette?: PaletteKey | null;
+  hoverHue?: HoverHueKey;
 };
 
 export const DEFAULT_CUSTOMIZATION: Customization = {
@@ -32,6 +37,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   anim: "smooth",
   radius: 14,
   palette: null,
+  hoverHue: "auto",
 };
 
 export const ACCENTS: Record<AccentKey, { name: string; primary: string; ring: string; glow: string; swatch: string }> = {
