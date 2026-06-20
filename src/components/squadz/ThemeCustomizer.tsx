@@ -52,6 +52,39 @@ export function ThemeCustomizer() {
 
   return (
     <div className="space-y-5">
+      <Group icon={Layers} title="Palette presets">
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.keys(PALETTES) as PaletteKey[]).map((k) => {
+            const p = PALETTES[k];
+            const on = draft.palette === k;
+            return (
+              <button
+                key={k}
+                onClick={() => {
+                  applyPalettePreset(k);
+                  const fresh = loadCustomization();
+                  setSaved(fresh);
+                  setDraft(fresh);
+                  toast.success(`${p.name} applied`);
+                }}
+                className={cn(
+                  "relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all",
+                  on ? "border-primary scale-[1.02]" : "border-border hover:border-primary/60"
+                )}
+              >
+                <div className="flex gap-1 mb-1.5">
+                  {p.swatches.map((c, i) => (
+                    <span key={i} className="h-6 flex-1 rounded-md" style={{ background: c }} />
+                  ))}
+                </div>
+                <p className="text-[11px] font-bold leading-tight">{p.name}</p>
+                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.mode}</p>
+              </button>
+            );
+          })}
+        </div>
+      </Group>
+
       <Group icon={Palette} title="Accent color">
         <div className="grid grid-cols-4 gap-2">
           {(Object.keys(ACCENTS) as AccentKey[]).map((k) => {
