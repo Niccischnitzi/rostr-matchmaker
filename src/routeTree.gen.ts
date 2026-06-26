@@ -16,7 +16,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesFindingGamersRouteImport } from './routes/guides.finding-gamers'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
-import { Route as AuthCallbackProviderRouteImport } from './routes/auth.callback.$provider'
 import { Route as ApiPublicSteamReturnRouteImport } from './routes/api/public/steam.return'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -55,11 +54,6 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthCallbackProviderRoute = AuthCallbackProviderRouteImport.update({
-  id: '/callback/$provider',
-  path: '/callback/$provider',
-  getParentRoute: () => AuthRoute,
-} as any)
 const ApiPublicSteamReturnRoute = ApiPublicSteamReturnRouteImport.update({
   id: '/api/public/steam/return',
   path: '/api/public/steam/return',
@@ -74,38 +68,35 @@ const ApiPublicPaymentsWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
-  '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
-  '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
-  '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
@@ -119,7 +110,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/checkout/return'
     | '/guides/finding-gamers'
-    | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   fileRoutesByTo: FileRoutesByTo
@@ -131,7 +121,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/checkout/return'
     | '/guides/finding-gamers'
-    | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   id:
@@ -143,14 +132,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/checkout/return'
     | '/guides/finding-gamers'
-    | '/auth/callback/$provider'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ModerationRoute: typeof ModerationRoute
   PricingRoute: typeof PricingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -211,13 +199,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/callback/$provider': {
-      id: '/auth/callback/$provider'
-      path: '/callback/$provider'
-      fullPath: '/auth/callback/$provider'
-      preLoaderRoute: typeof AuthCallbackProviderRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/api/public/steam/return': {
       id: '/api/public/steam/return'
       path: '/api/public/steam/return'
@@ -235,19 +216,9 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthRouteChildren {
-  AuthCallbackProviderRoute: typeof AuthCallbackProviderRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthCallbackProviderRoute: AuthCallbackProviderRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRouteWithChildren,
+  AuthRoute: AuthRoute,
   ModerationRoute: ModerationRoute,
   PricingRoute: PricingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
