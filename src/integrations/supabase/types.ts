@@ -770,6 +770,32 @@ export type Database = {
           },
         ]
       }
+      lfg_ad_joiners: {
+        Row: {
+          ad_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lfg_ad_joiners_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "lfg_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lfg_ad_views: {
         Row: {
           ad_owner_id: string
@@ -805,6 +831,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lfg_ads: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          description: string | null
+          expires_at: string
+          game: string
+          host_id: string
+          id: string
+          mic_required: boolean
+          min_rank: string | null
+          mode: string | null
+          region: string | null
+          slots_filled: number
+          slots_total: number
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          description?: string | null
+          expires_at?: string
+          game: string
+          host_id: string
+          id?: string
+          mic_required?: boolean
+          min_rank?: string | null
+          mode?: string | null
+          region?: string | null
+          slots_filled?: number
+          slots_total?: number
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          description?: string | null
+          expires_at?: string
+          game?: string
+          host_id?: string
+          id?: string
+          mic_required?: boolean
+          min_rank?: string | null
+          mode?: string | null
+          region?: string | null
+          slots_filled?: number
+          slots_total?: number
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       lfg_boosts: {
         Row: {
@@ -1120,6 +1200,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          link: string | null
+          payload: Json
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          link?: string | null
+          payload?: Json
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          payload?: Json
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_grants: {
         Row: {
           amount_paid: number | null
@@ -1206,6 +1322,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profile_swipes: {
+        Row: {
+          created_at: string
+          direction: string
+          swiper_id: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          swiper_id: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          swiper_id?: string
+          target_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
