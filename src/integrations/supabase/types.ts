@@ -725,6 +725,54 @@ export type Database = {
         }
         Relationships: []
       }
+      games: {
+        Row: {
+          category: string
+          created_at: string
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          lookup_key: string
+          name: string
+          popularity: number
+          publisher: string | null
+          riot_game_key: string | null
+          steam_app_id: number | null
+          tracker_gg_slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          lookup_key: string
+          name: string
+          popularity?: number
+          publisher?: string | null
+          riot_game_key?: string | null
+          steam_app_id?: number | null
+          tracker_gg_slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          lookup_key?: string
+          name?: string
+          popularity?: number
+          publisher?: string | null
+          riot_game_key?: string | null
+          steam_app_id?: number | null
+          tracker_gg_slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leaderboard_entries: {
         Row: {
           audit_flags: Json
@@ -1320,6 +1368,68 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_stats_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          fetched_at: string
+          game_key: string
+          headshot_pct: number | null
+          hours_played: number | null
+          id: string
+          kd: number | null
+          longest_streak: number | null
+          rank_tier: string | null
+          raw: Json | null
+          source: string
+          updated_at: string
+          user_id: string
+          win_rate: number | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          fetched_at?: string
+          game_key: string
+          headshot_pct?: number | null
+          hours_played?: number | null
+          id?: string
+          kd?: number | null
+          longest_streak?: number | null
+          rank_tier?: string | null
+          raw?: Json | null
+          source: string
+          updated_at?: string
+          user_id: string
+          win_rate?: number | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          fetched_at?: string
+          game_key?: string
+          headshot_pct?: number | null
+          hours_played?: number | null
+          id?: string
+          kd?: number | null
+          longest_streak?: number | null
+          rank_tier?: string | null
+          raw?: Json | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+          win_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_cache_game_key_fkey"
+            columns: ["game_key"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["lookup_key"]
           },
         ]
       }
