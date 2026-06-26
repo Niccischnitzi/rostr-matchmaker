@@ -27,20 +27,39 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
-  // Redirect if already signed in
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/" });
     });
   }, [navigate]);
 
+  const friendlyError = (msg: string): { text: string; emailUnconfirmed?: boolean } => {
+    const m = msg.toLowerCase();
+    if (m.includes("email not confirmed")) {
+      return { text: "Check your inbox to confirm your email first.", emailUnconfirmed: true };
+    }
+    if (m.includes("invalid login")) return { text: "Wrong email or password." };
+    if (m.includes("user already registered")) return { text: "Account exists — sign in instead." };
+    if (m.includes("password") && m.includes("6")) return { text: "Password must be at least 6 characters." };
+    if (m.includes("rate limit")) return { text: "Too many attempts — wait a minute and try again." };
+    if (m.includes("pwned") || m.includes("compromised")) return { text: "That password has been leaked online — pick another." };
+    return { text: msg };
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
+    setNeedsConfirm(false);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        if (password.length < 6) {
+          toast.error("Password must be at least 6 characters");
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -49,7 +68,12 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created — welcome to Rostr");
+        if (!data.session) {
+          setNeedsConfirm(true);
+          toast.success("Account created — check your email to confirm");
+          return;
+        }
+        toast.success("Welcome to Rostr");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -58,7 +82,45 @@ function AuthPage() {
       router.invalidate();
       navigate({ to: "/" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      const raw = err instanceof Error ? err.message : "Authentication failed";
+      const f = friendlyError(raw);
+      if (f.emailUnconfirmed) setNeedsConfirm(true);
+      toast.error(f.text);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onResendConfirm = async () => {
+    if (!email) { toast.error("Enter your email first"); return; }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      toast.success("Confirmation email sent");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't send email");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onForgot = async () => {
+    if (!email) { toast.error("Enter your email above first"); return; }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent");
+      setForgotOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't send reset email");
     } finally {
       setBusy(false);
     }
@@ -74,7 +136,7 @@ function AuthPage() {
         toast.error(result.error.message ?? "Google sign-in failed");
         return;
       }
-      if (result.redirected) return; // browser is redirecting
+      if (result.redirected) return;
       router.invalidate();
       navigate({ to: "/" });
     } finally {
@@ -100,7 +162,7 @@ function AuthPage() {
             {(["signin", "signup"] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => setMode(m)}
+                onClick={() => { setMode(m); setNeedsConfirm(false); }}
                 className={`py-2 text-sm font-bold rounded-lg transition-all ${
                   mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                 }`}
@@ -112,40 +174,41 @@ function AuthPage() {
 
           <form onSubmit={onSubmit} className="space-y-4">
             {mode === "signup" && (
-              <Field
-                label="Username"
-                value={username}
-                onChange={setUsername}
-                placeholder="ghostshot42"
-                autoComplete="username"
-              />
+              <Field label="Username" value={username} onChange={setUsername} placeholder="ghostshot42" autoComplete="username" />
             )}
-            <Field
-              label="Email"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="you@example.com"
-              required
-              autoComplete="email"
-            />
-            <Field
-              label="Password"
-              type="password"
-              value={password}
-              onChange={setPassword}
-              placeholder="At least 6 characters"
-              required
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            />
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition"
-            >
+            <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required autoComplete="email" />
+            <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="At least 6 characters" required minLength={6} autoComplete={mode === "signin" ? "current-password" : "new-password"} />
+
+            {mode === "signin" && (
+              <div className="flex justify-end -mt-2">
+                <button type="button" onClick={() => setForgotOpen((v) => !v)} className="text-xs text-muted-foreground hover:text-primary transition">
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {forgotOpen && mode === "signin" && (
+              <div className="rounded-xl border border-border bg-surface p-3 text-xs space-y-2">
+                <p className="text-muted-foreground">We'll email a reset link to <span className="font-semibold text-foreground">{email || "your email"}</span>.</p>
+                <button type="button" onClick={onForgot} disabled={busy} className="w-full h-9 rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50">
+                  Send reset link
+                </button>
+              </div>
+            )}
+
+            <button type="submit" disabled={busy} className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition">
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
               {mode === "signin" ? "Sign in" : "Create account"}
             </button>
+
+            {needsConfirm && (
+              <div className="rounded-xl border border-border bg-surface p-3 text-xs space-y-2">
+                <p className="text-muted-foreground">Didn't get the confirmation email?</p>
+                <button type="button" onClick={onResendConfirm} disabled={busy} className="w-full h-9 rounded-lg border border-border bg-background font-bold disabled:opacity-50">
+                  Resend confirmation
+                </button>
+              </div>
+            )}
           </form>
 
           <div className="my-5 flex items-center gap-3">
@@ -154,19 +217,13 @@ function AuthPage() {
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          <button
-            onClick={onGoogle}
-            disabled={busy}
-            className="w-full h-11 rounded-xl border border-border bg-surface hover:bg-surface-2 font-bold text-sm flex items-center justify-center gap-2 transition disabled:opacity-50"
-          >
+          <button onClick={onGoogle} disabled={busy} className="w-full h-11 rounded-xl border border-border bg-surface hover:bg-surface-2 font-bold text-sm flex items-center justify-center gap-2 transition disabled:opacity-50">
             <GoogleIcon />
             Continue with Google
           </button>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          One passport. Every platform.
-        </p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">One passport. Every platform.</p>
       </div>
       <Toaster theme="dark" position="top-center" />
     </main>
