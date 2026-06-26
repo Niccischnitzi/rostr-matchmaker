@@ -1,52 +1,97 @@
-# rostr Master Update — Phased Plan
+# Rostr — Mockup → Production Roadmap
 
-Scope is too large for one turn. I'll ship in 5 phases. After each phase you confirm it works, then I move on. This avoids regressions and keeps credits sane.
+Right now Rostr looks like a real app but most data is hard-coded in `src/lib/squadz-data.ts` and pushed through `SquadzProvider` (in-memory React state). Auth, theme, payments, and some Supabase tables are real; the social graph, media, clubs, chat, LFG, clips, and ranking are not. Here's what's needed to make it an actual product.
 
-## Phase 1 — Critical bug fixes (frontend-only, ships first)
+## 1. Real data layer (replace mock store)
 
-- **Tab-switch crash**: add `AbortController` + `isMounted` ref in `Shell.tsx` tab effects and every async fetch in `ClubsTab`, `MediaTab`, `FriendsTab`, `ChatTab`, `ProfileTab`. Cancel in-flight Supabase queries on unmount.
-- **Media buffering crash**: wrap `ReelsView` and `MediaTab` video players in an ErrorBoundary that renders a skeleton instead of the white "page didn't load" screen. Debounce `play()` calls; swallow `AbortError`.
-- **Auth loop**: audit `use-auth.tsx` — already filters event types, but verify `router.invalidate()` isn't fighting the `_authenticated` gate. Add `INITIAL_SESSION` ignore.
-- **Avatar fallback**: central `<Avatar>` wrapper that swaps to initials on `onError`. Apply across all consumers.
-- **Friend mutations**: read `friends` table policies, fix the insert/accept RPC if mutation is rejected.
-- **Payment null state**: guard `StripeEmbeddedCheckout` against missing `clientSecret`.
+Move every screen off `squadz-store.tsx` mock arrays onto Supabase tables with RLS + GRANTs:
 
-## Phase 2 — Theme engine, fonts, palettes, light mode
+- **profiles** (exists) — finish: bio, country, languages, primary games, rank, availability JSON.
+- **friends / connections** (exists) — wire swipe → insert; mutual = match.
+- **clubs, club_members, club_channels, club_messages** (exist) — bind ClubsTab + ChatTab to live data; add banner/logo storage bucket.
+- **lfg_ads** (new) — host, game, mode, region, slots, expires_at; realtime list.
+- **clips / media_posts** (new) — uploader, video_url, thumb_url, likes, views, duration; Storage bucket with 720p cap.
+- **clip_likes, comments, reports** (new) — interactions + moderation.
+- **clans, clan_members, challenges, tournaments, leaderboard_entries** (exist) — connect ClansTab, ChallengesTab, TournamentsTab to live queries.
+- **wallets, transactions** (exist) — show real balance in profile.
+- **presence** — Supabase Realtime channel for Online/In-Game/Busy/LFG status.
 
-- Install via `bun add @fontsource-variable/plus-jakarta-sans @fontsource/bebas-neue @fontsource-variable/geist`. Neue Haas Grotesk is proprietary — substitute with **Inter Tight** (closest free analog) and label it "Neue Haas" in the picker, or skip if you want strict licensing.
-- Extend `customization.ts` with `FONT_FAMILIES` = {jakarta, neueHaas, bebas, geist} and `BACKGROUNDS` palette set: Crimson Cobalt, Neon Navy, Purple Cream, Party Pinky, Cyber Mint, Midnight Obsidian, Slate Minimal. Each palette ships paired dark+light tokens.
-- Rewrite light-mode tokens in `styles.css` so every surface/border/text variable has a tested contrast pair. Use `oklch` with L≥0.95 for surfaces and L≤0.25 for foregrounds.
-- Settings → `ThemeCustomizer` already wires `applyCustomization`; verify propagation by tagging `<html>` with `data-palette` and reading from CSS vars only (no hard-coded `text-white`).
+Each new public table: GRANT on insert/update/delete to `authenticated`, RLS scoped to `auth.uid()`, separate `user_roles` table for admin/mod (already noted in plan.md).
 
-## Phase 3 — Signature gradients + 360° hover + micro-interactions
+## 2. Real interactions
 
-- 5 gradient utilities in `styles.css`: `@utility gradient-dusk/arctic/solar-flare/neon-tide/quantum-void`.
-- `@utility rotating-border`: conic-gradient mask, 6s linear infinite rotate. Applied to `<Card variant="hot">` and primary buttons.
-- Chromatic pulse `@keyframes` on `:active` for toggle/like buttons.
-- Spring transitions via existing framer-motion (or CSS cubic-bezier presets).
+- **Swipe → friend request** instead of fake mock-id mapping.
+- **Chat (DM + club)** via Supabase Realtime subscriptions on `direct_messages` / `club_messages`.
+- **LFG ads**: create / join / auto-expire (pg_cron or `expires_at` filter).
+- **Clip feed**: upload (signed URL → Storage), transcode/thumb (client-side capture or edge function), like/comment, report.
+- **Reels autoplay**: already implemented; needs real video URLs + view counter RPC.
+- **Notifications**: new friend, new message, club invite, LFG match — `notifications` table + bell badge.
 
-## Phase 4 — Full-screen reels + bottom tabs + comment tray + density
+## 3. Account & onboarding completeness
 
-- `ReelsView`: `h-[100dvh] w-screen fixed inset-0`, snap-y mandatory. Hide Shell chrome when reels active.
-- Shell bottom nav: shrink to `h-12`, `text-[10px]`, overlay with `backdrop-blur` over reels.
-- Comments: slide-up `<Sheet side="bottom">` at 60vh, scrollable, doesn't push video.
-- Density: `data-layout-density` already wired (`styles.css` line ~240). Audit components still using hardcoded `p-4`/`gap-4` and switch to `p-(--spacing)`-driven utilities.
+- Finish `OnboardingWizard` write-through (game picks, platforms, region, availability grid → profile).
+- **Steam linking**: `STEAM_WEB_API_KEY` secret + `steam.return.ts` (file exists, needs key + UI completion).
+- Add **PSN / Xbox / Riot / Epic / Discord** OAuth or manual handle entry into `linked_accounts` table.
+- Password reset page (`/reset-password`) — currently missing.
+- Avatar upload to Storage with the central `<Avatar>` fallback already planned.
 
-## Phase 5 — Backend (Steam, calls, payments, reports)
+## 4. Voice / video calls
 
-- **Steam OAuth**: requires `STEAM_WEB_API_KEY` secret. I'll request it via `add_secret` and wire `/api/public/steam.return.ts` (file already exists). Ship a hardcoded top-100 Steam game catalog JSON for selection.
-- **WebRTC calls**: peer connection via Supabase Realtime channel for SDP/ICE signaling. Google STUN. Reuse existing `CallSheet.tsx`.
-- **Club governance**: SQL trigger `enforce_single_club_membership` already exists — verify it's active. Add banner upload to `clubs` table + storage. Resign/Draw fields on `club_wars`.
-- **Reporting**: `user_reports` table exists. Extend `ReportDialog` with reason categories + chat-log attachment. **No email** (per your choice) — admin views via moderation route.
-- **Payments**: 720p cap already in `uploadPricing.ts`. Add PayPal + Twint via Stripe Checkout `payment_method_types: ['card','paypal','twint']`. Exponential cost helper already exists server-side.
+- 1:1 WebRTC via Supabase Realtime for SDP/ICE signaling, Google STUN.
+- `CallSheet.tsx` exists — wire it. Group calls (>2) need an SFU; out of scope for v1.
 
-## Technical notes
+## 5. Payments (real money)
 
-- Neue Haas Grotesk: no free webfont exists. Confirm substitute with **Inter Tight** or pay for license elsewhere.
-- WebRTC group calls (>2 peers) need an SFU; I'll ship 1:1 only.
-- Twint requires the Stripe account to be in CH and enabled in Stripe Dashboard — I'll wire the code, but it won't show up at checkout until the user enables it on their Stripe side.
-- Steam OAuth requires you (the developer) to register at https://steamcommunity.com/dev/apikey and paste the key when prompted.
+- Stripe Checkout for: upload-overage (exponential pricing helper exists), club boosts, tournament entry, cosmetics.
+- Add **PayPal + Twint** to `payment_method_types` (Twint needs CH Stripe account).
+- Webhook at `/api/public/payments/webhook` (file exists) → update `transactions` + `wallets`.
+- PaymentTestModeBanner already there.
 
-## Order of execution
+## 6. Moderation & safety
 
-I'll start **Phase 1 immediately** on your approval. Reply "go" or specify a different starting phase.
+- `ReportDialog` → write to `user_reports` (table exists) with reason categories + optional chat log.
+- `/moderation` route gated by `has_role(uid, 'admin')`.
+- Block/mute lists, content takedown action, soft-delete on clips.
+
+## 7. Discovery & growth
+
+- Search (players, clubs, clips) via Postgres full-text or trigram.
+- Public profile pages (`/u/$handle`) SSR-rendered for SEO with OG image per user.
+- Public club pages (`/c/$slug`) likewise.
+- Sitemap (exists) + per-route head() metadata for shareable links.
+
+## 8. Polish & reliability
+
+- Replace remaining `Loader2` spinners with skeleton-shine variants.
+- Error boundaries on every tab (TabErrorBoundary exists — apply universally).
+- AbortController on every Supabase fetch in tab effects (Phase 1 of existing plan.md).
+- Empty states + retry UI for failed loads.
+- Mobile: bottom nav over reels, sheet-based comments, 100dvh full-screen reels.
+- Light mode contrast pass for every palette in ThemeCustomizer.
+
+## 9. Legal / launch
+
+- `/privacy`, `/terms`, `/community-guidelines` routes.
+- Cookie/consent banner if targeting EU.
+- Age gate (13+ / 16+ depending on region).
+- Support email + report-abuse contact.
+- Custom domain after first publish.
+
+## Suggested phasing
+
+```
+Phase A  Data layer: schema + RLS + GRANTs for clips, lfg_ads, comments, likes, notifications
+Phase B  Swap each tab off mock store → live Supabase queries + realtime
+Phase C  Clip upload + Storage + reels backed by real videos
+Phase D  Steam/PSN/Xbox linking + onboarding write-through
+Phase E  Payments (Stripe Checkout + webhook + wallet credit)
+Phase F  Calls (WebRTC 1:1) + notifications
+Phase G  Moderation, public profiles/clubs, SEO, legal pages, launch
+```
+
+## Open questions before I start building
+
+1. Which phase do you want first? (My recommendation: Phase A + B together — without real data nothing else matters.)
+2. Clip uploads: cap at 720p / 60s / 50MB like the existing `uploadPricing.ts`, or different limits?
+3. Which platform linking is must-have for v1? (Steam is half-wired; PSN/Xbox need their own API access.)
+4. Payments at launch, or after first user cohort?
