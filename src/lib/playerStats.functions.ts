@@ -85,7 +85,7 @@ export const refreshBattlecardStats = createServerFn({ method: "POST" })
         hours_played: r.hours_played ?? null,
         headshot_pct: r.headshot_pct ?? null,
         longest_streak: r.longest_streak ?? null,
-        raw: r.raw ?? null,
+        raw: (r.raw ?? null) as never,
         fetched_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
       }));
