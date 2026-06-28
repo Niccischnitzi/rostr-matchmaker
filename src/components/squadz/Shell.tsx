@@ -275,13 +275,16 @@ export function Shell() {
             {/* Contained active pill */}
             <div
               aria-hidden
-              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-primary/15 ring-1 ring-primary/30"
+              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-primary/15 ring-1 ring-primary/30 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)]"
               style={{
                 width: `calc(${100 / tabs.length}% - 0.25rem)`,
                 left: `calc(${(tabs.findIndex(t => t.key === tab) * 100) / tabs.length}% + 0.125rem)`,
                 transition: "left 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
               }}
-            />
+            >
+              {/* BattleCard-style neon halo — contained by nav's overflow-hidden */}
+              <div className="absolute inset-0 -z-10 rounded-xl bg-primary/20 blur-3xl animate-pulse" />
+            </div>
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.key;
