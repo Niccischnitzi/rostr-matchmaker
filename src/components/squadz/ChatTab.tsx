@@ -451,24 +451,35 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
         {messages.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-10">Say hi to {peer?.display_name ?? peer?.username}.</p>
         )}
-        {messages.map((m) => {
+        {messages.map((m, idx) => {
           const me = m.sender_id === user.id;
           const attach = parseAttachment(m.body ?? "");
+          const prev = idx > 0 ? messages[idx - 1] : null;
+          const showDate = !prev || !isSameDay(new Date(prev.created_at), new Date(m.created_at));
           return (
-            <div key={m.id} className={cn("flex flex-col max-w-[min(280px,80%)] min-w-0 soft-rise", me ? "ml-auto items-end" : "items-start")}>
-              {attach ? (
-                <div className={cn("rounded-2xl overflow-hidden", me ? "rounded-br-sm" : "rounded-bl-sm")}>
-                  <Attachment meta={attach} me={me} />
-                </div>
-              ) : (
-                <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words overflow-hidden max-w-full", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")} style={{ wordBreak: "break-word" }}>
-                  {m.body}
+            <div key={m.id} className="contents">
+              {showDate && (
+                <div className="flex justify-center my-2">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60 bg-surface/40 px-2.5 py-0.5 rounded-full">
+                    {formatDateHeader(new Date(m.created_at))}
+                  </span>
                 </div>
               )}
-              <p className="text-[10px] text-muted-foreground mt-1 px-2 flex items-center gap-1">
-                {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                {me && m.read_at && <span className="text-primary">· seen</span>}
-              </p>
+              <div className={cn("flex flex-col max-w-[min(280px,80%)] min-w-0 soft-rise", me ? "ml-auto items-end" : "items-start")}>
+                {attach ? (
+                  <div className={cn("rounded-2xl overflow-hidden", me ? "rounded-br-sm" : "rounded-bl-sm")}>
+                    <Attachment meta={attach} me={me} />
+                  </div>
+                ) : (
+                  <div className={cn("rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words overflow-hidden max-w-full", me ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface rounded-bl-sm")} style={{ wordBreak: "break-word" }}>
+                    {m.body}
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground mt-1 px-2 flex items-center gap-1">
+                  {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {me && m.read_at && <span className="text-primary">· seen</span>}
+                </p>
+              </div>
             </div>
           );
         })}
@@ -636,6 +647,18 @@ function Avatar({ profile, size = 12 }: { profile: Profile | null; size?: number
       )}
     </div>
   );
+}
+
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function formatDateHeader(d: Date) {
+  const today = new Date();
+  const yest = new Date(); yest.setDate(today.getDate() - 1);
+  if (isSameDay(d, today)) return "Today";
+  if (isSameDay(d, yest)) return "Yesterday";
+  return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
 }
 
 function relTime(iso: string) {
