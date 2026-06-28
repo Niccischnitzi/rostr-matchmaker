@@ -1,14 +1,13 @@
 // Sprint 3 — vertical snap-scroll Reels feed (TikTok-style).
 // Autoplays when visible, pauses when scrolled away or tab hidden.
-// Side rail: like, comment, save, mute. Comment sheet opens at the bottom.
-import { useEffect, useMemo, useState } from "react";
+// Side rail: like, comment, save, mute. Comment panel slides in from bottom.
+import { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, MessageCircle, Bookmark, Volume2, VolumeX, Send, Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVisibleVideo } from "@/hooks/use-visible-video";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 
@@ -46,14 +45,13 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-
   const { data: userId } = useQuery({
     queryKey: ["auth-user-id"],
     queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
     staleTime: Infinity,
   });
 
-  const { data: posts = [] } = useQuery<ReelPost[]>({
+  const { data: posts = [], isLoading: postsLoading } = useQuery<ReelPost[]>({
     queryKey: ["reels-posts"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -65,43 +63,50 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
       if (error) throw error;
       return (data ?? []) as ReelPost[];
     },
+    staleTime: 60_000,
   });
 
+  const postIds = useMemo(() => posts.map((p) => p.id), [posts]);
+  const postIdsKey = postIds.join(",");
+
   const paths = useMemo(() => posts.map((p) => p.media_path).filter((p): p is string => !!p), [posts]);
+  // Sign URLs in one batch for speed
   const { data: signedMap = {} } = useQuery<Record<string, string>>({
     queryKey: ["reels-signed", paths.join("|")],
     enabled: paths.length > 0,
+    staleTime: 50 * 60_000,
     queryFn: async () => {
       const out: Record<string, string> = {};
-      await Promise.all(paths.map(async (p) => {
-        const { data } = await supabase.storage.from("media-clips").createSignedUrl(p, 60 * 60);
-        if (data?.signedUrl) out[p] = data.signedUrl;
-      }));
+      const { data } = await supabase.storage.from("media-clips").createSignedUrls(paths, 60 * 60);
+      data?.forEach((d) => { if (d.signedUrl && d.path) out[d.path] = d.signedUrl; });
       return out;
     },
   });
 
+  // Scoped to current post set — much smaller payloads than fetching all.
   const { data: likes = [] } = useQuery<{ post_id: string; user_id: string }[]>({
-    queryKey: ["media-likes"],
+    queryKey: ["media-likes", postIdsKey],
+    enabled: postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_likes").select("post_id, user_id");
+      const { data, error } = await supabase.from("media_likes").select("post_id, user_id").in("post_id", postIds);
       if (error) throw error;
       return data as any;
     },
   });
   const { data: saves = [] } = useQuery<{ post_id: string; user_id: string }[]>({
-    queryKey: ["media-saves", userId],
-    enabled: !!userId,
+    queryKey: ["media-saves", userId, postIdsKey],
+    enabled: !!userId && postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_saves" as any).select("post_id, user_id");
+      const { data, error } = await supabase.from("media_saves" as any).select("post_id, user_id").eq("user_id", userId).in("post_id", postIds);
       if (error) throw error;
       return data as any;
     },
   });
-  const { data: comments = [] } = useQuery<MediaComment[]>({
-    queryKey: ["media-comments"],
+  const { data: commentCountsArr = [] } = useQuery<{ post_id: string }[]>({
+    queryKey: ["media-comment-counts", postIdsKey],
+    enabled: postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_comments" as any).select("*").order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("media_comments" as any).select("post_id").in("post_id", postIds);
       if (error) throw error;
       return data as any;
     },
@@ -114,11 +119,11 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
   }, [likes]);
   const commentCounts = useMemo(() => {
     const m = new Map<string, number>();
-    comments.forEach((c) => m.set(c.post_id, (m.get(c.post_id) ?? 0) + 1));
+    commentCountsArr.forEach((c) => m.set(c.post_id, (m.get(c.post_id) ?? 0) + 1));
     return m;
-  }, [comments]);
+  }, [commentCountsArr]);
   const myLikes = useMemo(() => new Set(likes.filter((l) => l.user_id === userId).map((l) => l.post_id)), [likes, userId]);
-  const mySaves = useMemo(() => new Set(saves.filter((s) => s.user_id === userId).map((s) => s.post_id)), [saves, userId]);
+  const mySaves = useMemo(() => new Set(saves.map((s) => s.post_id)), [saves]);
 
   const requireAuth = () => {
     if (!userId) { toast.error("Sign in to interact"); return false; }
@@ -147,12 +152,8 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
         sfx.tap();
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-saves", userId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-saves"] }),
   });
-
-  if (!posts.length) {
-    return <p className="text-center text-sm text-muted-foreground py-16">No reels yet — be the first.</p>;
-  }
 
   // Portal to <body> so `position: fixed` is NOT trapped by an ancestor
   // with `will-change: transform` (the Shell swipe wrapper creates a
@@ -168,6 +169,19 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
           <X className="h-5 w-5" />
         </button>
       )}
+
+      {postsLoading && (
+        <div className="absolute inset-0 grid place-items-center">
+          <div className="h-12 w-12 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+        </div>
+      )}
+
+      {!postsLoading && posts.length === 0 && (
+        <div className="absolute inset-0 grid place-items-center text-white/70 text-sm">
+          No reels yet — be the first.
+        </div>
+      )}
+
       <div
         className="h-full w-full overflow-y-auto snap-y snap-mandatory"
         style={{ scrollSnapStop: "always" as React.CSSProperties["scrollSnapStop"] }}
@@ -191,21 +205,17 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
           />
         ))}
       </div>
+
+      {/* Comments panel — rendered INSIDE the reels portal so it stacks above */}
+      <CommentsPanel
+        postId={commentsFor}
+        onClose={() => setCommentsFor(null)}
+        userId={userId ?? null}
+      />
     </div>
   );
 
-  return (
-    <>
-      {typeof document !== "undefined" ? createPortal(overlay, document.body) : overlay}
-
-      <CommentsSheet
-        postId={commentsFor}
-        onClose={() => setCommentsFor(null)}
-        comments={comments.filter((c) => c.post_id === commentsFor)}
-        userId={userId ?? null}
-      />
-    </>
-  );
+  return typeof document !== "undefined" ? createPortal(overlay, document.body) : overlay;
 }
 
 
@@ -230,7 +240,6 @@ function Reel({
 }) {
   const { ref, playing, setPlaying } = useVisibleVideo({ threshold: 0.6, onAutoplayMuted });
   const [tapPause, setTapPause] = useState(false);
-
   const [errored, setErrored] = useState(false);
 
   return (
@@ -268,7 +277,6 @@ function Reel({
         </div>
       )}
 
-
       {/* Bottom info */}
       <div className="absolute inset-x-0 bottom-0 p-3 pr-16 bg-gradient-to-t from-black/85 to-transparent text-white">
         {post.title && <p className="font-display text-base sm:text-lg font-black drop-shadow line-clamp-2">{post.title}</p>}
@@ -298,10 +306,7 @@ function Reel({
 
 function RailBtn({ children, label, onClick, active }: { children: React.ReactNode; label: string; onClick: () => void; active?: boolean }) {
   return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-1"
-    >
+    <button onClick={onClick} className="flex flex-col items-center gap-1">
       <span className={cn(
         "h-11 w-11 rounded-full grid place-items-center backdrop-blur transition-colors",
         active ? "bg-white/20" : "bg-black/50"
@@ -313,16 +318,28 @@ function RailBtn({ children, label, onClick, active }: { children: React.ReactNo
   );
 }
 
-function CommentsSheet({
-  postId, onClose, comments, userId,
+function CommentsPanel({
+  postId, onClose, userId,
 }: {
   postId: string | null;
   onClose: () => void;
-  comments: MediaComment[];
   userId: string | null;
 }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState("");
+  const open = !!postId;
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: comments = [], isLoading } = useQuery<MediaComment[]>({
+    queryKey: ["media-comments", postId],
+    enabled: !!postId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("media_comments" as any)
+        .select("*").eq("post_id", postId).order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as any;
+    },
+  });
 
   const authorIds = useMemo(() => Array.from(new Set(comments.map((c) => c.user_id))), [comments]);
   const { data: authors = [] } = useQuery({
@@ -344,20 +361,52 @@ function CommentsSheet({
     },
     onSuccess: () => {
       setDraft("");
-      qc.invalidateQueries({ queryKey: ["media-comments"] });
+      qc.invalidateQueries({ queryKey: ["media-comments", postId] });
+      qc.invalidateQueries({ queryKey: ["media-comment-counts"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Comment failed"),
   });
 
+  // Close on ESC
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
   return (
-    <Sheet open={!!postId} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="h-[55svh] max-h-[55svh] flex flex-col p-0 rounded-t-3xl border-t border-border">
-        <SheetHeader className="p-3 border-b border-border">
-          <SheetTitle className="text-sm">{comments.length} comments</SheetTitle>
-        </SheetHeader>
+    <>
+      {/* Backdrop */}
+      <button
+        aria-label="Close comments"
+        onClick={onClose}
+        className="absolute inset-0 z-[105] bg-black/60 animate-in fade-in"
+      />
+      {/* Panel */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-[110] bg-background rounded-t-3xl border-t border-border flex flex-col animate-in slide-in-from-bottom-4 duration-200"
+        style={{ height: "60svh", maxHeight: "60svh" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-3 border-b border-border flex items-center justify-between">
+          <p className="text-sm font-semibold">{comments.length} {comments.length === 1 ? "comment" : "comments"}</p>
+          <button onClick={onClose} aria-label="Close" className="h-8 w-8 grid place-items-center rounded-full hover:bg-surface-2">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {comments.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Be the first to comment.</p>}
+          {isLoading && (
+            <div className="grid place-items-center py-8">
+              <div className="h-6 w-6 rounded-full border-2 border-border border-t-foreground animate-spin" />
+            </div>
+          )}
+          {!isLoading && comments.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">Be the first to comment.</p>
+          )}
           {comments.map((c) => {
             const a = authorMap.get(c.user_id) as any;
             return (
@@ -373,24 +422,27 @@ function CommentsSheet({
             );
           })}
         </div>
+
         {userId ? (
-          <div className="p-3 border-t border-border flex items-center gap-2">
+          <div className="p-3 border-t border-border flex items-center gap-2" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
             <input
+              ref={inputRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && draft.trim()) add.mutate(); }}
               placeholder="Add a comment…"
               maxLength={280}
               className="min-w-0 flex-1 bg-surface rounded-full px-4 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              autoFocus
             />
-            <button onClick={() => add.mutate()} disabled={!draft.trim()} className="h-10 w-10 rounded-full bg-primary text-primary-foreground grid place-items-center disabled:opacity-40">
+            <button onClick={() => add.mutate()} disabled={!draft.trim() || add.isPending} className="h-10 w-10 rounded-full bg-primary text-primary-foreground grid place-items-center disabled:opacity-40">
               <Send className="h-4 w-4" />
             </button>
           </div>
         ) : (
           <div className="p-4 text-sm text-center text-muted-foreground border-t border-border">Sign in to comment.</div>
         )}
-      </SheetContent>
-    </Sheet>
+      </div>
+    </>
   );
 }
