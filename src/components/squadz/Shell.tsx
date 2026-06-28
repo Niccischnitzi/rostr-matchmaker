@@ -269,16 +269,16 @@ export function Shell() {
         <nav
           data-swipe-tabbar="true"
           data-mobile-tabbar="true"
-          className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl"
+          className="lg:hidden fixed bottom-2 inset-x-2 z-40 rounded-2xl border border-border bg-background/95 backdrop-blur-xl shadow-lg overflow-hidden"
         >
-          <div className="relative grid grid-cols-5">
-            {/* Animated active indicator */}
+          <div className="relative grid grid-cols-5 p-1">
+            {/* Contained active pill */}
             <div
               aria-hidden
-              className="pointer-events-none absolute top-0 h-[2px] bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.6)]"
+              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-primary/15 ring-1 ring-primary/30"
               style={{
-                width: `${100 / tabs.length}%`,
-                left: `${(tabs.findIndex(t => t.key === tab) * 100) / tabs.length}%`,
+                width: `calc(${100 / tabs.length}% - 0.25rem)`,
+                left: `calc(${(tabs.findIndex(t => t.key === tab) * 100) / tabs.length}% + 0.125rem)`,
                 transition: "left 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
               }}
             />
@@ -290,8 +290,8 @@ export function Shell() {
                   key={t.key}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "hover-spin-ring flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-colors duration-200",
-                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    "relative z-10 flex flex-col items-center gap-0.5 py-1.5 text-[9px] uppercase tracking-wider transition-colors duration-200",
+                    active ? "text-primary font-bold" : "text-muted-foreground font-semibold hover:text-foreground"
                   )}
                 >
                   <Icon className={cn("h-[18px] w-[18px] transition-transform duration-300", active && "scale-110")} />
