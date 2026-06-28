@@ -649,6 +649,18 @@ function Avatar({ profile, size = 12 }: { profile: Profile | null; size?: number
   );
 }
 
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function formatDateHeader(d: Date) {
+  const today = new Date();
+  const yest = new Date(); yest.setDate(today.getDate() - 1);
+  if (isSameDay(d, today)) return "Today";
+  if (isSameDay(d, yest)) return "Yesterday";
+  return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+}
+
 function relTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
