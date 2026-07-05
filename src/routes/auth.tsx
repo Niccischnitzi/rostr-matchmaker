@@ -224,6 +224,11 @@ function AuthPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">One passport. Every platform.</p>
+        <div className="mt-4 flex justify-center gap-4 text-[11px] text-muted-foreground/70">
+          <a href="/privacy" className="hover:text-foreground underline-offset-4 hover:underline">Privacy</a>
+          <span aria-hidden>·</span>
+          <a href="/terms" className="hover:text-foreground underline-offset-4 hover:underline">Terms</a>
+        </div>
       </div>
       <Toaster theme="dark" position="top-center" />
     </main>
