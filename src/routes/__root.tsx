@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { ROSTR_LOGO_URL } from "@/components/squadz/RostrMark";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { initThemeListeners } from "../lib/theme";
 
@@ -188,7 +189,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AppErrorBoundary>
+        <Outlet />
+      </AppErrorBoundary>
     </QueryClientProvider>
   );
 }
