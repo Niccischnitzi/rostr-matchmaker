@@ -5,6 +5,13 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import mkcert from "vite-plugin-mkcert";
+
+// Enable local HTTPS in dev via a locally-trusted mkcert certificate. This is a
+// no-op in production builds. HTTPS is required for WebRTC (camera/mic) and
+// realistic Stripe/webhook testing. Skipped inside the Lovable sandbox
+// (LOVABLE_SANDBOX is set) so the platform's own dev server keeps working.
+const enableMkcert = !process.env.LOVABLE_SANDBOX && !process.env.CI;
 
 export default defineConfig({
   tanstackStart: {
@@ -12,4 +19,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: enableMkcert
+    ? {
+        plugins: [mkcert()],
+        server: { https: true },
+      }
+    : undefined,
 });
