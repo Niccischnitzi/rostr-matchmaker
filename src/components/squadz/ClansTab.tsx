@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Shield, Crown, Swords, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { CardGridSkeleton } from "@/components/squadz/LoadingSkeletons";
 
 export function ClansTab() {
   const { user } = useAuth();

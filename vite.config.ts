@@ -22,7 +22,7 @@ export default defineConfig({
   vite: enableMkcert
     ? {
         plugins: [mkcert()],
-        server: { https: true },
+        server: { https: {} },
       }
     : undefined,
 });
