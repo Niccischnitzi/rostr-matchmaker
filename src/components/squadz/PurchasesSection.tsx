@@ -4,6 +4,7 @@ import { Coins, Crown, Receipt, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/use-subscription";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Grant = {
   id: string;
@@ -99,8 +100,10 @@ export function PurchasesSection({ userId }: { userId: string }) {
       </div>
 
       {grants === null ? (
-        <div className="rounded-2xl border border-border bg-surface p-3 text-xs text-muted-foreground">
-          Loading purchases…
+        <div className="rounded-2xl border border-border bg-surface p-3 space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-full rounded-xl" />
+          <Skeleton className="h-9 w-full rounded-xl" />
         </div>
       ) : grants.length === 0 ? (
         <Link

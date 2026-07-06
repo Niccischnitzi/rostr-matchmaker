@@ -54,43 +54,56 @@ export function MediaTab() {
       if (error) throw error;
       return data as MediaPost[];
     },
+    staleTime: 30_000,
   });
 
+  const postIds = useMemo(() => posts.map((p) => p.id), [posts]);
+  const postIdsKey = postIds.join(",");
+
   const { data: likes = [] } = useQuery<Like[]>({
-    queryKey: ["media-likes"],
+    queryKey: ["media-likes", postIdsKey],
+    enabled: postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_likes").select("post_id, user_id");
+      const { data, error } = await supabase.from("media_likes").select("post_id, user_id").in("post_id", postIds);
       if (error) throw error;
       return data as Like[];
     },
+    staleTime: 20_000,
   });
 
   const { data: saves = [] } = useQuery<Save[]>({
-    queryKey: ["media-saves", userId],
+    queryKey: ["media-saves", userId, postIdsKey],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_saves" as any).select("post_id, user_id");
+      let query = supabase.from("media_saves" as any).select("post_id, user_id").eq("user_id", userId);
+      if (postIds.length > 0) query = query.in("post_id", postIds);
+      const { data, error } = await query;
       if (error) throw error;
       return (data as any) as Save[];
     },
+    staleTime: 20_000,
   });
 
   const { data: reposts = [] } = useQuery<Repost[]>({
-    queryKey: ["media-reposts"],
+    queryKey: ["media-reposts", postIdsKey],
+    enabled: postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_reposts" as any).select("id, post_id, user_id");
+      const { data, error } = await supabase.from("media_reposts" as any).select("id, post_id, user_id").in("post_id", postIds);
       if (error) throw error;
       return (data as any) as Repost[];
     },
+    staleTime: 20_000,
   });
 
   const { data: comments = [] } = useQuery<MediaComment[]>({
-    queryKey: ["media-comments"],
+    queryKey: ["media-comments", postIdsKey],
+    enabled: postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("media_comments" as any).select("*").order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("media_comments" as any).select("*").in("post_id", postIds).order("created_at", { ascending: true });
       if (error) throw error;
       return (data as any) as MediaComment[];
     },
+    staleTime: 20_000,
   });
 
   // Fetch liker mini-profiles
@@ -169,7 +182,7 @@ export function MediaTab() {
         sfx.tap();
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-saves", userId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["media-saves"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
@@ -229,16 +242,20 @@ export function MediaTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
   });
 
-  const videoPaths = posts.filter((p) => p.kind === "video" && p.media_path).map((p) => p.media_path as string);
+  const videoPaths = useMemo(
+    () => posts.filter((p) => p.kind === "video" && p.media_path).map((p) => p.media_path as string),
+    [posts],
+  );
   const { data: signedMap = {} } = useQuery<Record<string, string>>({
     queryKey: ["media-signed", videoPaths.join("|")],
     enabled: videoPaths.length > 0,
+    staleTime: 50 * 60_000,
     queryFn: async () => {
       const out: Record<string, string> = {};
-      await Promise.all(videoPaths.map(async (p) => {
-        const { data } = await supabase.storage.from("media-clips").createSignedUrl(p, 60 * 60);
-        if (data?.signedUrl) out[p] = data.signedUrl;
-      }));
+      const { data } = await supabase.storage.from("media-clips").createSignedUrls(videoPaths, 60 * 60);
+      data?.forEach((item) => {
+        if (item.path && item.signedUrl) out[item.path] = item.signedUrl;
+      });
       return out;
     },
   });

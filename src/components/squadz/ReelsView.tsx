@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useVisibleVideo } from "@/hooks/use-visible-video";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ReelPost = {
   id: string;
@@ -171,8 +172,10 @@ export function ReelsView({ onClose }: { onClose?: () => void } = {}) {
       )}
 
       {postsLoading && (
-        <div className="absolute inset-0 grid place-items-center">
-          <div className="h-12 w-12 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+        <div className="absolute inset-0 p-4 grid place-items-center">
+          <div className="w-full max-w-md h-[88svh] rounded-3xl border border-white/10 bg-white/5 p-4 space-y-4">
+            <Skeleton className="h-full w-full rounded-2xl bg-white/10" />
+          </div>
         </div>
       )}
 
@@ -266,7 +269,7 @@ function Reel({
           <button onClick={() => setErrored(false)} className="mt-2 text-primary font-bold">Retry</button>
         </div>
       ) : (
-        <div className="h-12 w-12 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+          <Skeleton className="h-full w-full bg-white/10" />
       )}
 
       {!playing && tapPause && (
@@ -400,8 +403,16 @@ function CommentsPanel({
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {isLoading && (
-            <div className="grid place-items-center py-8">
-              <div className="h-6 w-6 rounded-full border-2 border-border border-t-foreground animate-spin" />
+            <div className="py-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           {!isLoading && comments.length === 0 && (
