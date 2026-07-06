@@ -2012,6 +2012,20 @@ export type Database = {
       }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
+      process_payment_grant: {
+        Args: {
+          p_amount_paid: number
+          p_currency: string
+          p_environment: string
+          p_kind: string
+          p_metadata: Json
+          p_price_id: string
+          p_stripe_session_id: string
+          p_tokens_granted: number
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       record_daily_login: {
         Args: never
         Returns: {
