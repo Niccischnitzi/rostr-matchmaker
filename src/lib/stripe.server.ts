@@ -57,6 +57,15 @@ export function getStripeErrorMessage(error: unknown): string {
   return "Stripe request failed";
 }
 
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 export async function verifyWebhook(
   req: Request,
   env: StripeEnv,
@@ -96,7 +105,9 @@ export async function verifyWebhook(
   );
   const expected = Buffer.from(new Uint8Array(signed)).toString("hex");
 
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  if (!v1Signatures.some((sig) => timingSafeEqualHex(sig, expected))) {
+    throw new Error("Invalid webhook signature");
+  }
 
   return JSON.parse(body);
 }

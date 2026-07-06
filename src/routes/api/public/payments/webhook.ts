@@ -30,7 +30,20 @@ function resolvePriceId(item: any): string | null {
 }
 
 async function handleCheckoutCompleted(session: any, env: StripeEnv) {
-  if (session.mode !== "payment") return; // subscriptions handled by subscription.* events
+  if (session.mode === "subscription") {
+    // Subscription webhooks are the source of truth, but checkout completion can
+    // arrive first in test mode. Upsert here too so Pro unlocks quickly.
+    if (session.subscription) {
+      const stripeMod = await import("@/lib/stripe.server");
+      const stripe = stripeMod.createStripeClient(env);
+      const subscription = await stripe.subscriptions.retrieve(session.subscription, {
+        expand: ["items.data.price"],
+      });
+      await upsertSubscription(subscription, env);
+    }
+    return;
+  }
+  if (session.mode !== "payment") return;
   if (session.payment_status !== "paid") return;
 
   const userId = session.metadata?.userId;
@@ -39,19 +52,10 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
     return;
   }
 
-  // Idempotency check
   const supabase = getSupabase();
-  const { data: existing } = await supabase
-    .from("payment_grants")
-    .select("id")
-    .eq("stripe_session_id", session.id)
-    .maybeSingle();
-  if (existing) return;
 
-  // Need line items to know the price
-  // session.line_items isn't included by default in webhooks; we use display items
-  // but Stripe typically expands on checkout.completed retrieved via API.
-  // We re-fetch via API.
+  // Need line items to know the lookup_key-backed price id. Webhook payloads do
+  // not reliably include line_items, so re-fetch through the shared gateway.
   const stripeMod = await import("@/lib/stripe.server");
   const stripe = stripeMod.createStripeClient(env);
   const full = await stripe.checkout.sessions.retrieve(session.id, {
@@ -72,47 +76,30 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
       ? "tournament_entry"
       : "other";
 
-  // Record grant (idempotent on unique stripe_session_id)
-  const { error: grantErr } = await supabase.from("payment_grants").insert({
-    user_id: userId,
-    stripe_session_id: session.id,
-    price_id: priceId,
-    amount_paid: session.amount_total ?? null,
-    currency: session.currency ?? null,
-    kind,
-    tokens_granted: tokens,
-    metadata: tournamentId ? { tournamentId } : {},
-    environment: env,
+  // Atomically records the payment grant and credits wallet tokens once.
+  const { data: inserted, error: grantErr } = await supabase.rpc("process_payment_grant", {
+    p_user_id: userId,
+    p_stripe_session_id: session.id,
+    p_price_id: priceId,
+    p_amount_paid: session.amount_total ?? null,
+    p_currency: session.currency ?? null,
+    p_kind: kind,
+    p_tokens_granted: tokens,
+    p_metadata: tournamentId ? { tournamentId } : {},
+    p_environment: env,
   });
   if (grantErr) {
-    if (grantErr.code === "23505") return; // race: already inserted
-    console.error("Failed to insert grant", grantErr);
+    console.error("Failed to process payment grant", grantErr);
     return;
   }
+  if (!inserted) return;
 
-  // Credit wallet for token packs
-  if (tokens > 0) {
-    const { data: wallet } = await supabase
-      .from("wallets")
-      .select("balance_points, lifetime_won")
-      .eq("user_id", userId)
-      .maybeSingle();
-    const balance = ((wallet?.balance_points as number) ?? 0) + tokens;
-    const lifetime = ((wallet?.lifetime_won as number) ?? 0) + tokens;
-    await supabase
-      .from("wallets")
-      .upsert(
-        { user_id: userId, balance_points: balance, lifetime_won: lifetime },
-        { onConflict: "user_id" },
-      );
-  }
-
-  // Tournament entry registration
+  // Tournament entry registration is also idempotent on (tournament_id,user_id).
   if (kind === "tournament_entry" && tournamentId) {
-    await getSupabase()
+    const { error: entryError } = await getSupabase()
       .from("tournament_entries")
-      .insert({ tournament_id: tournamentId, user_id: userId })
-      .then(() => undefined, (e: unknown) => console.error("tournament_entries insert failed", e));
+      .upsert({ tournament_id: tournamentId, user_id: userId }, { onConflict: "tournament_id,user_id" });
+    if (entryError) console.error("tournament_entries upsert failed", entryError);
   }
 }
 
@@ -164,6 +151,12 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   switch (event.type) {
     case "checkout.session.completed":
       await handleCheckoutCompleted(event.data.object, env);
+      break;
+    case "checkout.session.async_payment_succeeded":
+      await handleCheckoutCompleted(event.data.object, env);
+      break;
+    case "checkout.session.async_payment_failed":
+      console.warn("Checkout async payment failed", event.data.object?.id);
       break;
     case "customer.subscription.created":
     case "customer.subscription.updated":
