@@ -9,6 +9,15 @@ import {
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 
+const PRICE_ID_RE = /^[a-zA-Z0-9_-]+$/;
+
+function validateStripeEnvironment(environment: StripeEnv): StripeEnv {
+  if (environment !== "sandbox" && environment !== "live") {
+    throw new Error("Invalid Stripe environment");
+  }
+  return environment;
+}
+
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
   options: { email?: string; userId?: string },
@@ -51,8 +60,14 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     environment: StripeEnv;
     tournamentId?: string;
   }) => {
-    if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
-    return data;
+    if (!PRICE_ID_RE.test(data.priceId)) throw new Error("Invalid priceId");
+    if (data.quantity !== undefined && (!Number.isInteger(data.quantity) || data.quantity < 1 || data.quantity > 99)) {
+      throw new Error("Invalid quantity");
+    }
+    if (!data.returnUrl || !data.returnUrl.includes("{CHECKOUT_SESSION_ID}")) {
+      throw new Error("Invalid return URL");
+    }
+    return { ...data, environment: validateStripeEnvironment(data.environment) };
   })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
@@ -91,10 +106,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
-        // Sprint 5 — let Stripe surface Twint in CH. Stripe ignores unsupported
-        // methods per region, so this is safe globally. Requires Twint to be
-        // activated in the Stripe dashboard for the connected account.
-        payment_method_types: ["card", "twint"],
+        // Keep the checkout method set conservative. Forcing regional methods
+        // such as TWINT on USD/subscription sessions makes Stripe reject the
+        // whole checkout; card is globally supported and reliable in test/live.
+        payment_method_types: ["card"],
         ...(!isRecurring && {
           payment_intent_data: { description: productDescription, metadata },
         }),
@@ -110,19 +125,24 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
+  .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => ({
+    ...data,
+    environment: validateStripeEnvironment(data.environment),
+  }))
   .handler(async ({ data, context }): Promise<PortalSessionResult> => {
-    const { supabase, userId } = context;
-    const { data: sub, error: subError } = await supabase
-      .from("subscriptions")
-      .select("stripe_customer_id")
-      .eq("user_id", userId)
-      .eq("environment", data.environment)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (subError || !sub?.stripe_customer_id) throw new Error("No subscription found");
     try {
+      const { supabase, userId } = context;
+      const { data: sub, error: subError } = await supabase
+        .from("subscriptions")
+        .select("stripe_customer_id")
+        .eq("user_id", userId)
+        .eq("environment", data.environment)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (subError) throw subError;
+      if (!sub?.stripe_customer_id) throw new Error("No subscription found");
+
       const stripe = createStripeClient(data.environment);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id as string,
