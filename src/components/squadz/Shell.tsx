@@ -1,11 +1,11 @@
 import { useState, type ReactNode, useEffect, useRef } from "react";
-import { Users, MessageCircle, Film, UserCircle, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
+import { Users, MessageCircle, UserCircle, Shield, Trophy, Settings as SettingsIcon, Sparkles, ShoppingBag } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
 import { ChatTab } from "./ChatTab";
-import { MediaTab } from "./MediaTab";
+import { CommunityTab } from "./CommunityTab";
 import { ProfileTab } from "./ProfileTab";
-import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
 import { CrewsTab } from "./CrewsTab";
 import { SettingsSheet } from "./SettingsSheet";
@@ -17,24 +17,23 @@ import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 
-export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
+export type TabKey = "find" | "clans" | "chat" | "community" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
   { key: "clans", label: "Crews", icon: Shield },
   { key: "chat", label: "Chat", icon: MessageCircle },
-  { key: "media", label: "Media", icon: Film },
+  { key: "community", label: "Community", icon: Sparkles },
   { key: "profile", label: "Me", icon: UserCircle },
 ];
 
-type FindSub = "players" | "1v1";
 type ClansSub = "crews" | "cups";
 
 export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
   const [tabDir, setTabDir] = useState<1 | -1>(1);
   const prevTabRef = useRef<TabKey>("find");
-  const [findSub, setFindSub] = useState<FindSub>("players");
+  const navigate = useNavigate();
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [swipeDx, setSwipeDx] = useState(0);
@@ -205,6 +204,14 @@ export function Shell() {
               <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Online</span>
             </span>
             <button
+              onClick={() => navigate({ to: "/pricing" })}
+              className="h-7 px-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition"
+              aria-label="Shop"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              Shop
+            </button>
+            <button
               onClick={() => setSettingsOpen(true)}
               className="h-7 w-7 rounded-lg bg-surface hover:bg-surface-2 grid place-items-center"
               aria-label="Settings"
@@ -229,17 +236,7 @@ export function Shell() {
           {/* Tabs are mounted once visited and toggled with display:none — keeps state, eliminates remount jank. */}
           {mounted.has("find") && (
             <TabFrame active={tab === "find"} tabKey="find" dir={tabDir}>
-              <SubNav
-                items={[
-                  { key: "players", label: "Players", icon: Users },
-                  { key: "1v1", label: "1v1 Challenges", icon: Swords },
-                ]}
-                value={findSub}
-                onChange={(v) => setFindSub(v as FindSub)}
-              />
-              <div key={findSub} className="subpanel-swap">
-                {findSub === "players" ? <FindTab /> : <ChallengesTab />}
-              </div>
+              <FindTab />
             </TabFrame>
           )}
           {mounted.has("clans") && (
@@ -258,9 +255,9 @@ export function Shell() {
               </div>
             </TabFrame>
           )}
-          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"    dir={tabDir}><ChatTab /></TabFrame>}
-          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"   dir={tabDir}><MediaTab /></TabFrame>}
-          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile" dir={tabDir}><ProfileTab /></TabFrame>}
+          {mounted.has("chat")      && <TabFrame active={tab === "chat"}      tabKey="chat"      dir={tabDir}><ChatTab /></TabFrame>}
+          {mounted.has("community") && <TabFrame active={tab === "community"} tabKey="community" dir={tabDir}><CommunityTab /></TabFrame>}
+          {mounted.has("profile")   && <TabFrame active={tab === "profile"}   tabKey="profile"   dir={tabDir}><ProfileTab /></TabFrame>}
 
 
         </div>
