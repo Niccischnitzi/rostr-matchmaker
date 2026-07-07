@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
@@ -6,21 +6,70 @@ import {
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers } from "lucide-react";
+import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
+// Premium cosmetics — cost tokens to unlock once, then free forever.
+const PREMIUM_PALETTES: Partial<Record<PaletteKey, number>> = {
+  "midnight-obsidian": 150,
+  "sunset-arcade": 100,
+  "cyber-mint": 100,
+};
+const PREMIUM_HOVER: Partial<Record<HoverHueKey, number>> = {
+  ultraviolet: 75,
+  "gold-rush": 75,
+  "blood-moon": 75,
+  vaporwave: 50,
+};
+const cosmeticKey = (kind: "palette" | "hover", key: string) => `${kind}:${key}`;
 
 export function ThemeCustomizer() {
+  const { user } = useAuth();
   const [saved, setSaved] = useState<Customization>(() => loadCustomization());
   const [draft, setDraft] = useState<Customization>(() => loadCustomization());
+  const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
+  const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
     const loaded = loadCustomization();
     setSaved(loaded);
     setDraft(loaded);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("cosmetic_unlocks")
+      .select("cosmetic_key")
+      .eq("user_id", user.id)
+      .then(({ data }) => setUnlocked(new Set((data ?? []).map((r) => r.cosmetic_key as string))));
+  }, [user]);
+
+  const requireUnlock = useCallback(
+    async (key: string, cost: number, label: string) => {
+      if (unlocked.has(key)) return true;
+      if (!user) {
+        toast.error("Sign in to unlock cosmetics");
+        return false;
+      }
+      setPending(key);
+      const { error } = await supabase.rpc("unlock_cosmetic", { _key: key, _cost: cost });
+      setPending(null);
+      if (error) {
+        toast.error(error.message.includes("Insufficient") ? "Not enough tokens" : error.message);
+        return false;
+      }
+      setUnlocked((prev) => new Set(prev).add(key));
+      toast.success(`${label} unlocked · -${cost} tokens`);
+      return true;
+    },
+    [unlocked, user],
+  );
 
   // Live preview while editing — never persists.
   useEffect(() => { previewCustomization(draft); }, [draft]);
@@ -57,10 +106,19 @@ export function ThemeCustomizer() {
           {(Object.keys(PALETTES) as PaletteKey[]).map((k) => {
             const p = PALETTES[k];
             const on = draft.palette === k;
+            const cost = PREMIUM_PALETTES[k];
+            const ck = cosmeticKey("palette", k);
+            const locked = cost != null && !unlocked.has(ck);
+            const busy = pending === ck;
             return (
               <button
                 key={k}
-                onClick={() => {
+                disabled={busy}
+                onClick={async () => {
+                  if (locked) {
+                    const ok = await requireUnlock(ck, cost!, p.name);
+                    if (!ok) return;
+                  }
                   applyPalettePreset(k);
                   const fresh = loadCustomization();
                   setSaved(fresh);
@@ -68,12 +126,21 @@ export function ThemeCustomizer() {
                   toast.success(`${p.name} applied`);
                 }}
                 className={cn(
-                  "relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all",
+                  "relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all disabled:opacity-60",
                   on ? "border-primary scale-[1.02]" : "border-border hover:border-primary/60"
                 )}
               >
-                <div className="h-12 rounded-lg mb-1.5 ring-1 ring-white/10" style={{ backgroundImage: p.gradient }} />
-                <p className="text-[11px] font-bold leading-tight">{p.name}</p>
+                <div className="h-12 rounded-lg mb-1.5 ring-1 ring-white/10 relative" style={{ backgroundImage: p.gradient }}>
+                  {locked && (
+                    <span className="absolute inset-0 grid place-items-center bg-black/50 rounded-lg text-[10px] font-bold text-white gap-1">
+                      <Lock className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[11px] font-bold leading-tight truncate">{p.name}</p>
+                  {locked && <span className="text-[9px] font-bold text-primary shrink-0">{cost}⨀</span>}
+                </div>
                 <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.mode}</p>
               </button>
             );
@@ -110,24 +177,44 @@ export function ThemeCustomizer() {
           {(Object.keys(HOVER_HUES) as HoverHueKey[]).map((k) => {
             const h = HOVER_HUES[k];
             const on = (draft.hoverHue ?? "auto") === k;
+            const cost = PREMIUM_HOVER[k];
+            const ck = cosmeticKey("hover", k);
+            const locked = cost != null && !unlocked.has(ck);
+            const busy = pending === ck;
             const gradient = h.swatches.length
               ? `conic-gradient(from 180deg, ${h.swatches.join(", ")}, ${h.swatches[0]})`
               : "conic-gradient(from 180deg, var(--primary), var(--primary-glow), var(--primary))";
             return (
               <button
                 key={k}
-                onClick={() => set("hoverHue", k)}
+                disabled={busy}
+                onClick={async () => {
+                  if (locked) {
+                    const ok = await requireUnlock(ck, cost!, h.name);
+                    if (!ok) return;
+                  }
+                  set("hoverHue", k);
+                }}
                 className={cn(
-                  "group relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all hover:scale-[1.03]",
+                  "group relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all hover:scale-[1.03] disabled:opacity-60",
                   on ? "border-foreground scale-[1.04]" : "border-border hover:border-primary/60"
                 )}
                 title={h.name}
               >
                 <div
-                  className="h-10 w-full rounded-lg mb-1 ring-1 ring-white/10 transition-transform duration-700 group-hover:rotate-[40deg]"
+                  className="h-10 w-full rounded-lg mb-1 ring-1 ring-white/10 transition-transform duration-700 group-hover:rotate-[40deg] relative"
                   style={{ backgroundImage: gradient }}
-                />
-                <p className="text-[10px] font-bold leading-tight">{h.name}</p>
+                >
+                  {locked && (
+                    <span className="absolute inset-0 grid place-items-center bg-black/50 rounded-lg text-white">
+                      <Lock className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[10px] font-bold leading-tight truncate">{h.name}</p>
+                  {locked && <span className="text-[9px] font-bold text-primary shrink-0">{cost}⨀</span>}
+                </div>
               </button>
             );
           })}
