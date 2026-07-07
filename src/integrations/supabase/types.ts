@@ -535,6 +535,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cosmetic_unlocks: {
+        Row: {
+          cosmetic_key: string
+          cost_paid: number
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          cosmetic_key: string
+          cost_paid?: number
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          cosmetic_key?: string
+          cost_paid?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crew_event_rsvps: {
         Row: {
           event_id: string
@@ -2034,6 +2058,10 @@ export type Database = {
         }[]
       }
       spend_tokens: { Args: { _amount: number }; Returns: number }
+      unlock_cosmetic: {
+        Args: { _cost: number; _key: string }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_kind:
