@@ -33,7 +33,7 @@ export function Shell() {
   const [tab, setTab] = useState<TabKey>("find");
   const [tabDir, setTabDir] = useState<1 | -1>(1);
   const prevTabRef = useRef<TabKey>("find");
-  const [findSub, setFindSub] = useState<FindSub>("players");
+  const navigate = useNavigate();
   const [clansSub, setClansSub] = useState<ClansSub>("crews");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [swipeDx, setSwipeDx] = useState(0);
