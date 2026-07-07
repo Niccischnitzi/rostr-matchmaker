@@ -1,11 +1,11 @@
 import { useState, type ReactNode, useEffect, useRef } from "react";
-import { Users, MessageCircle, Film, UserCircle, Shield, Swords, Trophy, Settings as SettingsIcon } from "lucide-react";
+import { Users, MessageCircle, UserCircle, Shield, Trophy, Settings as SettingsIcon, Sparkles, ShoppingBag } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { FindTab } from "./FindTab";
 import { ChatTab } from "./ChatTab";
-import { MediaTab } from "./MediaTab";
+import { CommunityTab } from "./CommunityTab";
 import { ProfileTab } from "./ProfileTab";
-import { ChallengesTab } from "./ChallengesTab";
 import { TournamentsTab } from "./TournamentsTab";
 import { CrewsTab } from "./CrewsTab";
 import { SettingsSheet } from "./SettingsSheet";
@@ -17,17 +17,16 @@ import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 
-export type TabKey = "find" | "clans" | "chat" | "media" | "profile";
+export type TabKey = "find" | "clans" | "chat" | "community" | "profile";
 
 const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
   { key: "find", label: "Find", icon: Users },
   { key: "clans", label: "Crews", icon: Shield },
   { key: "chat", label: "Chat", icon: MessageCircle },
-  { key: "media", label: "Media", icon: Film },
+  { key: "community", label: "Community", icon: Sparkles },
   { key: "profile", label: "Me", icon: UserCircle },
 ];
 
-type FindSub = "players" | "1v1";
 type ClansSub = "crews" | "cups";
 
 export function Shell() {
