@@ -106,10 +106,19 @@ export function ThemeCustomizer() {
           {(Object.keys(PALETTES) as PaletteKey[]).map((k) => {
             const p = PALETTES[k];
             const on = draft.palette === k;
+            const cost = PREMIUM_PALETTES[k];
+            const ck = cosmeticKey("palette", k);
+            const locked = cost != null && !unlocked.has(ck);
+            const busy = pending === ck;
             return (
               <button
                 key={k}
-                onClick={() => {
+                disabled={busy}
+                onClick={async () => {
+                  if (locked) {
+                    const ok = await requireUnlock(ck, cost!, p.name);
+                    if (!ok) return;
+                  }
                   applyPalettePreset(k);
                   const fresh = loadCustomization();
                   setSaved(fresh);
@@ -117,12 +126,21 @@ export function ThemeCustomizer() {
                   toast.success(`${p.name} applied`);
                 }}
                 className={cn(
-                  "relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all",
+                  "relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all disabled:opacity-60",
                   on ? "border-primary scale-[1.02]" : "border-border hover:border-primary/60"
                 )}
               >
-                <div className="h-12 rounded-lg mb-1.5 ring-1 ring-white/10" style={{ backgroundImage: p.gradient }} />
-                <p className="text-[11px] font-bold leading-tight">{p.name}</p>
+                <div className="h-12 rounded-lg mb-1.5 ring-1 ring-white/10 relative" style={{ backgroundImage: p.gradient }}>
+                  {locked && (
+                    <span className="absolute inset-0 grid place-items-center bg-black/50 rounded-lg text-[10px] font-bold text-white gap-1">
+                      <Lock className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[11px] font-bold leading-tight truncate">{p.name}</p>
+                  {locked && <span className="text-[9px] font-bold text-primary shrink-0">{cost}⨀</span>}
+                </div>
                 <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.mode}</p>
               </button>
             );
