@@ -29,14 +29,47 @@ const PREMIUM_HOVER: Partial<Record<HoverHueKey, number>> = {
 const cosmeticKey = (kind: "palette" | "hover", key: string) => `${kind}:${key}`;
 
 export function ThemeCustomizer() {
+  const { user } = useAuth();
   const [saved, setSaved] = useState<Customization>(() => loadCustomization());
   const [draft, setDraft] = useState<Customization>(() => loadCustomization());
+  const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
+  const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
     const loaded = loadCustomization();
     setSaved(loaded);
     setDraft(loaded);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("cosmetic_unlocks")
+      .select("cosmetic_key")
+      .eq("user_id", user.id)
+      .then(({ data }) => setUnlocked(new Set((data ?? []).map((r) => r.cosmetic_key as string))));
+  }, [user]);
+
+  const requireUnlock = useCallback(
+    async (key: string, cost: number, label: string) => {
+      if (unlocked.has(key)) return true;
+      if (!user) {
+        toast.error("Sign in to unlock cosmetics");
+        return false;
+      }
+      setPending(key);
+      const { error } = await supabase.rpc("unlock_cosmetic", { _key: key, _cost: cost });
+      setPending(null);
+      if (error) {
+        toast.error(error.message.includes("Insufficient") ? "Not enough tokens" : error.message);
+        return false;
+      }
+      setUnlocked((prev) => new Set(prev).add(key));
+      toast.success(`${label} unlocked · -${cost} tokens`);
+      return true;
+    },
+    [unlocked, user],
+  );
 
   // Live preview while editing — never persists.
   useEffect(() => { previewCustomization(draft); }, [draft]);
