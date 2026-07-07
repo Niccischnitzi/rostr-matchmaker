@@ -177,24 +177,44 @@ export function ThemeCustomizer() {
           {(Object.keys(HOVER_HUES) as HoverHueKey[]).map((k) => {
             const h = HOVER_HUES[k];
             const on = (draft.hoverHue ?? "auto") === k;
+            const cost = PREMIUM_HOVER[k];
+            const ck = cosmeticKey("hover", k);
+            const locked = cost != null && !unlocked.has(ck);
+            const busy = pending === ck;
             const gradient = h.swatches.length
               ? `conic-gradient(from 180deg, ${h.swatches.join(", ")}, ${h.swatches[0]})`
               : "conic-gradient(from 180deg, var(--primary), var(--primary-glow), var(--primary))";
             return (
               <button
                 key={k}
-                onClick={() => set("hoverHue", k)}
+                disabled={busy}
+                onClick={async () => {
+                  if (locked) {
+                    const ok = await requireUnlock(ck, cost!, h.name);
+                    if (!ok) return;
+                  }
+                  set("hoverHue", k);
+                }}
                 className={cn(
-                  "group relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all hover:scale-[1.03]",
+                  "group relative rounded-xl border-2 p-2 text-left overflow-hidden transition-all hover:scale-[1.03] disabled:opacity-60",
                   on ? "border-foreground scale-[1.04]" : "border-border hover:border-primary/60"
                 )}
                 title={h.name}
               >
                 <div
-                  className="h-10 w-full rounded-lg mb-1 ring-1 ring-white/10 transition-transform duration-700 group-hover:rotate-[40deg]"
+                  className="h-10 w-full rounded-lg mb-1 ring-1 ring-white/10 transition-transform duration-700 group-hover:rotate-[40deg] relative"
                   style={{ backgroundImage: gradient }}
-                />
-                <p className="text-[10px] font-bold leading-tight">{h.name}</p>
+                >
+                  {locked && (
+                    <span className="absolute inset-0 grid place-items-center bg-black/50 rounded-lg text-white">
+                      <Lock className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[10px] font-bold leading-tight truncate">{h.name}</p>
+                  {locked && <span className="text-[9px] font-bold text-primary shrink-0">{cost}⨀</span>}
+                </div>
               </button>
             );
           })}
