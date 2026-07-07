@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
@@ -6,11 +6,27 @@ import {
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers } from "lucide-react";
+import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
+// Premium cosmetics — cost tokens to unlock once, then free forever.
+const PREMIUM_PALETTES: Partial<Record<PaletteKey, number>> = {
+  "midnight-obsidian": 150,
+  "sunset-arcade": 100,
+  "cyber-mint": 100,
+};
+const PREMIUM_HOVER: Partial<Record<HoverHueKey, number>> = {
+  ultraviolet: 75,
+  "gold-rush": 75,
+  "blood-moon": 75,
+  vaporwave: 50,
+};
+const cosmeticKey = (kind: "palette" | "hover", key: string) => `${kind}:${key}`;
 
 export function ThemeCustomizer() {
   const [saved, setSaved] = useState<Customization>(() => loadCustomization());
