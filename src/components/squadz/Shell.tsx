@@ -228,17 +228,7 @@ export function Shell() {
           {/* Tabs are mounted once visited and toggled with display:none — keeps state, eliminates remount jank. */}
           {mounted.has("find") && (
             <TabFrame active={tab === "find"} tabKey="find" dir={tabDir}>
-              <SubNav
-                items={[
-                  { key: "players", label: "Players", icon: Users },
-                  { key: "1v1", label: "1v1 Challenges", icon: Swords },
-                ]}
-                value={findSub}
-                onChange={(v) => setFindSub(v as FindSub)}
-              />
-              <div key={findSub} className="subpanel-swap">
-                {findSub === "players" ? <FindTab /> : <ChallengesTab />}
-              </div>
+              <FindTab />
             </TabFrame>
           )}
           {mounted.has("clans") && (
@@ -257,9 +247,9 @@ export function Shell() {
               </div>
             </TabFrame>
           )}
-          {mounted.has("chat")    && <TabFrame active={tab === "chat"}    tabKey="chat"    dir={tabDir}><ChatTab /></TabFrame>}
-          {mounted.has("media")   && <TabFrame active={tab === "media"}   tabKey="media"   dir={tabDir}><MediaTab /></TabFrame>}
-          {mounted.has("profile") && <TabFrame active={tab === "profile"} tabKey="profile" dir={tabDir}><ProfileTab /></TabFrame>}
+          {mounted.has("chat")      && <TabFrame active={tab === "chat"}      tabKey="chat"      dir={tabDir}><ChatTab /></TabFrame>}
+          {mounted.has("community") && <TabFrame active={tab === "community"} tabKey="community" dir={tabDir}><CommunityTab /></TabFrame>}
+          {mounted.has("profile")   && <TabFrame active={tab === "profile"}   tabKey="profile"   dir={tabDir}><ProfileTab /></TabFrame>}
 
 
         </div>
