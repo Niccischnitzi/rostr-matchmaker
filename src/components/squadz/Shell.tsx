@@ -16,6 +16,7 @@ import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 import { TabErrorBoundary } from "./TabErrorBoundary";
+import { TokenBalance } from "@/components/cosmetics/TokenBalance";
 
 export type TabKey = "find" | "clans" | "chat" | "community" | "profile";
 
@@ -184,6 +185,15 @@ export function Shell() {
         >
           <SettingsIcon className="h-5 w-5" /> Settings
         </button>
+        <div className="mt-3 flex items-center gap-2">
+          <TokenBalance className="flex-1 justify-center" />
+          <button
+            onClick={() => navigate({ to: "/shop" })}
+            className="h-9 px-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
+          >
+            <ShoppingBag className="h-4 w-4" /> Shop
+          </button>
+        </div>
         <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
             <p className="font-semibold text-foreground">Rostr v0.1</p>
@@ -198,13 +208,10 @@ export function Shell() {
         {/* Mobile header — ultra-compact */}
         <header data-app-header="true" className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-3 py-2 border-b border-border bg-background/85 backdrop-blur-xl">
           <Brand compact />
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-success pulse-ring" />
-              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Online</span>
-            </span>
+          <div className="flex items-center gap-1.5">
+            <TokenBalance compact />
             <button
-              onClick={() => navigate({ to: "/pricing" })}
+              onClick={() => navigate({ to: "/shop" })}
               className="h-7 px-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition"
               aria-label="Shop"
             >
