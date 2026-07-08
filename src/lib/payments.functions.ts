@@ -106,10 +106,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
-        // Keep the checkout method set conservative. Forcing regional methods
-        // such as TWINT on USD/subscription sessions makes Stripe reject the
-        // whole checkout; card is globally supported and reliable in test/live.
-        payment_method_types: ["card"],
+        // Omit payment_method_types entirely so Stripe uses the account's
+        // enabled methods for the session's currency + mode. Forcing a set
+        // was previously causing "checkout won't open" errors.
         ...(!isRecurring && {
           payment_intent_data: { description: productDescription, metadata },
         }),
