@@ -106,10 +106,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
-        // Let Stripe pick eligible payment methods based on account +
-        // currency; hardcoding an incompatible set is the #1 cause of
-        // "checkout won't open" in mixed sandbox/live environments.
-        automatic_payment_methods: { enabled: true },
+        // Omit payment_method_types entirely so Stripe uses the account's
+        // enabled methods for the session's currency + mode. Forcing a set
+        // was previously causing "checkout won't open" errors.
         ...(!isRecurring && {
           payment_intent_data: { description: productDescription, metadata },
         }),
