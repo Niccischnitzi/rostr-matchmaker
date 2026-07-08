@@ -1635,6 +1635,54 @@ export type Database = {
           },
         ]
       }
+      shop_items: {
+        Row: {
+          asset_url: string | null
+          cost_tokens: number
+          created_at: string
+          css_class: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          preview_url: string | null
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          asset_url?: string | null
+          cost_tokens: number
+          created_at?: string
+          css_class?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          preview_url?: string | null
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          asset_url?: string | null
+          cost_tokens?: number
+          created_at?: string
+          css_class?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          preview_url?: string | null
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -1679,6 +1727,33 @@ export type Database = {
           stripe_customer_id?: string
           stripe_subscription_id?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      token_transactions: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          ref_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1838,6 +1913,38 @@ export type Database = {
             columns: ["blocker_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_inventory: {
+        Row: {
+          equipped: boolean
+          id: string
+          item_id: string
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          equipped?: boolean
+          id?: string
+          item_id: string
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          equipped?: boolean
+          id?: string
+          item_id?: string
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
             referencedColumns: ["id"]
           },
         ]
@@ -2011,6 +2118,10 @@ export type Database = {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
       }
+      equip_cosmetic: {
+        Args: { _equip: boolean; _item_id: string }
+        Returns: boolean
+      }
       has_active_pro_subscription: {
         Args: { _user_id: string }
         Returns: boolean
@@ -2050,6 +2161,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
       record_daily_login: {
         Args: never
         Returns: {
