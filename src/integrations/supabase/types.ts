@@ -71,6 +71,13 @@ export type Database = {
             foreignKeyName: "activity_events_actor_id_fkey"
             columns: ["actor_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -590,6 +597,13 @@ export type Database = {
             foreignKeyName: "crew_event_rsvps_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_event_rsvps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -632,6 +646,13 @@ export type Database = {
             columns: ["clan_id"]
             isOneToOne: false
             referencedRelation: "clans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
             referencedColumns: ["id"]
           },
           {
@@ -892,7 +913,21 @@ export type Database = {
             foreignKeyName: "lfg_ad_views_ad_owner_id_fkey"
             columns: ["ad_owner_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lfg_ad_views_ad_owner_id_fkey"
+            columns: ["ad_owner_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lfg_ad_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
             referencedColumns: ["id"]
           },
           {
@@ -985,6 +1020,13 @@ export type Database = {
             foreignKeyName: "lfg_boosts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lfg_boosts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1032,6 +1074,13 @@ export type Database = {
             foreignKeyName: "linked_accounts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "linked_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1060,6 +1109,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "login_streaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "login_streaks_user_id_fkey"
             columns: ["user_id"]
@@ -1260,7 +1316,21 @@ export type Database = {
             foreignKeyName: "mentions_mentioned_id_fkey"
             columns: ["mentioned_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentions_mentioned_id_fkey"
+            columns: ["mentioned_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentions_mentioner_id_fkey"
+            columns: ["mentioner_id"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
             referencedColumns: ["id"]
           },
           {
@@ -1383,7 +1453,21 @@ export type Database = {
             foreignKeyName: "play_sessions_user_a_fkey"
             columns: ["user_a"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "play_sessions_user_a_fkey"
+            columns: ["user_a"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "play_sessions_user_b_fkey"
+            columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
             referencedColumns: ["id"]
           },
           {
@@ -1601,6 +1685,13 @@ export type Database = {
             foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1626,6 +1717,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rate_limit_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rate_limit_events_user_id_fkey"
             columns: ["user_id"]
@@ -1876,6 +1974,13 @@ export type Database = {
             foreignKeyName: "user_badges_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1905,7 +2010,21 @@ export type Database = {
             foreignKeyName: "user_blocks_blocked_id_fkey"
             columns: ["blocked_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
             referencedColumns: ["id"]
           },
           {
@@ -1997,7 +2116,21 @@ export type Database = {
             foreignKeyName: "user_reports_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "my_profile"
             referencedColumns: ["id"]
           },
           {
@@ -2092,6 +2225,99 @@ export type Database = {
       }
     }
     Views: {
+      my_profile: {
+        Row: {
+          age: number | null
+          availability_status: string | null
+          avatar_url: string | null
+          banner_url: string | null
+          bio: string | null
+          country: string | null
+          created_at: string | null
+          current_game_activity: string | null
+          customization_options: Json | null
+          date_of_birth: string | null
+          display_name: string | null
+          dm_policy: string | null
+          email_verified_at: string | null
+          gender: string | null
+          id: string | null
+          is_public: boolean | null
+          lfg_body: string | null
+          lfg_games: string[] | null
+          lfg_title: string | null
+          onboarded_at: string | null
+          playing_hours: Json | null
+          playstyle_badges: string[] | null
+          pro_until: string | null
+          rep_score: number | null
+          show_availability: boolean | null
+          timezone: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          age?: number | null
+          availability_status?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string | null
+          current_game_activity?: string | null
+          customization_options?: Json | null
+          date_of_birth?: string | null
+          display_name?: string | null
+          dm_policy?: string | null
+          email_verified_at?: string | null
+          gender?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          lfg_body?: string | null
+          lfg_games?: string[] | null
+          lfg_title?: string | null
+          onboarded_at?: string | null
+          playing_hours?: Json | null
+          playstyle_badges?: string[] | null
+          pro_until?: string | null
+          rep_score?: number | null
+          show_availability?: boolean | null
+          timezone?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          age?: number | null
+          availability_status?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string | null
+          current_game_activity?: string | null
+          customization_options?: Json | null
+          date_of_birth?: string | null
+          display_name?: string | null
+          dm_policy?: string | null
+          email_verified_at?: string | null
+          gender?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          lfg_body?: string | null
+          lfg_games?: string[] | null
+          lfg_title?: string | null
+          onboarded_at?: string | null
+          playing_hours?: Json | null
+          playstyle_badges?: string[] | null
+          pro_until?: string | null
+          rep_score?: number | null
+          show_availability?: boolean | null
+          timezone?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       tournament_payout: {
         Row: {
           entries: number | null
