@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { useServerFn } from "@tanstack/react-start";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createCheckoutSession } from "@/lib/payments.functions";
 import { AlertTriangle } from "lucide-react";
@@ -14,6 +15,7 @@ interface Props {
 
 export function StripeEmbeddedCheckout({ priceId, quantity, tournamentId, returnUrl }: Props) {
   const [fatal, setFatal] = useState<string | null>(null);
+  const createCheckout = useServerFn(createCheckoutSession);
 
   // Memoize so EmbeddedCheckoutProvider doesn't remount and throw
   // "You cannot change the client secret after creation".
@@ -31,7 +33,7 @@ export function StripeEmbeddedCheckout({ priceId, quantity, tournamentId, return
   const options = useMemo(() => ({
     fetchClientSecret: async (): Promise<string> => {
       try {
-        const result = await createCheckoutSession({
+        const result = await createCheckout({
           data: {
             priceId,
             quantity,
@@ -51,7 +53,7 @@ export function StripeEmbeddedCheckout({ priceId, quantity, tournamentId, return
         throw e;
       }
     },
-  }), [priceId, quantity, tournamentId, returnUrl]);
+  }), [createCheckout, priceId, quantity, tournamentId, returnUrl]);
 
   if (fatal || stripeState.configError || !stripeState.stripePromise) {
     return (

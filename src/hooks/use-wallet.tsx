@@ -27,17 +27,8 @@ export function useWallet() {
       }
     };
     load();
-    const ch = supabase
-      .channel(`wallet:${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "wallets", filter: `user_id=eq.${user.id}` },
-        () => load(),
-      )
-      .subscribe();
     return () => {
       cancelled = true;
-      supabase.removeChannel(ch);
     };
   }, [user]);
 

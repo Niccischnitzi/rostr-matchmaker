@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
+import type { StripeEnv } from "@/lib/stripe.server";
 
 let _supabase: any = null;
 function getSupabase(): any {
@@ -59,7 +59,7 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
   const stripeMod = await import("@/lib/stripe.server");
   const stripe = stripeMod.createStripeClient(env);
   const full = await stripe.checkout.sessions.retrieve(session.id, {
-    expand: ["line_items"],
+    expand: ["line_items.data.price"],
   });
   const item = full.line_items?.data?.[0];
   const priceId = resolvePriceId(item);
@@ -90,7 +90,7 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
   });
   if (grantErr) {
     console.error("Failed to process payment grant", grantErr);
-    return;
+    throw grantErr;
   }
   if (!inserted) return;
 
@@ -99,7 +99,10 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
     const { error: entryError } = await getSupabase()
       .from("tournament_entries")
       .upsert({ tournament_id: tournamentId, user_id: userId }, { onConflict: "tournament_id,user_id" });
-    if (entryError) console.error("tournament_entries upsert failed", entryError);
+    if (entryError) {
+      console.error("tournament_entries upsert failed", entryError);
+      throw entryError;
+    }
   }
 }
 
@@ -116,7 +119,7 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
 
-  await getSupabase().from("subscriptions").upsert(
+  const { error } = await getSupabase().from("subscriptions").upsert(
     {
       user_id: userId,
       stripe_subscription_id: subscription.id,
@@ -132,10 +135,14 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
     },
     { onConflict: "stripe_subscription_id" },
   );
+  if (error) {
+    console.error("subscription upsert failed", error);
+    throw error;
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
-  await getSupabase()
+  const { error } = await getSupabase()
     .from("subscriptions")
     .update({
       status: "canceled",
@@ -144,9 +151,14 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
     })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+  if (error) {
+    console.error("subscription delete update failed", error);
+    throw error;
+  }
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
+  const { verifyWebhook } = await import("@/lib/stripe.server");
   const event = await verifyWebhook(req, env);
   switch (event.type) {
     case "checkout.session.completed":
