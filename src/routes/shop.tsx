@@ -36,7 +36,7 @@ const TOKEN_PACKS = [
 type TabKey = "cosmetics" | "tokens";
 
 function ShopPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { balance } = useWallet();
   const { items, loading } = useShopItems();
   const { rows, equipped, reload } = useInventory();
@@ -78,6 +78,22 @@ function ShopPage() {
       toast.error(e?.message ?? "Could not equip");
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PaymentTestModeBanner />
+        <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
+          <div className="h-9 w-48 animate-pulse rounded-lg bg-muted" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-56 animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

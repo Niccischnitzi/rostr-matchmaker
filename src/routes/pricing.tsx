@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Coins, Crown, Trophy, ArrowLeft, Loader2 } from "lucide-react";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -67,16 +68,17 @@ const ENTRY_TIERS = [
 ];
 
 function PricingPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isPro, subscription } = useSubscription();
   const [tab, setTab] = useState<Tab>("tokens");
   const [activePrice, setActivePrice] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const createPortal = useServerFn(createPortalSession);
 
   const openPortal = async () => {
     setPortalLoading(true);
     try {
-      const res = await createPortalSession({
+      const res = await createPortal({
         data: { environment: getStripeEnvironment(), returnUrl: window.location.href },
       });
       if ("error" in res) throw new Error(res.error);
@@ -101,6 +103,22 @@ function PricingPage() {
           </button>
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <StripeEmbeddedCheckout priceId={activePrice} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PaymentTestModeBanner />
+        <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+          <div className="h-9 w-48 animate-pulse rounded-lg bg-muted" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-48 animate-pulse rounded-2xl bg-muted" />
+            ))}
           </div>
         </div>
       </div>
