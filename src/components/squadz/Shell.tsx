@@ -12,6 +12,7 @@ import { SettingsSheet } from "./SettingsSheet";
 import { OnboardingWizard } from "./OnboardingWizard";
 import { RostrMark } from "./RostrMark";
 import { IncomingCallListener } from "./IncomingCallListener";
+import { DevPanel } from "./DevPanel";
 import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
@@ -54,6 +55,18 @@ export function Shell() {
   }, [tab]);
 
   useEffect(() => { sfx.nav(); }, [tab]);
+  // Listen for cross-tab jumps (e.g. Find → Chat after squadding an LFG).
+  useEffect(() => {
+    const h = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { tab?: TabKey };
+      if (detail?.tab) {
+        setMounted((m) => m.has(detail.tab!) ? m : new Set([...m, detail.tab!]));
+        setTab(detail.tab);
+      }
+    };
+    window.addEventListener("rostr:switch-tab", h);
+    return () => window.removeEventListener("rostr:switch-tab", h);
+  }, []);
   useEffect(() => {
     recordDailyLoginOnce().then((r) => {
       if (r) toast.success(`Day ${r.streak} streak! +${r.reward} tokens`, { description: "Login bonus credited." });
@@ -314,6 +327,7 @@ export function Shell() {
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <OnboardingWizard />
       <IncomingCallListener />
+      <DevPanel />
     </div>
   );
 }
