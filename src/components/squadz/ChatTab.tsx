@@ -30,6 +30,16 @@ export function ChatTab() {
   const [view, setView] = useState<"chats" | "friends" | "lfg">("chats");
   const [openChat, setOpenChat] = useState<string | null>(null);
 
+  // Cross-tab: FindTab dispatches `rostr:open-chat` with a conversationId.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent).detail as { conversationId?: string };
+      if (d?.conversationId) { setView("chats"); setOpenChat(d.conversationId); }
+    };
+    window.addEventListener("rostr:open-chat", h);
+    return () => window.removeEventListener("rostr:open-chat", h);
+  }, []);
+
   return (
     <div className="max-w-5xl mx-auto px-4 pt-6 lg:pt-10 pb-10">
       {!openChat && (
