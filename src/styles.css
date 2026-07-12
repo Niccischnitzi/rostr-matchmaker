@@ -743,3 +743,24 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
     animation: none !important;
   }
 }
+
+/* Pixel/arcade animations for empty states + dev panel */
+@keyframes pixel-flicker {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+@keyframes pixel-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes pixel-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 60%, transparent); }
+  50% { box-shadow: 0 0 24px 4px color-mix(in oklab, var(--primary) 45%, transparent); }
+}
+.pixel-flicker { animation: pixel-flicker 1.8s ease-in-out infinite; }
+.pixel-bounce  { animation: pixel-bounce 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.pixel-glow    { animation: pixel-glow 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-flicker, .pixel-bounce, .pixel-glow { animation: none !important; }
+}
