@@ -12,6 +12,7 @@ import { SettingsSheet } from "./SettingsSheet";
 import { OnboardingWizard } from "./OnboardingWizard";
 import { RostrMark } from "./RostrMark";
 import { IncomingCallListener } from "./IncomingCallListener";
+import { DevPanel } from "./DevPanel";
 import { recordDailyLoginOnce } from "@/lib/streak";
 import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
@@ -314,6 +315,7 @@ export function Shell() {
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <OnboardingWizard />
       <IncomingCallListener />
+      <DevPanel />
     </div>
   );
 }
