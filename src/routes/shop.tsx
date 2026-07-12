@@ -37,15 +37,19 @@ type TabKey = "cosmetics" | "tokens";
 
 function ShopPage() {
   const { user, loading: authLoading } = useAuth();
-  const { balance } = useWallet();
+  const { balance, adjust, refresh } = useWallet();
   const { items, loading } = useShopItems();
   const { rows, equipped, reload } = useInventory();
   const [tab, setTab] = useState<TabKey>("cosmetics");
   const [activePrice, setActivePrice] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [optimisticOwned, setOptimisticOwned] = useState<Set<string>>(new Set());
 
-  const ownedIds = useMemo(() => new Set(rows.map((r) => r.item_id)), [rows]);
+  const ownedIds = useMemo(
+    () => new Set([...rows.map((r) => r.item_id), ...optimisticOwned]),
+    [rows, optimisticOwned],
+  );
 
   const buy = async (item: ShopItem) => {
     if (!user) return;
@@ -55,12 +59,22 @@ function ShopPage() {
       return;
     }
     setBusyId(item.id);
+    // Optimistic: mark owned + debit balance immediately.
+    setOptimisticOwned((s) => new Set(s).add(item.id));
+    adjust(-item.cost_tokens);
     try {
       const res = await purchaseItem(item.id);
       if (res.already_owned) toast.info("You already own this");
       else toast.success(`Unlocked ${item.name}`);
-      await reload();
+      await Promise.all([reload(), refresh()]);
     } catch (e: any) {
+      // Revert optimistic state on failure.
+      setOptimisticOwned((s) => {
+        const n = new Set(s);
+        n.delete(item.id);
+        return n;
+      });
+      adjust(item.cost_tokens);
       toast.error(e?.message ?? "Purchase failed");
     } finally {
       setBusyId(null);
