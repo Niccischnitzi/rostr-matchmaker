@@ -818,6 +818,97 @@ export type Database = {
         }
         Relationships: []
       }
+      group_chats: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          last_message_at: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_messages: {
+        Row: {
+          attachment_url: string | null
+          body: string | null
+          created_at: string
+          group_id: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          body?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          body?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leaderboard_entries: {
         Row: {
           audit_flags: Json
@@ -2331,6 +2422,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_adjust_tokens: {
+        Args: { _delta: number; _reason?: string; _target_user: string }
+        Returns: number
+      }
       boost_lfg: { Args: { _cost: number; _hours: number }; Returns: string }
       check_rate_limit: {
         Args: { _action: string; _limit: number; _window_seconds: number }
@@ -2369,6 +2464,10 @@ export type Database = {
       }
       is_conversation_participant: {
         Args: { _conv: string; _user: string }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { _group: string; _user: string }
         Returns: boolean
       }
       media_upload_cost: { Args: { _user: string }; Returns: number }
