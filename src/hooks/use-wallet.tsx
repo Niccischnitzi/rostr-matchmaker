@@ -26,14 +26,15 @@ export function useWallet() {
   useEffect(() => {
     load();
     if (!user) return;
-    // Live-update balance when webhook credits tokens or purchases spend them.
+    // Unique channel name per mount — StrictMode/re-mounts otherwise return a
+    // still-subscribed channel and `.on()` throws "cannot add callbacks after subscribe()".
     const ch = supabase
-      .channel(`wallet:${user.id}`)
+      .channel(`wallet:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "wallets", filter: `user_id=eq.${user.id}` },
         (payload: any) => {
-          const next = payload?.new?.balance_points;
+          const next = (payload as any)?.new?.balance_points;
           if (typeof next === "number") setBalance(next);
           else load();
         },
