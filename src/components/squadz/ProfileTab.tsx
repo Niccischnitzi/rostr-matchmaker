@@ -72,6 +72,8 @@ export function ProfileTab() {
   const avatarInput = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
+  const equippedCos = useEquippedCosmetics();
+
   // Current user id
   const { data: userId } = useQuery({
     queryKey: ["auth-user-id"],
