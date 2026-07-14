@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bebas Neue", "Inter", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -67,22 +67,23 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.005 270);
-  --foreground: oklch(0.98 0 0);
-  --surface: oklch(0.17 0.006 270);
-  --surface-2: oklch(0.22 0.008 270);
-  --card: oklch(0.18 0.006 270);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.18 0.006 270);
-  --popover-foreground: oklch(0.98 0 0);
+  /* Editorial Sport — ink #0A0A0A, cream #F5F5F0, orange #FF5722, graphite #1F1F1F */
+  --background: oklch(0.09 0 0);
+  --foreground: oklch(0.965 0.005 90);
+  --surface: oklch(0.16 0 0);
+  --surface-2: oklch(0.22 0 0);
+  --card: oklch(0.13 0 0);
+  --card-foreground: oklch(0.965 0.005 90);
+  --popover: oklch(0.13 0 0);
+  --popover-foreground: oklch(0.965 0.005 90);
   /* NOTE: --primary, --primary-foreground, --primary-glow, --ring, --accent,
      --accent-foreground are intentionally NOT set here — they are controlled
      globally by src/lib/customization.ts so the user's accent choice wins
      inside any `.dark` wrapper (e.g. routes/index.tsx). */
-  --secondary: oklch(0.24 0.008 270);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.24 0.008 270);
-  --muted-foreground: oklch(0.7 0.01 270);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.965 0.005 90);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.66 0.005 90);
   --destructive: oklch(0.65 0.22 27);
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.72 0.18 152);
