@@ -12,6 +12,8 @@ import { BattleCard } from "./BattleCard";
 import { PurchasesSection } from "./PurchasesSection";
 import { LfgAdStats } from "./LfgAdStats";
 import { SteamConnectButton } from "./SteamConnectButton";
+import { CosmeticAvatar } from "@/components/cosmetics/CosmeticAvatar";
+import { useEquippedCosmetics } from "@/hooks/use-equipped-cosmetics";
 
 const statuses = ["Online", "In-Game", "Busy", "Looking for Squad"] as const;
 const statusColors: Record<string, string> = {
@@ -69,6 +71,8 @@ export function ProfileTab() {
   const [adding, setAdding] = useState(false);
   const avatarInput = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const equippedCos = useEquippedCosmetics();
 
   // Current user id
   const { data: userId } = useQuery({
@@ -198,9 +202,15 @@ export function ProfileTab() {
         <div className="px-5 pb-5 -mt-12">
           <div className="flex items-end gap-4 flex-wrap">
             <div className="relative shrink-0">
-              <div className="h-24 w-24 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden">
-                <img src={avatarUrl ?? fallbackAvatar} alt={profile.username} className="h-full w-full object-cover" />
-              </div>
+              <CosmeticAvatar
+                size={96}
+                haloClass={equippedCos.halo?.css_class}
+                frameClass={equippedCos.avatar_frame?.css_class}
+              >
+                <div className="h-24 w-24 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden">
+                  <img src={avatarUrl ?? fallbackAvatar} alt={profile.username} loading="lazy" className="h-full w-full object-cover" />
+                </div>
+              </CosmeticAvatar>
               <input
                 ref={avatarInput}
                 type="file"
@@ -223,8 +233,15 @@ export function ProfileTab() {
             </div>
             <div className="flex-1 min-w-0 pt-12 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="font-display text-2xl font-black truncate">{profile.display_name || profile.username}</h1>
-                <p className="text-sm text-muted-foreground truncate">@{profile.username}{profile.country ? ` · ${profile.country}` : ""}</p>
+                <h1 className="font-display text-2xl font-black truncate tracking-tight">{profile.display_name || profile.username}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm text-muted-foreground truncate">@{profile.username}{profile.country ? ` · ${profile.country}` : ""}</p>
+                  {equippedCos.tag && (
+                    <span className="inline-flex items-center rounded-full border border-primary/50 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest px-2 py-0.5">
+                      {equippedCos.tag.name}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => setEditing(true)}

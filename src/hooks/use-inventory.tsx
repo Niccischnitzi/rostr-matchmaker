@@ -64,7 +64,7 @@ export function useInventory() {
     load();
     if (!user) return;
     const ch = supabase
-      .channel(`inv:${user.id}`)
+      .channel(`inv:${user.id}:${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_inventory", filter: `user_id=eq.${user.id}` },

@@ -18,6 +18,7 @@ import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 import { TokenBalance } from "@/components/cosmetics/TokenBalance";
+import { useApplyEquippedCosmetics } from "@/hooks/use-equipped-cosmetics";
 
 export type TabKey = "find" | "clans" | "chat" | "community" | "profile";
 
@@ -72,6 +73,9 @@ export function Shell() {
       if (r) toast.success(`Day ${r.streak} streak! +${r.reward} tokens`, { description: "Login bonus credited." });
     });
   }, []);
+
+  // Apply equipped background + tag globally (halo/frame are consumed per-avatar).
+  useApplyEquippedCosmetics();
 
   const goTab = (dir: 1 | -1) => {
     const idx = tabs.findIndex((t) => t.key === tab);
