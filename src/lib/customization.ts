@@ -33,7 +33,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   density: "comfy",
   fontDensity: "comfy",
   layoutDensity: "comfy",
-  font: "grotesk",
+  font: "bebas",
   anim: "smooth",
   radius: 14,
   palette: null,
@@ -41,7 +41,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
 };
 
 export const ACCENTS: Record<AccentKey, { name: string; primary: string; ring: string; glow: string; swatch: string }> = {
-  orange:  { name: "Sunset",  primary: "oklch(0.72 0.22 38)",  ring: "oklch(0.72 0.22 38)",  glow: "oklch(0.78 0.18 55)",  swatch: "#ff7849" },
+  orange:  { name: "Sunset",  primary: "oklch(0.66 0.216 40)", ring: "oklch(0.66 0.216 40)", glow: "oklch(0.78 0.18 55)",  swatch: "#FF5722" },
   violet:  { name: "Nebula",  primary: "oklch(0.66 0.24 295)", ring: "oklch(0.66 0.24 295)", glow: "oklch(0.74 0.18 320)", swatch: "#8b5cf6" },
   cyan:    { name: "Plasma",  primary: "oklch(0.78 0.16 210)", ring: "oklch(0.78 0.16 210)", glow: "oklch(0.86 0.12 195)", swatch: "#22d3ee" },
   lime:    { name: "Toxic",   primary: "oklch(0.86 0.22 132)", ring: "oklch(0.86 0.22 132)", glow: "oklch(0.92 0.18 120)", swatch: "#a3e635" },
