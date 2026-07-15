@@ -2517,7 +2517,13 @@ export type Database = {
         | "disputed"
         | "settled"
         | "cancelled"
-      clan_role: "leader" | "officer" | "member"
+      clan_role:
+        | "leader"
+        | "co_leader"
+        | "officer"
+        | "veteran"
+        | "member"
+        | "recruit"
       club_role: "owner" | "officer" | "member" | "recruit"
       escrow_status: "held" | "released" | "refunded"
       play_session_kind: "call" | "lfg_match" | "crew_event"
@@ -2675,7 +2681,14 @@ export const Constants = {
         "settled",
         "cancelled",
       ],
-      clan_role: ["leader", "officer", "member"],
+      clan_role: [
+        "leader",
+        "co_leader",
+        "officer",
+        "veteran",
+        "member",
+        "recruit",
+      ],
       club_role: ["owner", "officer", "member", "recruit"],
       escrow_status: ["held", "released", "refunded"],
       play_session_kind: ["call", "lfg_match", "crew_event"],
