@@ -8,6 +8,7 @@ import { sfx } from "@/lib/sfx";
 import { fetchProfiles, type Profile } from "@/lib/squadz-supabase";
 import { useSquadz } from "@/lib/squadz-store";
 import { UserSafetyActions } from "./UserSafetyActions";
+import { EmptyState } from "./EmptyState";
 
 type Friend = {
   id: string;
