@@ -147,13 +147,14 @@ export function FindTab() {
 
   const filtered = useMemo(() => deck.filter((p) => {
     if (p.isLfg && user?.id && p.realId === user.id) return false;
+    if (p.isLfg && p.realId && existingFriendIds.has(p.realId)) return false;
     if (filters.country && !p.country.toLowerCase().includes(filters.country.toLowerCase())) return false;
     if (filters.games.length && !filters.games.some((g) => p.games.some((pg) => pg.name.toLowerCase() === g.toLowerCase()))) return false;
     if (p.isLfg) return true;
     if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
     if (filters.traits.length && !filters.traits.some((t) => p.traits.includes(t as never))) return false;
     return true;
-  }), [deck, filters, user?.id]);
+  }), [deck, filters, user?.id, existingFriendIds]);
 
   const top = filtered[0];
 
