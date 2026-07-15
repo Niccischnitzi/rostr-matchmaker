@@ -53,12 +53,52 @@ export function FindTab() {
   const [adOpen, setAdOpen] = useState(false);
   const [lfgCards, setLfgCards] = useState<DeckCard[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [existingFriendIds, setExistingFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [matchBurst, setMatchBurst] = useState<string | null>(null);
 
   useEffect(() => {
     try { localStorage.setItem("rostr:find-filters", JSON.stringify(filters)); } catch { /* noop */ }
   }, [filters]);
+
+  // Track people I've already added (any status) so they don't reappear in the deck.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("friends")
+        .select("requester_id, addressee_id, status")
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+      if (cancelled) return;
+      const ids = new Set<string>();
+      ((data as any[]) ?? []).forEach((r) => {
+        const other = r.requester_id === user.id ? r.addressee_id : r.requester_id;
+        if (other) ids.add(other);
+      });
+      setExistingFriendIds(ids);
+    };
+    void load();
+    const ch = supabase
+      .channel(`find-friends-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friends", filter: `addressee_id=eq.${user.id}` }, (payload: any) => {
+        const row = payload.new ?? payload.old;
+        if (row?.requester_id) setExistingFriendIds((prev) => new Set(prev).add(row.requester_id));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "friends", filter: `requester_id=eq.${user.id}` }, (payload: any) => {
+        const row = payload.new;
+        if (row?.status === "accepted" && row?.addressee_id) {
+          // Mutual match — the other side accepted my request. Celebrate.
+          setMatchBurst(row.addressee_id);
+          sfx.like();
+          toast.success("It's a match! 🎉", { description: "You're both on each other's rostr now." });
+          setTimeout(() => setMatchBurst(null), 1800);
+        }
+      })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [user?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,13 +147,14 @@ export function FindTab() {
 
   const filtered = useMemo(() => deck.filter((p) => {
     if (p.isLfg && user?.id && p.realId === user.id) return false;
+    if (p.isLfg && p.realId && existingFriendIds.has(p.realId)) return false;
     if (filters.country && !p.country.toLowerCase().includes(filters.country.toLowerCase())) return false;
     if (filters.games.length && !filters.games.some((g) => p.games.some((pg) => pg.name.toLowerCase() === g.toLowerCase()))) return false;
     if (p.isLfg) return true;
     if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
     if (filters.traits.length && !filters.traits.some((t) => p.traits.includes(t as never))) return false;
     return true;
-  }), [deck, filters, user?.id]);
+  }), [deck, filters, user?.id, existingFriendIds]);
 
   const top = filtered[0];
 
@@ -127,6 +168,7 @@ export function FindTab() {
         { onConflict: "requester_id,addressee_id" },
       );
       if (fErr) throw fErr;
+      setExistingFriendIds((prev) => new Set(prev).add(card.realId!));
       // 2. Open (or get) a DM conversation, drop a first message, then jump.
       const conv = await getOrCreateConversation(user.id, card.realId);
       await supabase.from("direct_messages").insert({
@@ -166,7 +208,18 @@ export function FindTab() {
   const activeCount = (filters.games.length + filters.traits.length + (filters.country ? 1 : 0) + (filters.region ? 1 : 0) + (filters.micOnly ? 1 : 0) + (filters.onlineOnly ? 1 : 0));
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10">
+    <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10 relative">
+      {matchBurst && (
+        <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center animate-fade-in">
+          <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
+          <div className="relative animate-scale-in text-center">
+            <div className="font-display text-7xl md:text-8xl font-black text-gradient-orange drop-shadow-[0_0_30px_var(--primary)]">
+              IT'S A MATCH
+            </div>
+            <p className="mt-3 text-lg text-white/90 font-semibold">You're both on each other's rostr 🎮</p>
+          </div>
+        </div>
+      )}
       <div className="flex items-end justify-between gap-3 mb-4">
         <div className="min-w-0">
           <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">

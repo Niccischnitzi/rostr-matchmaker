@@ -20,6 +20,7 @@ import { FriendsTab } from "./FriendsTab";
 import { CallSheet } from "./CallSheet";
 import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 import { UserSafetyActions } from "./UserSafetyActions";
+import { EmptyState } from "./EmptyState";
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
@@ -152,46 +153,54 @@ function DMList({ onOpen }: { onOpen: (id: string) => void }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">{convos.length} conversation{convos.length === 1 ? "" : "s"}</p>
-        <Button size="sm" onClick={() => setShowNew(true)} className="gap-1.5">
-          <MessageSquarePlus className="h-4 w-4" /> New DM
-        </Button>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        {loading ? (
-          <div className="p-10 grid place-items-center text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card p-10 grid place-items-center text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+        </div>
+      ) : convos.length === 0 ? (
+        <EmptyState
+          variant="cosmic"
+          title="No conversations yet"
+          body="Start a DM with anyone on your rostr — say hi, swap gamertags, plan a session."
+          action={
+            <Button size="lg" onClick={() => setShowNew(true)} className="gap-2 rounded-full h-12 px-6">
+              <MessageSquarePlus className="h-5 w-5" /> Start a new DM
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-muted-foreground">{convos.length} conversation{convos.length === 1 ? "" : "s"}</p>
+            <Button size="sm" onClick={() => setShowNew(true)} className="gap-1.5">
+              <MessageSquarePlus className="h-4 w-4" /> New DM
+            </Button>
           </div>
-        ) : convos.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            No conversations yet. Tap <span className="text-foreground font-semibold">New DM</span> to start one.
-          </div>
-        ) : (
-          convos.map((c, i) => (
-            <button
-              key={c.id}
-              onClick={() => onOpen(c.id)}
-              className={cn(
-                "w-full flex items-center gap-3 p-4 hover:bg-surface text-left",
-                i > 0 && "border-t border-border",
-              )}
-            >
-              <Avatar profile={c.peer} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold truncate">{c.peer?.display_name ?? c.peer?.username ?? "Unknown"}</p>
-                  <span className="text-xs text-muted-foreground shrink-0">{relTime(c.last_message_at)}</span>
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            {convos.map((c, i) => (
+              <button
+                key={c.id}
+                onClick={() => onOpen(c.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 p-4 hover:bg-surface text-left",
+                  i > 0 && "border-t border-border",
+                )}
+              >
+                <Avatar profile={c.peer} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold truncate">{c.peer?.display_name ?? c.peer?.username ?? "Unknown"}</p>
+                    <span className="text-xs text-muted-foreground shrink-0">{relTime(c.last_message_at)}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {c.lastMessage?.body ?? <span className="italic">No messages yet</span>}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
-                  {c.lastMessage?.body ?? <span className="italic">No messages yet</span>}
-                </p>
-              </div>
-            </button>
-          ))
-        )}
-      </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {showNew && <NewDMModal onClose={() => setShowNew(false)} onOpen={onOpen} />}
     </>

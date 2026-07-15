@@ -216,12 +216,15 @@ function ClanDetail({ clan, members, onBack, onChanged }: { clan: Clan; members:
               </div>
               <span className={cn(
                 "text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full flex items-center gap-1",
-                m.role === "leader" && "bg-primary/20 text-primary",
-                m.role === "officer" && "bg-accent text-accent-foreground",
-                m.role === "member" && "bg-surface text-muted-foreground"
+                m.role === "leader"    && "bg-primary/20 text-primary ring-1 ring-primary/40",
+                m.role === "co_leader" && "bg-amber-500/20 text-amber-500 ring-1 ring-amber-500/40",
+                m.role === "officer"   && "bg-accent text-accent-foreground",
+                m.role === "veteran"   && "bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-500/30",
+                m.role === "member"    && "bg-surface text-muted-foreground",
+                m.role === "recruit"   && "bg-surface/60 text-muted-foreground/70 border border-dashed border-border",
               )}>
                 {m.role === "leader" && <Crown className="h-3 w-3" />}
-                {m.role}
+                {String(m.role).replace("_", "-")}
               </span>
             </div>
           ))}

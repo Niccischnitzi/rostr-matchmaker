@@ -4,7 +4,7 @@
 export type AccentKey = "orange" | "violet" | "cyan" | "lime" | "rose" | "amber" | "emerald" | "indigo";
 export type BackgroundKey = "void" | "aurora" | "grid" | "noise" | "sunset" | "matrix";
 export type DensityKey = "comfy" | "compact";
-export type FontKey = "grotesk" | "jakarta" | "bebas" | "serif" | "rounded" | "mono";
+export type FontKey = "satoshi" | "inter" | "manrope" | "general" | "plex" | "grotesk" | "mono";
 export type AnimKey = "smooth" | "snappy" | "reduced";
 export type PaletteKey =
   | "crimson-cobalt" | "neon-navy" | "purple-cream" | "party-pinky"
@@ -33,7 +33,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   density: "comfy",
   fontDensity: "comfy",
   layoutDensity: "comfy",
-  font: "bebas",
+  font: "satoshi",
   anim: "smooth",
   radius: 14,
   palette: null,
@@ -79,12 +79,13 @@ export const BACKGROUNDS: Record<BackgroundKey, { name: string; css: string }> =
 };
 
 export const FONT_FAMILIES: Record<FontKey, { name: string; family: string }> = {
-  grotesk: { name: "Grotesk",  family: '"Space Grotesk", "Inter", sans-serif' },
-  jakarta: { name: "Jakarta",  family: '"Plus Jakarta Sans", "Inter", sans-serif' },
-  bebas:   { name: "Bebas",    family: '"Bebas Neue", "Inter", sans-serif' },
-  serif:   { name: "Serif",    family: '"Fraunces", "Times New Roman", serif' },
-  rounded: { name: "Rounded",  family: '"Nunito", "Inter", sans-serif' },
-  mono:    { name: "Mono",     family: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace' },
+  satoshi: { name: "Satoshi",       family: '"Satoshi", "Inter", ui-sans-serif, system-ui, sans-serif' },
+  inter:   { name: "Inter",         family: '"Inter", ui-sans-serif, system-ui, sans-serif' },
+  manrope: { name: "Manrope",       family: '"Manrope", "Inter", sans-serif' },
+  general: { name: "General Sans",  family: '"General Sans", "Inter", sans-serif' },
+  plex:    { name: "IBM Plex Sans", family: '"IBM Plex Sans", "Inter", sans-serif' },
+  grotesk: { name: "Space Grotesk", family: '"Space Grotesk", "Inter", sans-serif' },
+  mono:    { name: "Mono",          family: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace' },
 };
 
 // One-click paired presets — mode + accent + background combined.
