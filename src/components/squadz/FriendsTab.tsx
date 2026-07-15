@@ -157,7 +157,15 @@ export function FriendsTab() {
               </Row>
             ))}
             {filteredAccepted.length === 0 && connectedMatches.length === 0 && discoveryResults.length === 0 && (
-              <p className="text-sm text-muted-foreground py-6 text-center">{q.trim() ? "No matches found." : "No friends yet. Send a request from the Find tab."}</p>
+              q.trim() ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">No matches found.</p>
+              ) : (
+                <EmptyState
+                  variant="controller"
+                  title="Your rostr is empty"
+                  body="Swipe on the Find tab to add players. Every friend request that goes both ways lands here."
+                />
+              )
             )}
             {filteredAccepted.map((r) => {
               const other = r.requester_id === user.id ? r.addressee_id : r.requester_id;
