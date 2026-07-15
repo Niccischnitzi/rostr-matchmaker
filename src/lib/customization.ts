@@ -33,7 +33,7 @@ export const DEFAULT_CUSTOMIZATION: Customization = {
   density: "comfy",
   fontDensity: "comfy",
   layoutDensity: "comfy",
-  font: "bebas",
+  font: "satoshi",
   anim: "smooth",
   radius: 14,
   palette: null,
