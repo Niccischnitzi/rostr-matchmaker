@@ -66,9 +66,11 @@ export function LfgAdsList() {
         <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Looking for Rostr</p>
       </div>
       {ads.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          No active LFG ads yet — post one to be the first.
-        </div>
+        <EmptyState
+          variant="arcade"
+          title="The board is wide open"
+          body="No active LFG ads right now. Post one from the Find tab and be the first face people see today."
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {ads.map((ad) => (
