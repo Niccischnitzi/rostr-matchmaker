@@ -53,12 +53,52 @@ export function FindTab() {
   const [adOpen, setAdOpen] = useState(false);
   const [lfgCards, setLfgCards] = useState<DeckCard[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [existingFriendIds, setExistingFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [matchBurst, setMatchBurst] = useState<string | null>(null);
 
   useEffect(() => {
     try { localStorage.setItem("rostr:find-filters", JSON.stringify(filters)); } catch { /* noop */ }
   }, [filters]);
+
+  // Track people I've already added (any status) so they don't reappear in the deck.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("friends")
+        .select("requester_id, addressee_id, status")
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+      if (cancelled) return;
+      const ids = new Set<string>();
+      ((data as any[]) ?? []).forEach((r) => {
+        const other = r.requester_id === user.id ? r.addressee_id : r.requester_id;
+        if (other) ids.add(other);
+      });
+      setExistingFriendIds(ids);
+    };
+    void load();
+    const ch = supabase
+      .channel(`find-friends-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friends", filter: `addressee_id=eq.${user.id}` }, (payload: any) => {
+        const row = payload.new ?? payload.old;
+        if (row?.requester_id) setExistingFriendIds((prev) => new Set(prev).add(row.requester_id));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "friends", filter: `requester_id=eq.${user.id}` }, (payload: any) => {
+        const row = payload.new;
+        if (row?.status === "accepted" && row?.addressee_id) {
+          // Mutual match — the other side accepted my request. Celebrate.
+          setMatchBurst(row.addressee_id);
+          sfx.like();
+          toast.success("It's a match! 🎉", { description: "You're both on each other's rostr now." });
+          setTimeout(() => setMatchBurst(null), 1800);
+        }
+      })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [user?.id]);
 
   useEffect(() => {
     let cancelled = false;
