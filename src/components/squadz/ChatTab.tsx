@@ -20,6 +20,7 @@ import { FriendsTab } from "./FriendsTab";
 import { CallSheet } from "./CallSheet";
 import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 import { UserSafetyActions } from "./UserSafetyActions";
+import { EmptyState } from "./EmptyState";
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
