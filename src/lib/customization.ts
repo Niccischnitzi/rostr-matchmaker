@@ -4,7 +4,7 @@
 export type AccentKey = "orange" | "violet" | "cyan" | "lime" | "rose" | "amber" | "emerald" | "indigo";
 export type BackgroundKey = "void" | "aurora" | "grid" | "noise" | "sunset" | "matrix";
 export type DensityKey = "comfy" | "compact";
-export type FontKey = "grotesk" | "jakarta" | "bebas" | "serif" | "rounded" | "mono";
+export type FontKey = "satoshi" | "inter" | "manrope" | "general" | "plex" | "grotesk" | "mono";
 export type AnimKey = "smooth" | "snappy" | "reduced";
 export type PaletteKey =
   | "crimson-cobalt" | "neon-navy" | "purple-cream" | "party-pinky"
