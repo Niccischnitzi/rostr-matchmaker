@@ -168,6 +168,7 @@ export function FindTab() {
         { onConflict: "requester_id,addressee_id" },
       );
       if (fErr) throw fErr;
+      setExistingFriendIds((prev) => new Set(prev).add(card.realId!));
       // 2. Open (or get) a DM conversation, drop a first message, then jump.
       const conv = await getOrCreateConversation(user.id, card.realId);
       await supabase.from("direct_messages").insert({
