@@ -208,7 +208,18 @@ export function FindTab() {
   const activeCount = (filters.games.length + filters.traits.length + (filters.country ? 1 : 0) + (filters.region ? 1 : 0) + (filters.micOnly ? 1 : 0) + (filters.onlineOnly ? 1 : 0));
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10">
+    <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10 relative">
+      {matchBurst && (
+        <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center animate-fade-in">
+          <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
+          <div className="relative animate-scale-in text-center">
+            <div className="font-display text-7xl md:text-8xl font-black text-gradient-orange drop-shadow-[0_0_30px_var(--primary)]">
+              IT'S A MATCH
+            </div>
+            <p className="mt-3 text-lg text-white/90 font-semibold">You're both on each other's rostr 🎮</p>
+          </div>
+        </div>
+      )}
       <div className="flex items-end justify-between gap-3 mb-4">
         <div className="min-w-0">
           <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">
