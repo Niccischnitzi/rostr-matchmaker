@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Megaphone, MapPin, UserPlus, Check } from "lucide-react";
+import { Loader2, Megaphone, MapPin, UserPlus, Check, Megaphone as MegaphoneIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
+import { GlowButton } from "./GlowButton";
 import { Button } from "@/components/ui/button";
+
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
 
