@@ -12,12 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ModerationRouteImport } from './routes/moderation'
+import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as GuidesFindingGamersRouteImport } from './routes/guides.finding-gamers'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicSteamReturnRouteImport } from './routes/api/public/steam.return'
@@ -36,6 +39,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -58,6 +66,11 @@ const ModerationRoute = ModerationRouteImport.update({
   path: '/moderation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -66,6 +79,11 @@ const AuthRoute = AuthRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UHandleRoute = UHandleRouteImport.update({
+  id: '/u/$handle',
+  path: '/u/$handle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuidesFindingGamersRoute = GuidesFindingGamersRouteImport.update({
@@ -93,30 +111,36 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inbox': typeof InboxRoute
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inbox': typeof InboxRoute
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
@@ -124,15 +148,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inbox': typeof InboxRoute
   '/moderation': typeof ModerationRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
@@ -141,45 +168,54 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/inbox'
     | '/moderation'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
+    | '/search'
     | '/shop'
     | '/sitemap.xml'
     | '/terms'
     | '/checkout/return'
     | '/guides/finding-gamers'
+    | '/u/$handle'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/inbox'
     | '/moderation'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
+    | '/search'
     | '/shop'
     | '/sitemap.xml'
     | '/terms'
     | '/checkout/return'
     | '/guides/finding-gamers'
+    | '/u/$handle'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   id:
     | '__root__'
     | '/'
     | '/auth'
+    | '/inbox'
     | '/moderation'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
+    | '/search'
     | '/shop'
     | '/sitemap.xml'
     | '/terms'
     | '/checkout/return'
     | '/guides/finding-gamers'
+    | '/u/$handle'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   fileRoutesById: FileRoutesById
@@ -187,15 +223,18 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  InboxRoute: typeof InboxRoute
   ModerationRoute: typeof ModerationRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   GuidesFindingGamersRoute: typeof GuidesFindingGamersRoute
+  UHandleRoute: typeof UHandleRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSteamReturnRoute: typeof ApiPublicSteamReturnRoute
 }
@@ -221,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -251,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModerationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -263,6 +316,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$handle': {
+      id: '/u/$handle'
+      path: '/u/$handle'
+      fullPath: '/u/$handle'
+      preLoaderRoute: typeof UHandleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guides/finding-gamers': {
@@ -299,28 +359,21 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  InboxRoute: InboxRoute,
   ModerationRoute: ModerationRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SearchRoute: SearchRoute,
   ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   GuidesFindingGamersRoute: GuidesFindingGamersRoute,
+  UHandleRoute: UHandleRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSteamReturnRoute: ApiPublicSteamReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

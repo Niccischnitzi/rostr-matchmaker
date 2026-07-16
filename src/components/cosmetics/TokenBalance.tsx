@@ -1,23 +1,40 @@
-import { Coins } from "lucide-react";
-import { useWallet } from "@/hooks/use-wallet";
 import { useNavigate } from "@tanstack/react-router";
+import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
+import { ShardIcon } from "./ShardIcon";
 
-export function TokenBalance({ compact = false, className }: { compact?: boolean; className?: string }) {
+/**
+ * Shard balance chip (formerly TokenBalance). Click to open the shop.
+ * Uses the ShardIcon crystal glyph with a subtle pulse ring on hover.
+ */
+export function ShardBalance({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
   const { balance } = useWallet();
   const nav = useNavigate();
   return (
     <button
       onClick={() => nav({ to: "/shop" })}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition font-bold",
+        "group relative inline-flex items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition font-bold overflow-hidden",
         compact ? "h-7 px-2 text-[10px]" : "h-9 px-3 text-sm",
         className,
       )}
-      aria-label="Token balance — open shop"
+      aria-label={`Shard balance ${balance ?? 0} — open shop`}
     >
-      <Coins className={compact ? "h-3 w-3" : "h-4 w-4"} />
-      <span>{balance == null ? "—" : balance.toLocaleString()}</span>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-primary/25 to-transparent"
+      />
+      <ShardIcon size={compact ? 12 : 15} spinning />
+      <span className="tabular-nums">{balance == null ? "—" : balance.toLocaleString()}</span>
     </button>
   );
 }
+
+// Back-compat: existing imports keep working.
+export const TokenBalance = ShardBalance;

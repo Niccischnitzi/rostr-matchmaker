@@ -2470,6 +2470,7 @@ export type Database = {
         Args: { _group: string; _user: string }
         Returns: boolean
       }
+      mark_all_notifications_read: { Args: never; Returns: number }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
       process_payment_grant: {
@@ -2486,6 +2487,36 @@ export type Database = {
         }
         Returns: boolean
       }
+      public_profile: {
+        Args: { _username: string }
+        Returns: {
+          availability_status: string
+          avatar_url: string
+          banner_url: string
+          bio: string
+          country: string
+          created_at: string
+          current_game_activity: string
+          display_name: string
+          frame_class: string
+          halo_class: string
+          id: string
+          lfg_body: string
+          lfg_games: string[]
+          lfg_title: string
+          playstyle_badges: string[]
+          rep_score: number
+          username: string
+        }[]
+      }
+      public_profile_stats: {
+        Args: { _user_id: string }
+        Returns: {
+          clip_count: number
+          crew_count: number
+          friend_count: number
+        }[]
+      }
       purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
       record_daily_login: {
         Args: never
@@ -2494,11 +2525,15 @@ export type Database = {
           streak: number
         }[]
       }
+      search_all: { Args: { _limit?: number; _q: string }; Returns: Json }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       spend_tokens: { Args: { _amount: number }; Returns: number }
       unlock_cosmetic: {
         Args: { _cost: number; _key: string }
         Returns: boolean
       }
+      unread_notification_count: { Args: never; Returns: number }
     }
     Enums: {
       activity_kind:

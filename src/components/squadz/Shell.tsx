@@ -18,6 +18,9 @@ import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 import { TokenBalance } from "@/components/cosmetics/TokenBalance";
+import { NotificationsBell } from "@/components/squadz/NotificationsBell";
+import { GlobalSearchInput } from "@/components/squadz/GlobalSearchInput";
+
 import { useApplyEquippedCosmetics } from "@/hooks/use-equipped-cosmetics";
 
 export type TabKey = "find" | "clans" | "chat" | "community" | "profile";
@@ -202,15 +205,20 @@ export function Shell() {
         >
           <SettingsIcon className="h-5 w-5" /> Settings
         </button>
-        <div className="mt-3 flex items-center gap-2">
-          <TokenBalance className="flex-1 justify-center" />
-          <button
-            onClick={() => navigate({ to: "/shop" })}
-            className="h-9 px-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
-          >
-            <ShoppingBag className="h-4 w-4" /> Shop
-          </button>
+        <div className="mt-3 space-y-2">
+          <GlobalSearchInput />
+          <div className="flex items-center gap-2">
+            <TokenBalance className="flex-1 justify-center" />
+            <NotificationsBell />
+            <button
+              onClick={() => navigate({ to: "/shop" })}
+              className="h-9 px-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
+            >
+              <ShoppingBag className="h-4 w-4" /> Shop
+            </button>
+          </div>
         </div>
+
         <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
             <p className="font-semibold text-foreground">Rostr v0.1</p>
@@ -226,14 +234,15 @@ export function Shell() {
         <header data-app-header="true" className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-3 py-2 border-b border-border bg-background/85 backdrop-blur-xl">
           <Brand compact />
           <div className="flex items-center gap-1.5">
+            <GlobalSearchInput compact className="w-32" />
+            <NotificationsBell compact />
             <TokenBalance compact />
             <button
               onClick={() => navigate({ to: "/shop" })}
-              className="h-7 px-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition"
+              className="h-7 w-7 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 grid place-items-center transition"
               aria-label="Shop"
             >
               <ShoppingBag className="h-3.5 w-3.5" />
-              Shop
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
@@ -244,6 +253,7 @@ export function Shell() {
             </button>
           </div>
         </header>
+
 
         <div
           className="flex-1 pb-16 lg:pb-0 touch-pan-y"

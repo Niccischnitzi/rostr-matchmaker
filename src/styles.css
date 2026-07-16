@@ -765,3 +765,5 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
 @media (prefers-reduced-motion: reduce) {
   .pixel-flicker, .pixel-bounce, .pixel-glow { animation: none !important; }
 }
+
+@keyframes shard-spin { to { transform: rotate(360deg); } }
