@@ -53,6 +53,8 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
+
 
   useEffect(() => { setPrefs(loadPrefs()); }, []);
   useEffect(() => {
