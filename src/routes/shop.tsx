@@ -155,6 +155,7 @@ function ShopPage() {
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
+        <RostrMark variant="lockup" size={26} />
         <TokenBalance />
       </header>
 
@@ -186,6 +187,60 @@ function ShopPage() {
 
         {tab === "cosmetics" && (
           <>
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search cosmetics…"
+                  className="w-full pl-9 pr-3 py-2 rounded-full bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                {(["all", "halo", "avatar_frame", "background", "tag"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTypeFilter(t)}
+                    className={cn(
+                      "shrink-0 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold border transition",
+                      typeFilter === t
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-surface text-muted-foreground border-border hover:text-foreground",
+                    )}
+                  >
+                    {t === "all" ? "All" : t.replace("_", " ")}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                {(["all", "owned", "locked"] as const).map((o) => (
+                  <button
+                    key={o}
+                    onClick={() => setOwnFilter(o)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold border transition",
+                      ownFilter === o
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-surface text-muted-foreground border-border hover:text-foreground",
+                    )}
+                  >
+                    {o}
+                  </button>
+                ))}
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as typeof sort)}
+                  className="ml-1 rounded-full bg-surface border border-border text-[10px] uppercase tracking-widest font-bold px-2 py-1.5"
+                >
+                  <option value="popular">Featured</option>
+                  <option value="price_asc">Price ↑</option>
+                  <option value="price_desc">Price ↓</option>
+                </select>
+              </div>
+            </div>
+
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -194,7 +249,25 @@ function ShopPage() {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map((item) => {
+                {items
+                  .filter((it) => typeFilter === "all" || it.type === typeFilter)
+                  .filter((it) => {
+                    if (ownFilter === "all") return true;
+                    const isOwned = ownedIds.has(it.id);
+                    return ownFilter === "owned" ? isOwned : !isOwned;
+                  })
+                  .filter((it) =>
+                    query.trim() === "" ? true : it.name.toLowerCase().includes(query.toLowerCase()),
+                  )
+                  .sort((a, b) =>
+                    sort === "price_asc"
+                      ? a.cost_tokens - b.cost_tokens
+                      : sort === "price_desc"
+                        ? b.cost_tokens - a.cost_tokens
+                        : 0,
+                  )
+                  .map((item) => {
+
                   const owned = ownedIds.has(item.id);
                   const isEquipped = rows.find((r) => r.item_id === item.id)?.equipped ?? false;
                   const busy = busyId === item.id;
