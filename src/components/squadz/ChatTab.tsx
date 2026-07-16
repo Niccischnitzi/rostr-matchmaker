@@ -22,6 +22,8 @@ import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
 import { GlowButton } from "./GlowButton";
+import { UserAvatar } from "./UserAvatar";
+
 
 
 type ConvWithPeer = Conversation & {
