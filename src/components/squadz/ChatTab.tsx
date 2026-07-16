@@ -21,6 +21,8 @@ import { CallSheet } from "./CallSheet";
 import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
+import { GlowButton } from "./GlowButton";
+
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
