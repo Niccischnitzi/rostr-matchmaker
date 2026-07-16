@@ -656,20 +656,15 @@ function LFGBoard() {
 function Avatar({ profile, size = 12 }: { profile: Profile | null; size?: number }) {
   const px = size * 4;
   return (
-    <div
-      style={{ width: px, height: px }}
-      className="rounded-xl bg-surface-2 grid place-items-center overflow-hidden shrink-0"
-    >
-      {profile?.avatar_url ? (
-        <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <span className="font-bold text-sm text-muted-foreground">
-          {(profile?.display_name ?? profile?.username ?? "?").slice(0, 1).toUpperCase()}
-        </span>
-      )}
-    </div>
+    <UserAvatar
+      userId={profile?.id}
+      avatarUrl={profile?.avatar_url ?? undefined}
+      fallback={profile?.display_name ?? profile?.username ?? "?"}
+      size={px}
+    />
   );
 }
+
 
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
