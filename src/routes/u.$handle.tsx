@@ -249,7 +249,7 @@ function UserProfilePage() {
               {p.lfg_body && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{p.lfg_body}</p>}
               {p.lfg_games && p.lfg_games.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3">
-                  {p.lfg_games.map((g) => (
+                  {(p.lfg_games as string[]).map((g: string) => (
                     <span key={g} className="text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded bg-surface text-muted-foreground">
                       {g}
                     </span>
