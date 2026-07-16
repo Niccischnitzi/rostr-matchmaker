@@ -228,10 +228,11 @@ function UserProfilePage() {
         {p.playstyle_badges && p.playstyle_badges.length > 0 && (
           <Section title="Playstyle">
             <div className="flex flex-wrap gap-1.5">
-              {p.playstyle_badges.map((b) => (
+              {(p.playstyle_badges as string[]).map((b: string) => (
                 <span
                   key={b}
                   className="text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-full border border-primary/40 text-primary bg-primary/10"
+
                 >
                   {b}
                 </span>

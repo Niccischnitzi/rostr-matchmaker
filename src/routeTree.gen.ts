@@ -20,6 +20,7 @@ import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as GuidesFindingGamersRouteImport } from './routes/guides.finding-gamers'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicSteamReturnRouteImport } from './routes/api/public/steam.return'
@@ -80,6 +81,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UHandleRoute = UHandleRouteImport.update({
+  id: '/u/$handle',
+  path: '/u/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuidesFindingGamersRoute = GuidesFindingGamersRouteImport.update({
   id: '/guides/finding-gamers',
   path: '/guides/finding-gamers',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/guides/finding-gamers': typeof GuidesFindingGamersRoute
+  '/u/$handle': typeof UHandleRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/steam/return': typeof ApiPublicSteamReturnRoute
 }
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/checkout/return'
     | '/guides/finding-gamers'
+    | '/u/$handle'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   fileRoutesByTo: FileRoutesByTo
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/checkout/return'
     | '/guides/finding-gamers'
+    | '/u/$handle'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   id:
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/checkout/return'
     | '/guides/finding-gamers'
+    | '/u/$handle'
     | '/api/public/payments/webhook'
     | '/api/public/steam/return'
   fileRoutesById: FileRoutesById
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   GuidesFindingGamersRoute: typeof GuidesFindingGamersRoute
+  UHandleRoute: typeof UHandleRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSteamReturnRoute: typeof ApiPublicSteamReturnRoute
 }
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$handle': {
+      id: '/u/$handle'
+      path: '/u/$handle'
+      fullPath: '/u/$handle'
+      preLoaderRoute: typeof UHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guides/finding-gamers': {
       id: '/guides/finding-gamers'
       path: '/guides/finding-gamers'
@@ -350,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   GuidesFindingGamersRoute: GuidesFindingGamersRoute,
+  UHandleRoute: UHandleRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSteamReturnRoute: ApiPublicSteamReturnRoute,
 }
