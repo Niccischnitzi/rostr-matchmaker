@@ -26,15 +26,16 @@ type Crew = {
 export const Route = createFileRoute("/search")({
   ssr: false,
   validateSearch: searchSchema,
-  head: ({ search }) => ({
+  head: () => ({
     meta: [
-      { title: search.q ? `Search: ${search.q} — Rostr` : "Search — Rostr" },
+      { title: "Search — Rostr" },
       { name: "description", content: "Find players and crews on Rostr." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: SearchPage,
 });
+
 
 function SearchPage() {
   const { q: initialQ } = Route.useSearch();
