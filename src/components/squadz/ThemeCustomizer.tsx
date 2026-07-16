@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
+  ACCENTS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
-  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey, type HoverHueKey,
+  type AccentKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey, type HoverHueKey,
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
+
 import { Slider } from "@/components/ui/slider";
 import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
