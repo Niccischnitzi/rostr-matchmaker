@@ -4,16 +4,19 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert, Sparkles } from "lucide-react";
+import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert, Sparkles, Package } from "lucide-react";
 import { signOut } from "@/hooks/use-auth";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeCustomizer } from "./ThemeCustomizer";
 import { AvatarPicker } from "./AvatarPicker";
+import { OwnedCosmeticsSection } from "./OwnedCosmeticsSection";
+import { PurchasesSection } from "./PurchasesSection";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { UserCircle, Wand2 } from "lucide-react";
+
 
 type Prefs = {
   theme: "dark" | "light" | "system";
