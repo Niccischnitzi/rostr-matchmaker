@@ -2,7 +2,9 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { Gamepad2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { RostrMark } from "@/components/squadz/RostrMark";
+
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
