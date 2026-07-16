@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Coins, Lock, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Coins, Lock, Check, Sparkles, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useWallet } from "@/hooks/use-wallet";
@@ -9,7 +9,9 @@ import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { TokenBalance } from "@/components/cosmetics/TokenBalance";
 import { CosmeticAvatar } from "@/components/cosmetics/CosmeticAvatar";
+import { RostrMark } from "@/components/squadz/RostrMark";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/shop")({
   component: ShopPage,
