@@ -767,3 +767,8 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
 }
 
 @keyframes shard-spin { to { transform: rotate(360deg); } }
+
+/* Utility: hide native scrollbars on horizontal filter rails. */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
