@@ -205,15 +205,20 @@ export function Shell() {
         >
           <SettingsIcon className="h-5 w-5" /> Settings
         </button>
-        <div className="mt-3 flex items-center gap-2">
-          <TokenBalance className="flex-1 justify-center" />
-          <button
-            onClick={() => navigate({ to: "/shop" })}
-            className="h-9 px-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
-          >
-            <ShoppingBag className="h-4 w-4" /> Shop
-          </button>
+        <div className="mt-3 space-y-2">
+          <GlobalSearchInput />
+          <div className="flex items-center gap-2">
+            <TokenBalance className="flex-1 justify-center" />
+            <NotificationsBell />
+            <button
+              onClick={() => navigate({ to: "/shop" })}
+              className="h-9 px-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
+            >
+              <ShoppingBag className="h-4 w-4" /> Shop
+            </button>
+          </div>
         </div>
+
         <div className="mt-3 text-xs text-muted-foreground">
           <div className="rounded-xl border border-border bg-surface p-3">
             <p className="font-semibold text-foreground">Rostr v0.1</p>
