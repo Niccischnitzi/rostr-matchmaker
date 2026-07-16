@@ -18,6 +18,9 @@ import { sfx } from "@/lib/sfx";
 import { toast } from "sonner";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 import { TokenBalance } from "@/components/cosmetics/TokenBalance";
+import { NotificationsBell } from "@/components/squadz/NotificationsBell";
+import { GlobalSearchInput } from "@/components/squadz/GlobalSearchInput";
+
 import { useApplyEquippedCosmetics } from "@/hooks/use-equipped-cosmetics";
 
 export type TabKey = "find" | "clans" | "chat" | "community" | "profile";
