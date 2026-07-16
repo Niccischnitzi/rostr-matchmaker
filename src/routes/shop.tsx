@@ -43,6 +43,11 @@ function ShopPage() {
   const { items, loading } = useShopItems();
   const { rows, equipped, reload } = useInventory();
   const [tab, setTab] = useState<TabKey>("cosmetics");
+  const [typeFilter, setTypeFilter] = useState<"all" | ShopItem["type"]>("all");
+  const [ownFilter, setOwnFilter] = useState<"all" | "owned" | "locked">("all");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<"popular" | "price_asc" | "price_desc">("popular");
+
   const [activePrice, setActivePrice] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
