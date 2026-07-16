@@ -8,7 +8,9 @@ export type NotificationRow = {
   kind: string;
   title: string | null;
   body: string | null;
-  data: Record<string, unknown> | null;
+  payload: Record<string, unknown> | null;
+  link: string | null;
+
   read_at: string | null;
   created_at: string;
 };
