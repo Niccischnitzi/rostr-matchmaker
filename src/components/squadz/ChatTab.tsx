@@ -165,11 +165,12 @@ function DMList({ onOpen }: { onOpen: (id: string) => void }) {
           title="No conversations yet"
           body="Start a DM with anyone on your rostr — say hi, swap gamertags, plan a session."
           action={
-            <Button size="lg" onClick={() => setShowNew(true)} className="gap-2 rounded-full h-12 px-6">
-              <MessageSquarePlus className="h-5 w-5" /> Start a new DM
-            </Button>
+            <GlowButton onClick={() => setShowNew(true)} icon={<MessageSquarePlus className="h-5 w-5" />}>
+              Start a new DM
+            </GlowButton>
           }
         />
+
       ) : (
         <>
           <div className="flex items-center justify-between mb-3">
