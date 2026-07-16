@@ -44,7 +44,7 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
 
   const src = avatarUrl ?? otherAvatar ?? undefined;
   const halo = isSelf ? equipped.halo?.css_class : undefined;
-  const frame = isSelf ? equipped.frame?.css_class : undefined;
+  const frame = isSelf ? equipped.avatar_frame?.css_class : undefined;
 
   return (
     <CosmeticAvatar size={size} haloClass={halo} frameClass={frame} className={className}>
