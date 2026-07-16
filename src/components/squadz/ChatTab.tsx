@@ -90,68 +90,61 @@ function DMList({ onOpen }: { onOpen: (id: string) => void }) {
   const [showNew, setShowNew] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     let cancelled = false;
 
     async function load() {
-      const { data: rows, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .or(`user_a.eq.${user!.id},user_b.eq.${user!.id}`)
-        .order("last_message_at", { ascending: false });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      const peerIds = (rows ?? []).map((c) => (c.user_a === user!.id ? c.user_b : c.user_a));
-      const profiles = await fetchProfiles(peerIds);
-      const profileById = new Map(profiles.map((p) => [p.id, p]));
-
-      // Last message per conversation
-      const convIds = (rows ?? []).map((c) => c.id);
-      let lastByConv = new Map<string, DirectMessage>();
-      if (convIds.length) {
-        const { data: msgs } = await supabase
-          .from("direct_messages")
+      try {
+        const { data: rows, error } = await supabase
+          .from("conversations")
           .select("*")
-          .in("conversation_id", convIds)
-          .order("created_at", { ascending: false });
-        for (const m of msgs ?? []) {
-          if (!lastByConv.has(m.conversation_id)) lastByConv.set(m.conversation_id, m);
-        }
-      }
+          .or(`user_a.eq.${user!.id},user_b.eq.${user!.id}`)
+          .order("last_message_at", { ascending: false });
+        if (error) throw error;
+        const peerIds = (rows ?? []).map((c) => (c.user_a === user!.id ? c.user_b : c.user_a));
+        const profiles = await fetchProfiles(peerIds);
+        const profileById = new Map(profiles.map((p) => [p.id, p]));
 
-      if (cancelled) return;
-      setConvos(
-        (rows ?? []).map((c) => ({
-          ...c,
-          peer: profileById.get(c.user_a === user!.id ? c.user_b : c.user_a) ?? null,
-          lastMessage: lastByConv.get(c.id),
-        })),
-      );
-      setLoading(false);
+        const convIds = (rows ?? []).map((c) => c.id);
+        const lastByConv = new Map<string, DirectMessage>();
+        if (convIds.length) {
+          const { data: msgs } = await supabase
+            .from("direct_messages")
+            .select("*")
+            .in("conversation_id", convIds)
+            .order("created_at", { ascending: false });
+          for (const m of msgs ?? []) {
+            if (!lastByConv.has(m.conversation_id)) lastByConv.set(m.conversation_id, m);
+          }
+        }
+
+        if (cancelled) return;
+        setConvos(
+          (rows ?? []).map((c) => ({
+            ...c,
+            peer: profileById.get(c.user_a === user!.id ? c.user_b : c.user_a) ?? null,
+            lastMessage: lastByConv.get(c.id),
+          })),
+        );
+      } catch (e: any) {
+        if (!cancelled) toast.error(e?.message ?? "Could not load conversations");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
     load();
 
-    // Realtime: bump conversations on any new DM in any of mine
     const channel = supabase
-      .channel("dm-list")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "conversations" },
-        () => load(),
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "direct_messages" },
-        () => load(),
-      )
+      .channel(`dm-list-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => load())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, () => load())
       .subscribe();
     return () => {
       cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [user]);
+
 
   if (!user) return null;
 

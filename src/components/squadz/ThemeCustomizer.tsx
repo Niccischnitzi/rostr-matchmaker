@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ACCENTS, BACKGROUNDS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
+  ACCENTS, FONT_FAMILIES, PALETTES, HOVER_HUES, applyPalettePreset,
   loadCustomization, saveCustomization, previewCustomization, applyCustomization,
-  type AccentKey, type BackgroundKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey, type HoverHueKey,
+  type AccentKey, type DensityKey, type FontKey, type AnimKey, type PaletteKey, type HoverHueKey,
   DEFAULT_CUSTOMIZATION, type Customization,
 } from "@/lib/customization";
+
 import { Slider } from "@/components/ui/slider";
 import { Sparkles, Palette, Type, Gauge, Wand2, RotateCcw, Check, Undo2, Layers, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -221,28 +222,8 @@ export function ThemeCustomizer() {
         </div>
       </Group>
 
-      <Group icon={Wand2} title="Background">
-        <div className="grid grid-cols-3 gap-2">
-          {(Object.keys(BACKGROUNDS) as BackgroundKey[]).map((k) => {
-            const b = BACKGROUNDS[k];
-            const on = draft.background === k;
-            return (
-              <button
-                key={k}
-                onClick={() => set("background", k)}
-                className={cn(
-                  "h-16 rounded-xl border-2 transition-all overflow-hidden relative",
-                  on ? "border-primary scale-[1.03]" : "border-border hover:border-primary/60"
-                )}
-                style={{ backgroundImage: b.css, backgroundSize: "cover" }}
-                title={b.name}
-              >
-                <span className="absolute inset-x-0 bottom-0 text-[9px] font-bold uppercase tracking-wider bg-black/50 text-white py-0.5 text-center">{b.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </Group>
+      {/* Backgrounds live in "Your cosmetics" (shop-owned) — removed here to avoid duplicate, conflicting controls. */}
+
 
       <Group icon={Type} title="Display font">
         <div className="grid grid-cols-2 gap-2">

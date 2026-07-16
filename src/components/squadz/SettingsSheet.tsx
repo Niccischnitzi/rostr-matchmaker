@@ -89,35 +89,26 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
           <SheetDescription>Personalize how Rostr behaves.</SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-5">
+          {/* IDENTITY */}
           <Section icon={UserCircle} title="Profile picture">
             <AvatarPickerRow />
           </Section>
 
-          <Section icon={Package} title="Your cosmetics">
-            <OwnedCosmeticsSection />
-          </Section>
-
-          {user && <PurchasesSection userId={user.id} />}
-
-
-          <Section icon={Wand2} title="Customize your Rostr">
+          {/* LOOK & FEEL — single home for all visual controls */}
+          <Section icon={Wand2} title="Look & feel">
             <ThemeCustomizer />
           </Section>
 
-          <Section icon={Palette} title="Appearance">
-            <Row label="Theme">
-              <Select value={prefs.theme} onValueChange={(v) => set("theme", v as Prefs["theme"])}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">System</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="light">Light</SelectItem>
-                </SelectContent>
-              </Select>
-            </Row>
+          {/* OWNED COSMETICS — the ONLY place backgrounds/halos/frames/tags live */}
+          <Section icon={Package} title="Your cosmetics">
+            <p className="text-xs text-muted-foreground mb-3">
+              Backgrounds, halos, frames, and tags you own. Equip them here — they apply everywhere.
+            </p>
+            <OwnedCosmeticsSection />
           </Section>
 
+          {/* PREFERENCES */}
           <Section icon={Bell} title="Notifications">
             <ToggleRow label="Squad requests" value={prefs.notifSquad} onChange={(v) => set("notifSquad", v)} />
             <ToggleRow label="Direct messages" value={prefs.notifDM} onChange={(v) => set("notifDM", v)} />
@@ -151,27 +142,30 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
             </Row>
           </Section>
 
+          {user && <PurchasesSection userId={user.id} />}
+
+          {/* HIGH-CONTRAST QUICK LINKS */}
           <Link
             to="/pricing"
             onClick={() => onOpenChange(false)}
-            className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-amber-400/40 bg-amber-400/5 hover:bg-amber-400/10 transition-colors"
+            className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-primary/50 bg-primary text-primary-foreground hover:opacity-95 transition-colors"
           >
             <span className="flex items-center gap-2 text-sm font-bold">
-              <Sparkles className="h-4 w-4 text-amber-500" /> Tokens & Rostr Pro
+              <Sparkles className="h-4 w-4" /> Shards & Rostr Pro
             </span>
-            <span className="text-[10px] uppercase tracking-widest text-amber-500 font-bold">Store</span>
+            <span className="text-[10px] uppercase tracking-widest font-black">Store</span>
           </Link>
 
           {isAdmin && (
             <Link
               to="/moderation"
               onClick={() => onOpenChange(false)}
-              className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+              className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-foreground/50 bg-foreground text-background hover:opacity-95 transition-colors"
             >
               <span className="flex items-center gap-2 text-sm font-bold">
-                <ShieldAlert className="h-4 w-4 text-primary" /> Moderation queue
+                <ShieldAlert className="h-4 w-4" /> Moderation queue
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-primary font-bold">Admin</span>
+              <span className="text-[10px] uppercase tracking-widest font-black">Admin</span>
             </Link>
           )}
 
@@ -181,6 +175,7 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
             </Button>
           </div>
         </div>
+
       </SheetContent>
     </Sheet>
   );
