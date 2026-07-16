@@ -2,7 +2,9 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { Gamepad2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { RostrMark } from "@/components/squadz/RostrMark";
+
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -147,15 +149,11 @@ function AuthPage() {
   return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="h-11 w-11 rounded-xl bg-primary grid place-items-center glow-orange">
-            <Gamepad2 className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-display font-black text-2xl tracking-tight">Rostr</h1>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
-          </div>
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <RostrMark variant="lockup" size={40} />
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Gaming social hub</p>
         </div>
+
 
         <div className="rounded-3xl border border-border bg-card p-6 shadow-xl">
           <div className="grid grid-cols-2 rounded-xl bg-surface p-1 mb-6">

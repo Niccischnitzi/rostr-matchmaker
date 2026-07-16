@@ -20,25 +20,33 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-dashed border-border bg-card/60 backdrop-blur px-6 py-12 text-center soft-rise",
+        "group relative overflow-hidden rounded-3xl border border-dashed border-border bg-card/60 backdrop-blur px-6 py-12 text-center soft-rise",
+        "transition-transform duration-500 hover:-translate-y-0.5",
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-40" aria-hidden>
-        <div className="absolute -top-8 -left-8 h-32 w-32 rounded-full bg-primary/30 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-accent/40 blur-3xl animate-pulse" />
+      {/* aurora blobs — slow float, react to hover */}
+      <div className="pointer-events-none absolute inset-0 opacity-50" aria-hidden>
+        <div className="absolute -top-10 -left-8 h-40 w-40 rounded-full bg-primary/30 blur-3xl animate-[float-y_7s_ease-in-out_infinite]" />
+        <div className="absolute -bottom-12 -right-10 h-48 w-48 rounded-full bg-accent/40 blur-3xl animate-[float-y_9s_ease-in-out_infinite_reverse]" />
       </div>
+      {/* scanline shimmer on hover */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1400ms] ease-out bg-gradient-to-r from-transparent via-white/[.06] to-transparent"
+      />
       <div className="relative flex flex-col items-center gap-4">
         <PixelArt variant={variant} />
         <div className="space-y-1">
           <h3 className="font-display text-xl font-black tracking-tight">{title}</h3>
           {body && <p className="text-sm text-muted-foreground max-w-sm mx-auto">{body}</p>}
         </div>
-        {action && <div className="pt-2">{action}</div>}
+        {action && <div className="pt-2 animate-[fade-in_600ms_ease-out_150ms_both]">{action}</div>}
       </div>
     </div>
   );
 }
+
 
 function PixelArt({ variant }: { variant: Variant }) {
   const grids: Record<Variant, string[]> = {
