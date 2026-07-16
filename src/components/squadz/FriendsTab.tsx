@@ -9,6 +9,8 @@ import { fetchProfiles, type Profile } from "@/lib/squadz-supabase";
 import { useSquadz } from "@/lib/squadz-store";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
+import { GlowButton } from "./GlowButton";
+
 
 type Friend = {
   id: string;
