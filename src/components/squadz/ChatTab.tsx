@@ -21,6 +21,10 @@ import { CallSheet } from "./CallSheet";
 import { Attachment, parseAttachment, encodeAttachment } from "./Attachment";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
+import { GlowButton } from "./GlowButton";
+import { UserAvatar } from "./UserAvatar";
+
+
 
 type ConvWithPeer = Conversation & {
   peer: Profile | null;
@@ -163,11 +167,12 @@ function DMList({ onOpen }: { onOpen: (id: string) => void }) {
           title="No conversations yet"
           body="Start a DM with anyone on your rostr — say hi, swap gamertags, plan a session."
           action={
-            <Button size="lg" onClick={() => setShowNew(true)} className="gap-2 rounded-full h-12 px-6">
-              <MessageSquarePlus className="h-5 w-5" /> Start a new DM
-            </Button>
+            <GlowButton onClick={() => setShowNew(true)} icon={<MessageSquarePlus className="h-5 w-5" />}>
+              Start a new DM
+            </GlowButton>
           }
         />
+
       ) : (
         <>
           <div className="flex items-center justify-between mb-3">
@@ -653,20 +658,15 @@ function LFGBoard() {
 function Avatar({ profile, size = 12 }: { profile: Profile | null; size?: number }) {
   const px = size * 4;
   return (
-    <div
-      style={{ width: px, height: px }}
-      className="rounded-xl bg-surface-2 grid place-items-center overflow-hidden shrink-0"
-    >
-      {profile?.avatar_url ? (
-        <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <span className="font-bold text-sm text-muted-foreground">
-          {(profile?.display_name ?? profile?.username ?? "?").slice(0, 1).toUpperCase()}
-        </span>
-      )}
-    </div>
+    <UserAvatar
+      userId={profile?.id}
+      avatarUrl={profile?.avatar_url ?? undefined}
+      fallback={profile?.display_name ?? profile?.username ?? "?"}
+      size={px}
+    />
   );
 }
+
 
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();

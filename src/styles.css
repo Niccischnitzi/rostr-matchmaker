@@ -772,3 +772,30 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* Signature "glow button": rotating conic-gradient border used sitewide on
+   empty-state CTAs. Border animates with a masked conic gradient so the
+   inner primary fill stays crisp; halo pulses via a separate layer. */
+@keyframes glow-btn-spin { to { transform: rotate(360deg); } }
+.glow-btn__ring {
+  background: conic-gradient(
+    from 0deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary-glow, var(--primary))) 25%,
+    hsl(var(--ring-c2, var(--primary))) 50%,
+    hsl(var(--primary-glow, var(--primary))) 75%,
+    hsl(var(--primary)) 100%
+  );
+  animation: glow-btn-spin 4.5s linear infinite;
+  filter: saturate(1.1);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  padding: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow-btn__ring { animation: none; }
+}
+
+

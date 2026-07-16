@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Megaphone, MapPin, UserPlus, Check } from "lucide-react";
+import { Loader2, Megaphone, MapPin, UserPlus, Check, Megaphone as MegaphoneIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
+import { GlowButton } from "./GlowButton";
 import { Button } from "@/components/ui/button";
+
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
 
@@ -71,7 +73,16 @@ export function LfgAdsList() {
           variant="arcade"
           title="The board is wide open"
           body="No active LFG ads right now. Post one from the Find tab and be the first face people see today."
+          action={
+            <GlowButton
+              onClick={() => window.dispatchEvent(new CustomEvent("rostr:go-tab", { detail: "find" }))}
+              icon={<MegaphoneIcon className="h-5 w-5" />}
+            >
+              Post an ad
+            </GlowButton>
+          }
         />
+
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {ads.map((ad) => (
