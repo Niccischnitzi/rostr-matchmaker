@@ -31,29 +31,31 @@ export function FriendsTab() {
   const [q, setQ] = useState("");
 
   async function load() {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await supabase
-      .from("friends")
-      .select("*")
-      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
-      .order("updated_at", { ascending: false });
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { data, error } = await supabase
+        .from("friends")
+        .select("*")
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      const list = (data ?? []) as Friend[];
+      const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
+      const [friendProfiles, discoverRows] = await Promise.all([
+        fetchProfiles(ids),
+        supabase.from("profiles").select("*").neq("id", user.id).order("username").limit(50),
+      ]);
+      setRows(list);
+      setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));
+      setDiscover((discoverRows.data ?? []) as Profile[]);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not load friends");
+    } finally {
       setLoading(false);
-      return;
     }
-    const list = (data ?? []) as Friend[];
-    const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
-    const [friendProfiles, discoverRows] = await Promise.all([
-      fetchProfiles(ids),
-      supabase.from("profiles").select("*").neq("id", user.id).order("username").limit(50),
-    ]);
-    setRows(list);
-    setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));
-    setDiscover((discoverRows.data ?? []) as Profile[]);
-    setLoading(false);
   }
+
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
 
