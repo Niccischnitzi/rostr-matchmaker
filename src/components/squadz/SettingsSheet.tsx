@@ -92,6 +92,13 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
             <AvatarPickerRow />
           </Section>
 
+          <Section icon={Package} title="Your cosmetics">
+            <OwnedCosmeticsSection />
+          </Section>
+
+          {user && <PurchasesSection userId={user.id} />}
+
+
           <Section icon={Wand2} title="Customize your Rostr">
             <ThemeCustomizer />
           </Section>
