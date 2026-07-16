@@ -73,7 +73,16 @@ export function LfgAdsList() {
           variant="arcade"
           title="The board is wide open"
           body="No active LFG ads right now. Post one from the Find tab and be the first face people see today."
+          action={
+            <GlowButton
+              onClick={() => window.dispatchEvent(new CustomEvent("rostr:go-tab", { detail: "find" }))}
+              icon={<MegaphoneIcon className="h-5 w-5" />}
+            >
+              Post an ad
+            </GlowButton>
+          }
         />
+
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {ads.map((ad) => (
