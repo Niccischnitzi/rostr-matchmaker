@@ -209,8 +209,10 @@ export function applyCustomization(c: Customization = loadCustomization()) {
   root.style.setProperty("--radius", `${c.radius / 16}rem`);
   // The chosen font drives DISPLAY (headings) globally. Body font stays as the
   // system sans (Plus Jakarta Sans) for editorial-style readability.
-  const fontFamily = FONT_FAMILIES[c.font].family;
+  const fontEntry = FONT_FAMILIES[c.font] ?? FONT_FAMILIES[DEFAULT_CUSTOMIZATION.font];
+  const fontFamily = fontEntry.family;
   root.style.setProperty("--font-display", fontFamily);
+
 
   // Background painted on <html> via CSS var.
   root.style.setProperty("--app-bg-image", BACKGROUNDS[c.background].css);
