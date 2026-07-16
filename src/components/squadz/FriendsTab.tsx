@@ -164,7 +164,16 @@ export function FriendsTab() {
                   variant="controller"
                   title="Your rostr is empty"
                   body="Swipe on the Find tab to add players. Every friend request that goes both ways lands here."
+                  action={
+                    <GlowButton
+                      onClick={() => window.dispatchEvent(new CustomEvent("rostr:go-tab", { detail: "find" }))}
+                      icon={<UserPlus className="h-5 w-5" />}
+                    >
+                      Add friends
+                    </GlowButton>
+                  }
                 />
+
               )
             )}
             {filteredAccepted.map((r) => {
