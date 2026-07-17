@@ -1,5 +1,5 @@
 import { defineTool } from "@lovable.dev/mcp-js";
-import { supabaseForUser } from "../supabase";
+import { supabaseForUser, requireUser } from "../supabase";
 
 export default defineTool({
   name: "get_my_wallet",
@@ -8,27 +8,22 @@ export default defineTool({
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    }
+    const u = requireUser(ctx);
+    if ("error" in u) return { content: [{ type: "text", text: u.error }], isError: true };
     const supabase = supabaseForUser(ctx);
-    const uid = ctx.getUserId();
     const [wallet, txns] = await Promise.all([
-      supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
+      supabase.from("wallets").select("*").eq("user_id", u.uid).maybeSingle(),
       supabase
         .from("token_transactions")
         .select("*")
-        .eq("user_id", uid)
+        .eq("user_id", u.uid)
         .order("created_at", { ascending: false })
         .limit(20),
     ]);
     if (wallet.error) return { content: [{ type: "text", text: wallet.error.message }], isError: true };
     return {
       content: [
-        {
-          type: "text",
-          text: JSON.stringify({ wallet: wallet.data, transactions: txns.data ?? [] }),
-        },
+        { type: "text", text: JSON.stringify({ wallet: wallet.data, transactions: txns.data ?? [] }) },
       ],
       structuredContent: { wallet: wallet.data, transactions: txns.data ?? [] },
     };

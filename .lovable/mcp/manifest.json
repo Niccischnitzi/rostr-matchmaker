@@ -141,12 +141,6 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "title": {
-              "type": "string",
-              "minLength": 3,
-              "maxLength": 120,
-              "description": "Short headline for the ad."
-            },
             "game": {
               "type": "string",
               "minLength": 1,
@@ -158,10 +152,29 @@
               "minLength": 1,
               "maxLength": 1000,
               "description": "Details about who you're looking for."
+            },
+            "mode": {
+              "type": "string",
+              "maxLength": 60,
+              "description": "Game mode (optional)."
+            },
+            "region": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Region tag (optional)."
+            },
+            "mic_required": {
+              "type": "boolean",
+              "description": "Require voice chat (default false)."
+            },
+            "slots_total": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 10,
+              "description": "Total party size (default 4)."
             }
           },
           "required": [
-            "title",
             "game",
             "description"
           ],
@@ -173,7 +186,7 @@
       {
         "name": "list_open_lfg_ads",
         "title": "Browse open LFG ads",
-        "description": "List currently open LFG ads on Rostr, optionally filtered by game. Newest first.",
+        "description": "List currently open LFG ads on Rostr (not yet expired or closed), optionally filtered by game. Newest first.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
