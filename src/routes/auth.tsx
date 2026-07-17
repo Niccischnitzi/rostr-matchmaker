@@ -76,7 +76,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}${dest}`,
             data: { username: username.trim() || undefined },
           },
         });
@@ -93,7 +93,7 @@ function AuthPage() {
         toast.success("Signed in");
       }
       router.invalidate();
-      navigate({ to: "/" });
+      window.location.href = dest;
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Authentication failed";
       const f = friendlyError(raw);
