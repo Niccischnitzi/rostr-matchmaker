@@ -5,6 +5,7 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 import mkcert from "vite-plugin-mkcert";
 
 // Enable local HTTPS in dev via a locally-trusted mkcert certificate. This is a
@@ -19,10 +20,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  vite: enableMkcert
-    ? {
-        plugins: [mkcert()],
-        server: { https: {} },
-      }
-    : undefined,
+  vite: {
+    plugins: [mcpPlugin(), ...(enableMkcert ? [mkcert()] : [])],
+    ...(enableMkcert ? { server: { https: {} } } : {}),
+  },
 });
