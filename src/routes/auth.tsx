@@ -143,7 +143,11 @@ function AuthPage() {
     setBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        // redirect_uri MUST be a full public URL, not a protected route.
+        // We return to /auth with ?next=<dest> so the session hydrates here
+        // and then this page bounces the user back to the original destination
+        // (including the OAuth consent screen).
+        redirect_uri: `${window.location.origin}/auth?next=${encodeURIComponent(dest)}`,
       });
       if (result.error) {
         toast.error(result.error.message ?? "Google sign-in failed");
@@ -151,7 +155,7 @@ function AuthPage() {
       }
       if (result.redirected) return;
       router.invalidate();
-      navigate({ to: "/" });
+      window.location.href = dest;
     } finally {
       setBusy(false);
     }
