@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { supabaseForUser } from "../supabase";
+import { supabaseForUser, requireUser } from "../supabase";
 
 export default defineTool({
   name: "send_direct_message",
@@ -12,13 +12,11 @@ export default defineTool({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ conversation_id, body }, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    }
-    const supabase = supabaseForUser(ctx);
-    const { data, error } = await supabase
+    const u = requireUser(ctx);
+    if ("error" in u) return { content: [{ type: "text", text: u.error }], isError: true };
+    const { data, error } = await supabaseForUser(ctx)
       .from("direct_messages")
-      .insert({ conversation_id, sender_id: ctx.getUserId(), body })
+      .insert({ conversation_id, sender_id: u.uid, body })
       .select()
       .single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

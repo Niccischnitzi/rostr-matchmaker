@@ -111,7 +111,7 @@ function Consent() {
           <div className="rounded-xl border border-border bg-surface p-3 text-xs space-y-1.5">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Permissions requested</p>
             <ul className="space-y-1">
-              {scopes.map((s) => (
+              {scopes.map((s: string) => (
                 <li key={s} className="flex items-center gap-2">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
                   <span>{scopeLabel(s)}</span>
