@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -10,6 +10,9 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : "",
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Rostr" },
@@ -21,9 +24,16 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+// Only accept same-origin relative paths ("/foo?bar"), never external URLs.
+function safeNext(next: string): string {
+  if (!next.startsWith("/") || next.startsWith("//")) return "/";
+  return next;
+}
+
 function AuthPage() {
-  const navigate = useNavigate();
   const router = useRouter();
+  const { next } = Route.useSearch();
+  const dest = safeNext(next);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,9 +44,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) window.location.href = dest;
     });
-  }, [navigate]);
+  }, [dest]);
 
   const friendlyError = (msg: string): { text: string; emailUnconfirmed?: boolean } => {
     const m = msg.toLowerCase();
@@ -65,7 +75,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}${dest}`,
             data: { username: username.trim() || undefined },
           },
         });
@@ -82,7 +92,7 @@ function AuthPage() {
         toast.success("Signed in");
       }
       router.invalidate();
-      navigate({ to: "/" });
+      window.location.href = dest;
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Authentication failed";
       const f = friendlyError(raw);
@@ -132,7 +142,11 @@ function AuthPage() {
     setBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        // redirect_uri MUST be a full public URL, not a protected route.
+        // We return to /auth with ?next=<dest> so the session hydrates here
+        // and then this page bounces the user back to the original destination
+        // (including the OAuth consent screen).
+        redirect_uri: `${window.location.origin}/auth?next=${encodeURIComponent(dest)}`,
       });
       if (result.error) {
         toast.error(result.error.message ?? "Google sign-in failed");
@@ -140,7 +154,7 @@ function AuthPage() {
       }
       if (result.redirected) return;
       router.invalidate();
-      navigate({ to: "/" });
+      window.location.href = dest;
     } finally {
       setBusy(false);
     }
