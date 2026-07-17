@@ -10,6 +10,9 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : "",
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Rostr" },
@@ -21,9 +24,17 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+// Only accept same-origin relative paths ("/foo?bar"), never external URLs.
+function safeNext(next: string): string {
+  if (!next.startsWith("/") || next.startsWith("//")) return "/";
+  return next;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
+  const { next } = Route.useSearch();
+  const dest = safeNext(next);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,9 +45,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) window.location.href = dest;
     });
-  }, [navigate]);
+  }, [dest]);
 
   const friendlyError = (msg: string): { text: string; emailUnconfirmed?: boolean } => {
     const m = msg.toLowerCase();
