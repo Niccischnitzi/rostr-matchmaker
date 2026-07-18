@@ -19,10 +19,10 @@ export const Route = createFileRoute("/shop")({
   notFoundComponent: () => <div className="p-6">Not found.</div>,
   head: () => ({
     meta: [
-      { title: "Token Shop — Rostr" },
-      { name: "description", content: "Buy Rostr tokens and unlock halos, avatar frames, and animated backgrounds." },
-      { property: "og:title", content: "Token Shop — Rostr" },
-      { property: "og:description", content: "Buy Rostr tokens and unlock cosmetics." },
+      { title: "Shard Shop — Rostr" },
+      { name: "description", content: "Buy Rostr Shards and unlock halos, avatar frames, and animated backgrounds." },
+      { property: "og:title", content: "Shard Shop — Rostr" },
+      { property: "og:description", content: "Buy Rostr Shards and unlock cosmetics." },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -161,7 +161,7 @@ function ShopPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Token Shop</h1>
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Shard Shop</h1>
           <p className="text-muted-foreground">Unlock halos, frames, and animated backgrounds with Shards.</p>
         </div>
 

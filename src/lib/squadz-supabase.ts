@@ -21,13 +21,33 @@ export function orderedPair(a: string, b: string): [string, string] {
 }
 
 export async function getOrCreateConversation(meId: string, otherId: string) {
-  const [user_a, user_b] = orderedPair(meId, otherId);
-  const existing = await supabase
-    .from("conversations").select("*").eq("user_a", user_a).eq("user_b", user_b).maybeSingle();
-  if (existing.data) return existing.data;
-  const inserted = await supabase.from("conversations").insert({ user_a, user_b }).select("*").single();
-  if (inserted.error) throw inserted.error;
-  return inserted.data;
+  // `meId` is kept for older callers; auth.uid() is authoritative in the RPC.
+  void meId;
+  const { data, error } = await supabase.rpc("get_or_create_conversation" as any, { _other_user: otherId });
+  if (error) throw error;
+  return data as Conversation;
+}
+
+export async function requestFriend(targetUserId: string) {
+  const { data, error } = await supabase.rpc("request_friend" as any, { _target_user: targetUserId });
+  if (error) throw error;
+  return data as { ok: boolean; status: "pending" | "accepted" | "blocked"; matched?: boolean; friendship_id?: string };
+}
+
+export async function sendDirectMessageToUser(otherUserId: string, body: string, attachmentUrl?: string | null) {
+  const { data, error } = await supabase.rpc("send_dm_to_user" as any, {
+    _other_user: otherUserId,
+    _body: body,
+    _attachment_url: attachmentUrl ?? null,
+  });
+  if (error) throw error;
+  return data as { ok: boolean; conversation: Conversation; message: DirectMessage };
+}
+
+export async function joinLfgAd(adId: string) {
+  const { data, error } = await supabase.rpc("join_lfg_ad" as any, { _ad_id: adId });
+  if (error) throw error;
+  return data as { ok: boolean; already_joined: boolean; ad: Record<string, unknown> };
 }
 
 export async function fetchProfiles(ids: string[]) {

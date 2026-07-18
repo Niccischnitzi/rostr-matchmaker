@@ -69,7 +69,7 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
     sfx.win();
     const expires = new Date(Date.now() + hours * 3600 * 1000).toISOString();
     setBoostExpiresAt(expires);
-    toast.success(`Boosted for ${hours}h`, { description: `${cost} tokens spent. You're at the top of the Find page.` });
+    toast.success(`Boosted for ${hours}h`, { description: `${cost} Shards spent. You're at the top of the Find page.` });
   }
 
   async function save() {
@@ -86,6 +86,39 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
       lfg_games: games.split(",").map((g) => g.trim()).filter(Boolean),
     };
     const { error } = await supabase.from("profiles" as any).update(payload).eq("id", user.id);
+    if (!error) {
+      const firstGame = payload.lfg_games[0] ?? "Any game";
+      const active = await supabase
+        .from("lfg_ads" as any)
+        .select("id")
+        .eq("host_id", user.id)
+        .is("closed_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const adPayload = {
+        host_id: user.id,
+        game: firstGame,
+        mode: title.trim(),
+        region: null,
+        description: body.trim() || title.trim(),
+        slots_total: 4,
+        mic_required: false,
+        min_rank: null,
+        tags: payload.lfg_games,
+        expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+        closed_at: isPublic ? null : new Date().toISOString(),
+      };
+      const adWrite = active.data?.id
+        ? await supabase.from("lfg_ads" as any).update(adPayload).eq("id", active.data.id)
+        : await supabase.from("lfg_ads" as any).insert(adPayload);
+      if (adWrite.error) {
+        setBusy(false);
+        sfx.error?.();
+        return toast.error(adWrite.error.message);
+      }
+    }
     setBusy(false);
     if (error) { sfx.error?.(); return toast.error(error.message); }
     sfx.win();
@@ -101,6 +134,13 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
       .from("profiles" as any)
       .update({ lfg_title: null, lfg_body: null, lfg_games: [] })
       .eq("id", user.id);
+    if (!error) {
+      await supabase
+        .from("lfg_ads" as any)
+        .update({ closed_at: new Date().toISOString() })
+        .eq("host_id", user.id)
+        .is("closed_at", null);
+    }
     setDeleting(false);
     if (error) { sfx.error?.(); return toast.error(error.message); }
     setTitle(""); setBody(""); setGames("");

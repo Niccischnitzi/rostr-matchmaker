@@ -11,7 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  LogOut, Bell, Eye, ShieldAlert, Sparkles, Package, Accessibility,
+  LogOut, Bell, Eye, ShieldAlert, Sparkles, Accessibility,
   UserCircle, Wand2, CreditCard, Trash2,
 } from "lucide-react";
 import { signOut } from "@/hooks/use-auth";
@@ -129,12 +129,15 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
 
           <Group value="look" icon={Wand2} label="Look & feel" hint="Theme, accent, density">
             <ThemeCustomizer />
-          </Group>
-
-          <Group value="cosmetics" icon={Package} label="Your cosmetics" hint="Backgrounds, halos, frames, tags">
-            <p className="text-xs text-muted-foreground mb-3">
-              Equip anything you own — it applies everywhere instantly.
-            </p>
+            <div className="h-px bg-border" />
+            <div>
+              <p className="text-xs uppercase tracking-widest font-black text-muted-foreground mb-2">
+                My cosmetics
+              </p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Equip owned backgrounds, halos, frames, and tags — applied everywhere instantly.
+              </p>
+            </div>
             <OwnedCosmeticsSection />
           </Group>
 
