@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Crown, Trophy, ArrowLeft, Loader2 } from "lucide-react";
+import { Coins, Crown, ArrowLeft, Loader2 } from "lucide-react";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -19,13 +19,12 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Power up your gaming experience with Rostr Pro, token packs for LFG boosts, and entry to paid tournaments and club wars.",
+          "Power up your gaming with Rostr Pro and Shard packs for LFG boosts and cosmetics. No real-money wagers — Rostr is 16+ and cash-out free.",
       },
       { property: "og:title", content: "Pricing & Power-ups — Rostr" },
       {
         property: "og:description",
-        content:
-          "Power up your gaming experience with Rostr Pro, token packs for LFG boosts, and entry to paid tournaments and club wars.",
+        content: "Rostr Pro and Shard packs. In-app currency only — no real-money wagers.",
       },
       { property: "og:url", content: "https://rostr-matchmaker.lovable.app/pricing" },
       { property: "og:type", content: "website" },
@@ -34,37 +33,16 @@ export const Route = createFileRoute("/pricing")({
   }),
 });
 
-type Tab = "tokens" | "pro" | "tournaments";
+type Tab = "shards" | "pro";
 
-const TOKEN_PACKS = [
-  { priceId: "tokens_500", tokens: 500, price: "$4.99" },
-  { priceId: "tokens_1200", tokens: 1200, price: "$9.99", badge: "Popular" },
-  { priceId: "tokens_3000", tokens: 3000, price: "$19.99" },
-  { priceId: "tokens_7500", tokens: 7500, price: "$39.99", badge: "Best value" },
-];
-
-const ENTRY_TIERS = [
-  {
-    priceId: "entry_free",
-    price: "Free",
-    label: "Daily Sprints",
-    blurb: "Daily quick cups. Token rewards, no entry fee.",
-    cta: "Join free",
-  },
-  {
-    priceId: "entry_5",
-    price: "$2 – $5",
-    label: "Weekend Warriors",
-    blurb: "Weekend brackets with paid entry & prize splits.",
-    cta: "Pay entry",
-  },
-  {
-    priceId: "entry_25",
-    price: "$50",
-    label: "Club War Showdowns",
-    blurb: "Inter-club showdowns. High stakes, winner-take-most.",
-    cta: "Buy in",
-  },
+// Shards are Rostr's in-app currency. No cash value, no cash-out, cannot buy
+// tournament entries. Real-money tournament tiers were removed as part of the
+// 16+ age gate + anti-gambling pass.
+const SHARD_PACKS = [
+  { priceId: "tokens_500", shards: 500, price: "$4.99" },
+  { priceId: "tokens_1200", shards: 1200, price: "$9.99", badge: "Popular" },
+  { priceId: "tokens_3000", shards: 3000, price: "$19.99" },
+  { priceId: "tokens_7500", shards: 7500, price: "$39.99", badge: "Best value" },
 ];
 
 function PricingPage() {
