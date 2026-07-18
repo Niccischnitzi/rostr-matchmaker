@@ -383,6 +383,8 @@ export function FindTab() {
 
       <LfgAdSheet open={adOpen} onOpenChange={setAdOpen} />
 
+      <YourLfgCard onEdit={() => setAdOpen(true)} />
+
       <div className="relative">
         {loading ? (
           <div className="rounded-3xl border border-border bg-card h-[520px] animate-pulse" />
