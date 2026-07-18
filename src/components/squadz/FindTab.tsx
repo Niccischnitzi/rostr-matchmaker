@@ -244,7 +244,10 @@ export function FindTab() {
     setDismissed((prev) => new Set(prev).add(top.id));
     if (top.isLfg) {
       if (dir === "squad") void handleLfgSquad(top);
-      else sfx.tap();
+      else {
+        sfx.tap();
+        if (top.realId) void recordInteraction(top.realId, "dismissed");
+      }
       return;
     }
     swipe(top.id, dir);
