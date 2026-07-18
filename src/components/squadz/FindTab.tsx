@@ -15,7 +15,7 @@ import { EmptyState } from "./EmptyState";
 import { UserAvatar } from "./UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { joinLfgAd, requestFriend, sendDirectMessageToUser } from "@/lib/squadz-supabase";
+import { getPairChemistry, joinLfgAd, requestFriend, sendDirectMessageToUser } from "@/lib/squadz-supabase";
 import { openChat, switchTab } from "@/lib/app-bus";
 import type { Player, Trait } from "@/lib/squadz-data";
 
@@ -443,7 +443,14 @@ export function FindTab() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
                     if (!user || !top.realId) return;
-                    requestFriend(top.realId).then(() => toast.success("Friend request sent")).catch((e) => toast.error(e?.message ?? "Could not send request"));
+                    requestFriend(top.realId)
+                      .then(() => {
+                        setExistingFriendIds((prev) => new Set(prev).add(top.realId!));
+                        setDismissed((prev) => new Set(prev).add(top.id));
+                        void recordInteraction(top.realId!, "accepted");
+                        toast.success("Friend request sent");
+                      })
+                      .catch((e) => toast.error(e?.message ?? "Could not send request"));
                   }}>
                     <UserPlus className="h-3.5 w-3.5" /> Friend
                   </Button>
@@ -459,6 +466,7 @@ export function FindTab() {
                   </Button>
                 </div>
               )}
+              {top.realId && <PairChemistryBadge userId={top.realId} />}
             </div>
             <div className="border-t border-border bg-surface/40 p-4 flex items-center justify-center gap-5">
               <button onClick={() => handle("skip")} disabled={busy} className="h-14 w-14 rounded-full border-2 border-border bg-card grid place-items-center hover:border-destructive hover:text-destructive transition-colors disabled:opacity-50">
@@ -501,6 +509,26 @@ export function FindTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PairChemistryBadge({ userId }: { userId: string }) {
+  const { user } = useAuth();
+  const [chem, setChem] = useState<{ score: number; sessions: number; label: string } | null>(null);
+  useEffect(() => {
+    if (!user?.id || user.id === userId) return;
+    let cancelled = false;
+    getPairChemistry(userId)
+      .then((row) => { if (!cancelled) setChem(row); })
+      .catch(() => { if (!cancelled) setChem(null); });
+    return () => { cancelled = true; };
+  }, [user?.id, userId]);
+  if (!chem) return null;
+  return (
+    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary animate-fade-in">
+      <Sparkles className="h-3.5 w-3.5" /> {chem.label} · {chem.score}%
+      {chem.sessions > 0 && <span className="text-muted-foreground">({chem.sessions})</span>}
     </div>
   );
 }

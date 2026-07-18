@@ -285,7 +285,10 @@ function NewChallengeDialog({ onCreated }: { onCreated: () => void }) {
         <Button className="rounded-full"><Swords className="h-4 w-4 mr-1" />Challenge</Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Issue a 1v1</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Issue a 1v1</DialogTitle>
+          <DialogDescription>Pick an opponent, game, and Shard wager.</DialogDescription>
+        </DialogHeader>
         {!opponent ? (
           <div className="space-y-2">
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search players by username…" autoFocus />
