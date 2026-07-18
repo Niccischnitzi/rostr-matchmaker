@@ -549,3 +549,105 @@ function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }
     </button>
   );
 }
+
+function CountryCombobox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between rounded-lg bg-surface border-border font-normal">
+          <span className={cn("truncate", !value && "text-muted-foreground")}>
+            {value || "Any country"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+        <Command>
+          <CommandInput placeholder="Search country…" />
+          <CommandList>
+            <CommandEmpty>No country found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="__any" onSelect={() => { onChange(""); setOpen(false); }}>
+                <Check className={cn("mr-2 h-4 w-4", !value ? "opacity-100" : "opacity-0")} />
+                Any country
+              </CommandItem>
+              {COUNTRIES.map((c) => (
+                <CommandItem key={c} value={c} onSelect={() => { onChange(c); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", value === c ? "opacity-100" : "opacity-0")} />
+                  {c}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function GamesMultiSelect({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const merged = useMemo(() => {
+    const set = new Set([...popularGames, ...value]);
+    return Array.from(set);
+  }, [value]);
+  const trimmed = query.trim();
+  const showAdd = trimmed.length > 0 && !merged.some((g) => g.toLowerCase() === trimmed.toLowerCase());
+  const toggle = (g: string) => {
+    onChange(value.includes(g) ? value.filter((x) => x !== g) : [...value, g]);
+  };
+  return (
+    <div className="space-y-2">
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((g) => (
+            <button
+              key={g}
+              onClick={() => toggle(g)}
+              className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25"
+            >
+              {g} <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+      )}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" className="w-full justify-between rounded-lg bg-surface border-border font-normal">
+            <span className="text-muted-foreground">{value.length ? "Add / remove games…" : "Select games…"}</span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+          <Command>
+            <CommandInput placeholder="Search or type a game…" value={query} onValueChange={setQuery} />
+            <CommandList>
+              <CommandEmpty>{showAdd ? "Press add below." : "No games found."}</CommandEmpty>
+              <CommandGroup>
+                {merged
+                  .filter((g) => !trimmed || g.toLowerCase().includes(trimmed.toLowerCase()))
+                  .map((g) => (
+                    <CommandItem key={g} value={g} onSelect={() => toggle(g)}>
+                      <Check className={cn("mr-2 h-4 w-4", value.includes(g) ? "opacity-100" : "opacity-0")} />
+                      {g}
+                    </CommandItem>
+                  ))}
+                {showAdd && (
+                  <CommandItem
+                    value={`__add_${trimmed}`}
+                    onSelect={() => { onChange([...value, trimmed]); setQuery(""); }}
+                  >
+                    <Check className="mr-2 h-4 w-4 opacity-0" />
+                    Add "{trimmed}"
+                  </CommandItem>
+                )}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
