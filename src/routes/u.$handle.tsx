@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Zap, Users, Film, Shield, Flame, Share2 } from "lucide-react";
+import { ArrowLeft, MapPin, Zap, Users, Film, Shield, Flame, Share2, Volume2, Star, Flag } from "lucide-react";
 import { CosmeticAvatar } from "@/components/cosmetics/CosmeticAvatar";
+import { ReportDialog } from "@/components/squadz/ReportDialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -26,6 +28,8 @@ type PublicProfile = {
 };
 
 type Stats = { friend_count: number; clip_count: number; crew_count: number };
+type RatingSummary = { avg_score: number; rating_count: number; top_tags: string[] };
+type VoiceSnippet = { user_id: string; storage_path: string; duration_seconds: number; transcript: string | null; is_public: boolean };
 
 const SITE = "https://rostr-matchmaker.lovable.app";
 
@@ -36,7 +40,9 @@ export const Route = createFileRoute("/u/$handle")({
     if (!p) throw notFound();
     const { data: statsRes } = await supabase.rpc("public_profile_stats" as any, { _user_id: p.id });
     const s = (Array.isArray(statsRes) ? statsRes[0] : statsRes) as Stats | null;
-    return { profile: p, stats: s ?? { friend_count: 0, clip_count: 0, crew_count: 0 } };
+    const { data: ratingRes } = await supabase.rpc("profile_rating_summary" as any, { _user_id: p.id });
+    const rating = (Array.isArray(ratingRes) ? ratingRes[0] : ratingRes) as RatingSummary | null;
+    return { profile: p, stats: s ?? { friend_count: 0, clip_count: 0, crew_count: 0 }, rating: rating ?? { avg_score: 0, rating_count: 0, top_tags: [] } };
   },
   head: ({ params, loaderData }) => {
     const d = loaderData?.profile;
@@ -102,8 +108,29 @@ export const Route = createFileRoute("/u/$handle")({
 });
 
 function UserProfilePage() {
-  const { profile: p, stats } = Route.useLoaderData();
+  const { profile: p, stats, rating } = Route.useLoaderData();
   const initial = (p.display_name ?? p.username).slice(0, 1).toUpperCase();
+  const [snippet, setSnippet] = useState<VoiceSnippet | null>(null);
+  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("voice_snippets" as any)
+        .select("user_id, storage_path, duration_seconds, transcript, is_public")
+        .eq("user_id", p.id)
+        .eq("is_public", true)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const row = data as VoiceSnippet;
+      setSnippet(row);
+      const signed = await supabase.storage.from("media-clips").createSignedUrl(row.storage_path, 60 * 10);
+      if (!cancelled) setVoiceUrl(signed.data?.signedUrl ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [p.id]);
 
   const share = async () => {
     const url = `${SITE}/u/${p.username}`;
@@ -217,6 +244,39 @@ function UserProfilePage() {
           <StatPanel icon={Shield} label="Crews" value={stats.crew_count} />
         </div>
 
+        <div className="mt-4 grid sm:grid-cols-[1fr_1fr] gap-3">
+          <div className="rounded-xl border border-border bg-surface/40 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Chemistry score</p>
+              <Star className="h-4 w-4 text-primary" />
+            </div>
+            <p className="mt-2 font-display text-3xl font-black">{Number(rating.avg_score ?? 0).toFixed(1)}<span className="text-sm text-muted-foreground"> / 5</span></p>
+            <p className="text-xs text-muted-foreground">{rating.rating_count} teammate rating{rating.rating_count === 1 ? "" : "s"}</p>
+            {rating.top_tags?.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {rating.top_tags.map((tag) => <span key={tag} className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{tag}</span>)}
+              </div>
+            )}
+          </div>
+          <div className="rounded-xl border border-border bg-surface/40 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Voice intro</p>
+              {snippet && <span className="text-[10px] uppercase tracking-widest font-black text-primary">{Number(snippet.duration_seconds).toFixed(0)}s</span>}
+            </div>
+            {voiceUrl ? (
+              <>
+                <audio controls src={voiceUrl} className="mt-3 w-full h-9" preload="metadata" />
+                {snippet?.transcript && <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5"><Volume2 className="h-3 w-3" /> {snippet.transcript}</p>}
+                <button onClick={() => setReportOpen(true)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-destructive">
+                  <Flag className="h-3 w-3" /> Report voice
+                </button>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">No voice intro yet.</p>
+            )}
+          </div>
+        </div>
+
         {/* Bio */}
         {p.bio && (
           <Section title="Bio">
@@ -264,6 +324,13 @@ function UserProfilePage() {
           Joined {new Date(p.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </p>
       </main>
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetType="voice_snippet"
+        targetId={p.id}
+        targetLabel={`${p.display_name ?? p.username}'s voice intro`}
+      />
     </div>
   );
 }
