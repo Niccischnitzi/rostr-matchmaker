@@ -224,6 +224,7 @@ export function FindTab() {
         sender_id: user.id,
         body: `Hey! Loved your LFG "${card.lfgTitle ?? "post"}" — wanna squad up?`,
       });
+      void recordInteraction(card.realId!, "accepted");
       sfx.like();
       toast.success(`Squadded up with ${card.username}!`, {
         description: "Friend request sent + chat opened.",
