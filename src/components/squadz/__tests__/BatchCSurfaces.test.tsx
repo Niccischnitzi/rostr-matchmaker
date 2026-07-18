@@ -32,9 +32,9 @@ describe("Batch C UI surfaces", () => {
   it("applies public equipped cosmetics to other users' avatars", async () => {
     const { container } = render(<UserAvatar userId="other" avatarUrl="https://example.test/a.png" fallback="OP" />);
 
-    expect(screen.getByRole("img", { hidden: true })).toBeInTheDocument();
-    await waitFor(() => expect(container.querySelector(".halo-public")).toBeInTheDocument());
-    expect(container.querySelector(".frame-public")).toBeInTheDocument();
+    expect(screen.getByRole("img", { hidden: true })).toBeTruthy();
+    await waitFor(() => expect(container.querySelector(".halo-public")).not.toBeNull());
+    expect(container.querySelector(".frame-public")).not.toBeNull();
   });
 
   it("renders the voice snippet report dialog copy", () => {
@@ -48,8 +48,8 @@ describe("Batch C UI surfaces", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: /report/i })).toBeInTheDocument();
-    expect(screen.getByText(/Player voice intro/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /submit report/i })).toBeDisabled();
+    expect(screen.getByRole("heading", { name: /report/i })).toBeTruthy();
+    expect(screen.getByText(/Player voice intro/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /submit report/i })).toHaveProperty("disabled", true);
   });
 });
