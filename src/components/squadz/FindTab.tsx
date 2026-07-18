@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
 import { LfgAdSheet } from "./LfgAdSheet";
+import { YourLfgCard } from "./YourLfgCard";
 import { EmptyState } from "./EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -381,6 +382,8 @@ export function FindTab() {
       )}
 
       <LfgAdSheet open={adOpen} onOpenChange={setAdOpen} />
+
+      <YourLfgCard onEdit={() => setAdOpen(true)} />
 
       <div className="relative">
         {loading ? (
