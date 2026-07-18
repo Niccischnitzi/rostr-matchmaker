@@ -1272,33 +1272,51 @@ export type Database = {
       match_ratings: {
         Row: {
           challenge_id: string | null
+          chemistry: number
           club_war_id: string | null
+          comms: number
           created_at: string
           id: string
+          note: string | null
           rated_id: string
           rater_id: string
+          reliability: number
           tag: string | null
+          tags: string[]
           thumbs: Database["public"]["Enums"]["match_rating_thumb"]
+          updated_at: string
         }
         Insert: {
           challenge_id?: string | null
+          chemistry?: number
           club_war_id?: string | null
+          comms?: number
           created_at?: string
           id?: string
+          note?: string | null
           rated_id: string
           rater_id: string
+          reliability?: number
           tag?: string | null
+          tags?: string[]
           thumbs: Database["public"]["Enums"]["match_rating_thumb"]
+          updated_at?: string
         }
         Update: {
           challenge_id?: string | null
+          chemistry?: number
           club_war_id?: string | null
+          comms?: number
           created_at?: string
           id?: string
+          note?: string | null
           rated_id?: string
           rater_id?: string
+          reliability?: number
           tag?: string | null
+          tags?: string[]
           thumbs?: Database["public"]["Enums"]["match_rating_thumb"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2347,21 +2365,27 @@ export type Database = {
         Row: {
           created_at: string
           duration_seconds: number
+          is_public: boolean
           storage_path: string
+          transcript: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           duration_seconds: number
+          is_public?: boolean
           storage_path: string
+          transcript?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           duration_seconds?: number
+          is_public?: boolean
           storage_path?: string
+          transcript?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2614,7 +2638,14 @@ export type Database = {
       mark_all_notifications_read: { Args: never; Returns: number }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
-      pair_chemistry: { Args: { _other_user: string }; Returns: Json }
+      pair_chemistry: {
+        Args: { _other_user: string }
+        Returns: {
+          label: string
+          score: number
+          sessions: number
+        }[]
+      }
       process_payment_grant: {
         Args: {
           p_amount_paid: number
@@ -2629,7 +2660,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      profile_rating_summary: { Args: { _user_id: string }; Returns: Json }
+      profile_rating_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          avg_score: number
+          rating_count: number
+          top_tags: string[]
+        }[]
+      }
       public_profile: {
         Args: { _username: string }
         Returns: {
@@ -2681,16 +2719,29 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       spend_tokens: { Args: { _amount: number }; Returns: number }
-      submit_match_rating: {
-        Args: {
-          _challenge_id?: string
-          _club_war_id?: string
-          _rated_id: string
-          _tag?: string
-          _thumbs: Database["public"]["Enums"]["match_rating_thumb"]
-        }
-        Returns: Json
-      }
+      submit_match_rating:
+        | {
+            Args: {
+              _challenge_id?: string
+              _club_war_id?: string
+              _rated_id: string
+              _tag?: string
+              _thumbs: Database["public"]["Enums"]["match_rating_thumb"]
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _challenge_id?: string
+              _chemistry?: number
+              _comms?: number
+              _note?: string
+              _reliability?: number
+              _tags?: string[]
+              _target_user: string
+            }
+            Returns: Json
+          }
       unlock_cosmetic: {
         Args: { _cost: number; _key: string }
         Returns: boolean
