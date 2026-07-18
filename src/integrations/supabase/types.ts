@@ -131,6 +131,35 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_settlements: {
+        Row: {
+          challenge_id: string
+          claimed_winner_id: string
+          created_at: string
+          reporter_id: string
+        }
+        Insert: {
+          challenge_id: string
+          claimed_winner_id: string
+          created_at?: string
+          reporter_id: string
+        }
+        Update: {
+          challenge_id?: string
+          claimed_winner_id?: string
+          created_at?: string
+          reporter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_settlements_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           challenger_id: string
@@ -2422,6 +2451,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_challenge: { Args: { _challenge_id: string }; Returns: boolean }
       admin_adjust_tokens: {
         Args: { _delta: number; _reason?: string; _target_user: string }
         Returns: number
@@ -2439,6 +2469,7 @@ export type Database = {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
       }
+      decline_challenge: { Args: { _challenge_id: string }; Returns: boolean }
       equip_cosmetic: {
         Args: { _equip: boolean; _item_id: string }
         Returns: boolean
@@ -2524,6 +2555,10 @@ export type Database = {
           reward: number
           streak: number
         }[]
+      }
+      report_challenge_winner: {
+        Args: { _challenge_id: string; _winner_id: string }
+        Returns: Json
       }
       search_all: { Args: { _limit?: number; _q: string }; Returns: Json }
       show_limit: { Args: never; Returns: number }
