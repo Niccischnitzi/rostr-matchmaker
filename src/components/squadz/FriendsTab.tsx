@@ -44,7 +44,7 @@ export function FriendsTab() {
       const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
       const [friendProfiles, discoverRows] = await Promise.all([
         fetchProfiles(ids),
-        supabase.from("profiles").select("*").neq("id", user.id).order("username").limit(50),
+        supabase.from("profiles").select("id, username, display_name, avatar_url, bio").neq("id", user.id).order("username").limit(50),
       ]);
       setRows(list);
       setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));

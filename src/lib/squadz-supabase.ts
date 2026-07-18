@@ -32,7 +32,7 @@ export async function getOrCreateConversation(meId: string, otherId: string) {
 
 export async function fetchProfiles(ids: string[]) {
   if (ids.length === 0) return [] as Profile[];
-  const { data, error } = await supabase.from("profiles").select("*").in("id", ids);
+  const { data, error } = await supabase.from("profiles").select("id, username, display_name, avatar_url, bio").in("id", ids);
   if (error) throw error;
   return data;
 }

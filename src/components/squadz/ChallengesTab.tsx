@@ -39,7 +39,7 @@ export function ChallengesTab() {
     await loadWallet();
     const { data } = await supabase
       .from("challenges")
-      .select("*, challenger:profiles!challenges_challenger_id_fkey(*), opponent:profiles!challenges_opponent_id_fkey(*)")
+      .select("*, challenger:profiles!challenges_challenger_id_fkey(id, username, display_name, avatar_url, bio), opponent:profiles!challenges_opponent_id_fkey(id, username, display_name, avatar_url, bio)")
       .or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
     if (data) setChallenges(data as never);
@@ -158,7 +158,7 @@ function NewChallengeDialog({ onCreated }: { onCreated: () => void }) {
   useEffect(() => {
     if (!open || !search.trim()) { setResults([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from("profiles").select("*")
+      const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url, bio")
         .ilike("username", `%${search.trim()}%`).neq("id", user?.id ?? "").limit(8);
       if (data) setResults(data);
     }, 200);

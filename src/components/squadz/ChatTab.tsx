@@ -215,7 +215,7 @@ function NewDMModal({ onClose, onOpen }: { onClose: () => void; onOpen: (id: str
     if (!user) return;
     supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, display_name, avatar_url, bio")
       .neq("id", user.id)
       .order("username")
       .limit(50)
@@ -321,7 +321,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
       if (!conv || cancelled) return;
       const otherId = conv.user_a === user.id ? conv.user_b : conv.user_a;
       const [{ data: profile }, { data: msgs }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", otherId).single(),
+        supabase.from("profiles").select("id, username, display_name, avatar_url, bio").eq("id", otherId).single(),
         supabase
           .from("direct_messages")
           .select("*")
