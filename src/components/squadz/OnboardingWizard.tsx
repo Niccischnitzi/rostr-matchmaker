@@ -47,17 +47,21 @@ export function OnboardingWizard() {
     if (!user) return;
     setBusy(true);
     try {
-      // age gate
-      if (dob) {
-        const birth = new Date(dob);
-        const age = Math.floor((Date.now() - birth.getTime()) / (365.25 * 24 * 3600 * 1000));
-        if (age < 13) {
-          toast.error("You must be 13 or older to use Rostr.");
-          setBusy(false);
-          await supabase.auth.signOut();
-          window.location.href = "/auth";
-          return;
-        }
+      // Age gate: Rostr is 16+ (anti-gambling / safety pass). If missing DOB,
+      // block finish — the field is required.
+      if (!dob) {
+        toast.error("Please enter your date of birth to continue.");
+        setBusy(false);
+        return;
+      }
+      const birth = new Date(dob);
+      const age = Math.floor((Date.now() - birth.getTime()) / (365.25 * 24 * 3600 * 1000));
+      if (age < 16) {
+        toast.error("You must be 16 or older to use Rostr.");
+        setBusy(false);
+        await supabase.auth.signOut();
+        window.location.href = "/auth";
+        return;
       }
       const { error } = await supabase.from("profiles").update({
         country: country.trim() || null,

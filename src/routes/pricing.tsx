@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Crown, Trophy, ArrowLeft, Loader2 } from "lucide-react";
+import { Coins, Crown, ArrowLeft, Loader2 } from "lucide-react";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -19,13 +19,12 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Power up your gaming experience with Rostr Pro, token packs for LFG boosts, and entry to paid tournaments and club wars.",
+          "Power up your gaming with Rostr Pro and Shard packs for LFG boosts and cosmetics. No real-money wagers — Rostr is 16+ and cash-out free.",
       },
       { property: "og:title", content: "Pricing & Power-ups — Rostr" },
       {
         property: "og:description",
-        content:
-          "Power up your gaming experience with Rostr Pro, token packs for LFG boosts, and entry to paid tournaments and club wars.",
+        content: "Rostr Pro and Shard packs. In-app currency only — no real-money wagers.",
       },
       { property: "og:url", content: "https://rostr-matchmaker.lovable.app/pricing" },
       { property: "og:type", content: "website" },
@@ -34,43 +33,22 @@ export const Route = createFileRoute("/pricing")({
   }),
 });
 
-type Tab = "tokens" | "pro" | "tournaments";
+type Tab = "shards" | "pro";
 
-const TOKEN_PACKS = [
-  { priceId: "tokens_500", tokens: 500, price: "$4.99" },
-  { priceId: "tokens_1200", tokens: 1200, price: "$9.99", badge: "Popular" },
-  { priceId: "tokens_3000", tokens: 3000, price: "$19.99" },
-  { priceId: "tokens_7500", tokens: 7500, price: "$39.99", badge: "Best value" },
-];
-
-const ENTRY_TIERS = [
-  {
-    priceId: "entry_free",
-    price: "Free",
-    label: "Daily Sprints",
-    blurb: "Daily quick cups. Token rewards, no entry fee.",
-    cta: "Join free",
-  },
-  {
-    priceId: "entry_5",
-    price: "$2 – $5",
-    label: "Weekend Warriors",
-    blurb: "Weekend brackets with paid entry & prize splits.",
-    cta: "Pay entry",
-  },
-  {
-    priceId: "entry_25",
-    price: "$50",
-    label: "Club War Showdowns",
-    blurb: "Inter-club showdowns. High stakes, winner-take-most.",
-    cta: "Buy in",
-  },
+// Shards are Rostr's in-app currency. No cash value, no cash-out, cannot buy
+// tournament entries. Real-money tournament tiers were removed as part of the
+// 16+ age gate + anti-gambling pass.
+const SHARD_PACKS = [
+  { priceId: "tokens_500", shards: 500, price: "$4.99" },
+  { priceId: "tokens_1200", shards: 1200, price: "$9.99", badge: "Popular" },
+  { priceId: "tokens_3000", shards: 3000, price: "$19.99" },
+  { priceId: "tokens_7500", shards: 7500, price: "$39.99", badge: "Best value" },
 ];
 
 function PricingPage() {
   const { user, loading: authLoading } = useAuth();
   const { isPro, subscription } = useSubscription();
-  const [tab, setTab] = useState<Tab>("tokens");
+  const [tab, setTab] = useState<Tab>("shards");
   const [activePrice, setActivePrice] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const createPortal = useServerFn(createPortalSession);
@@ -160,15 +138,14 @@ function PricingPage() {
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-2">
           <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Power up your Rostr</h1>
-          <p className="text-muted-foreground">Tokens, Pro perks, and paid cups — all in one place.</p>
+          <p className="text-muted-foreground">Shards & Pro perks. No real-money wagers, no cash-out.</p>
         </div>
 
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-muted p-1">
             {([
-              ["tokens", "Tokens", Coins],
+              ["shards", "Shards", Coins],
               ["pro", "Pro", Crown],
-              ["tournaments", "Cups", Trophy],
             ] as const).map(([id, label, Icon]) => (
               <button
                 key={id}
@@ -185,9 +162,9 @@ function PricingPage() {
           </div>
         </div>
 
-        {tab === "tokens" && (
+        {tab === "shards" && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TOKEN_PACKS.map((p) => (
+            {SHARD_PACKS.map((p) => (
               <div
                 key={p.priceId}
                 className="relative rounded-2xl border border-border bg-card p-6 flex flex-col gap-3 hover:border-primary/60 transition"
@@ -198,8 +175,8 @@ function PricingPage() {
                   </span>
                 )}
                 <Coins className="h-6 w-6 text-primary" />
-                <div className="font-display text-3xl font-bold">{p.tokens.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">tokens</div>
+                <div className="font-display text-3xl font-bold">{p.shards.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">Shards</div>
                 <div className="mt-auto pt-4 flex items-center justify-between">
                   <span className="font-semibold">{p.price}</span>
                   <button
@@ -211,6 +188,9 @@ function PricingPage() {
                 </div>
               </div>
             ))}
+            <p className="sm:col-span-2 lg:col-span-4 text-center text-xs text-muted-foreground">
+              Shards are an in-app currency for cosmetics and LFG boosts. They have no cash value and cannot be cashed out or used to enter real-money tournaments.
+            </p>
           </div>
         )}
 
@@ -258,24 +238,6 @@ function PricingPage() {
           </div>
         )}
 
-        {tab === "tournaments" && (
-          <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {ENTRY_TIERS.map((t) => (
-              <div key={t.priceId} className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-3">
-                <Trophy className="h-6 w-6 text-amber-500" />
-                <div className="font-semibold">{t.label}</div>
-                <div className="font-display text-3xl font-bold">{t.price}</div>
-                <p className="text-xs text-muted-foreground">{t.blurb}</p>
-                <button
-                  onClick={() => t.priceId === "entry_free" ? alert("Free cups open in the Tournaments tab.") : setActivePrice(t.priceId)}
-                  className="mt-auto rounded-md border border-primary text-primary px-3 py-1.5 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition"
-                >
-                  {t.cta}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         {isPro && subscription?.cancel_at_period_end && subscription.current_period_end && (
           <p className="text-center text-sm text-muted-foreground">

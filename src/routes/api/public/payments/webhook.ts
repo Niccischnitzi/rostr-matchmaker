@@ -68,15 +68,17 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
     return;
   }
 
-  const tournamentId = session.metadata?.tournamentId ?? null;
   const tokens = TOKEN_GRANTS[priceId] ?? 0;
-  const kind = priceId.startsWith("tokens_")
-    ? "tokens"
-    : priceId.startsWith("entry_")
-      ? "tournament_entry"
-      : "other";
+  // Real-money tournament entries were removed as part of the 16+ /
+  // anti-gambling pass. Only shard-pack purchases flow through here now —
+  // anything else is logged and ignored (no wallet credit, no side effects).
+  const kind = priceId.startsWith("tokens_") ? "tokens" : "other";
+  if (kind !== "tokens") {
+    console.warn("Ignoring non-shard price in webhook", { priceId, sessionId: session.id });
+    return;
+  }
 
-  // Atomically records the payment grant and credits wallet tokens once.
+  // Atomically records the payment grant and credits wallet shards once.
   const { data: inserted, error: grantErr } = await supabase.rpc("process_payment_grant", {
     p_user_id: userId,
     p_stripe_session_id: session.id,
@@ -85,7 +87,7 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
     p_currency: session.currency ?? null,
     p_kind: kind,
     p_tokens_granted: tokens,
-    p_metadata: tournamentId ? { tournamentId } : {},
+    p_metadata: {},
     p_environment: env,
   });
   if (grantErr) {
@@ -93,18 +95,8 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
     throw grantErr;
   }
   if (!inserted) return;
-
-  // Tournament entry registration is also idempotent on (tournament_id,user_id).
-  if (kind === "tournament_entry" && tournamentId) {
-    const { error: entryError } = await getSupabase()
-      .from("tournament_entries")
-      .upsert({ tournament_id: tournamentId, user_id: userId }, { onConflict: "tournament_id,user_id" });
-    if (entryError) {
-      console.error("tournament_entries upsert failed", entryError);
-      throw entryError;
-    }
-  }
 }
+
 
 async function upsertSubscription(subscription: any, env: StripeEnv) {
   const userId = subscription.metadata?.userId;
