@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert, Sparkles, Package } from "lucide-react";
+import { LogOut, Bell, Eye, Volume2, Palette, ShieldAlert, Sparkles, Package, Accessibility } from "lucide-react";
 import { signOut } from "@/hooks/use-auth";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ type Prefs = {
   sound: boolean;
   visibility: "public" | "squad";
   defaultPlatform: string;
+  highContrast: boolean;
 };
 
 const DEFAULTS: Prefs = {
@@ -36,6 +37,7 @@ const DEFAULTS: Prefs = {
   sound: true,
   visibility: "public",
   defaultPlatform: "PC",
+  highContrast: false,
 };
 
 const KEY = "rostr:settings";
@@ -140,6 +142,17 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
                 </SelectContent>
               </Select>
             </Row>
+          </Section>
+
+          <Section icon={Accessibility} title="Accessibility">
+            <ToggleRow
+              label="High contrast mode"
+              value={prefs.highContrast}
+              onChange={(v) => set("highContrast", v)}
+            />
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Boosts contrast on backgrounds, text, and borders. Off by default.
+            </p>
           </Section>
 
           {user && <PurchasesSection userId={user.id} />}

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus } from "lucide-react";
+import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus, Check, ChevronsUpDown } from "lucide-react";
 import { useSquadz } from "@/lib/squadz-store";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
@@ -15,9 +17,17 @@ import { getOrCreateConversation } from "@/lib/squadz-supabase";
 import { openChat, switchTab } from "@/lib/app-bus";
 import type { Player, Trait } from "@/lib/squadz-data";
 
-const allTraits = ["Toxic-free", "Tryhard", "Chill", "Shot-caller", "Night Owl", "Funny", "Mic'd up"];
-const popularGames = ["Valorant", "League of Legends", "CS2", "Fortnite", "Overwatch 2", "Apex Legends", "Rocket League", "Minecraft"];
+const allTraits = [
+  // Role
+  "IGL", "Shot-caller", "Support main", "Entry fragger", "Coach available",
+  // Availability
+  "Weekend only", "Night owl", "Grinder", "Casual", "Mic'd up",
+  // Vibe
+  "Chill", "Toxic-free", "Voice-shy", "Funny", "Content creator", "Tryhard", "Competitive", "Beginner-friendly", "LGBTQ+ friendly", "Non-toxic queue",
+];
+const popularGames = ["Valorant", "League of Legends", "CS2", "Fortnite", "Overwatch 2", "Apex Legends", "Rocket League", "Minecraft", "Marvel Rivals", "Dota 2", "R6 Siege", "PUBG", "Warzone", "Palworld", "The Finals"];
 const regions = ["EU", "NA", "SA", "APAC", "OCE", "AF"];
+const COUNTRIES = ["Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Czechia","Denmark","Finland","France","Germany","Greece","Hong Kong","Hungary","India","Indonesia","Ireland","Israel","Italy","Japan","Malaysia","Mexico","Netherlands","New Zealand","Norway","Philippines","Poland","Portugal","Romania","Saudi Arabia","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Taiwan","Thailand","Turkey","Ukraine","United Arab Emirates","United Kingdom","United States","Vietnam"];
 
 type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string };
 
@@ -100,6 +110,23 @@ export function FindTab() {
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [user?.id]);
 
+  // Hydrate durable per-user dismissals so swiped LFG ads stay gone across refreshes.
+  useEffect(() => {
+    if (!user?.id) { setDismissed(new Set()); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("lfg_ad_interactions" as any)
+        .select("ad_owner_id")
+        .eq("user_id", user.id);
+      if (cancelled) return;
+      const ids = new Set<string>();
+      ((data as any[]) ?? []).forEach((r) => { if (r.ad_owner_id) ids.add(`lfg-${r.ad_owner_id}`); });
+      setDismissed(ids);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -118,7 +145,18 @@ export function FindTab() {
         id: string; username: string; display_name: string | null; avatar_url: string | null;
         lfg_title: string | null; lfg_body: string | null; lfg_games: string[] | null; country: string | null;
       }>;
-      const mapped: DeckCard[] = rows.map((r) => ({
+      // Exclude ads the current user already dismissed/accepted (server-side truth of record).
+      let already = new Set<string>();
+      if (user?.id) {
+        const { data: ints } = await supabase
+          .from("lfg_ad_interactions" as any)
+          .select("ad_owner_id")
+          .eq("user_id", user.id);
+        already = new Set(((ints as any[]) ?? []).map((r) => r.ad_owner_id));
+      }
+      const mapped: DeckCard[] = rows
+        .filter((r) => !already.has(r.id))
+        .map((r) => ({
         id: `lfg-${r.id}`,
         realId: r.id,
         username: r.display_name ?? r.username,
@@ -139,6 +177,16 @@ export function FindTab() {
       setLoading(false);
     })();
   }, [user?.id]);
+
+  async function recordInteraction(adOwnerId: string, action: "dismissed" | "accepted") {
+    if (!user?.id) return;
+    await supabase.from("lfg_ad_interactions" as any).upsert(
+      { user_id: user.id, ad_owner_id: adOwnerId, action },
+      { onConflict: "user_id,ad_owner_id" },
+    );
+  }
+
+
 
   const deck: DeckCard[] = useMemo(() => [
     ...lfgCards.filter((c) => !dismissed.has(c.id)),
@@ -176,6 +224,7 @@ export function FindTab() {
         sender_id: user.id,
         body: `Hey! Loved your LFG "${card.lfgTitle ?? "post"}" — wanna squad up?`,
       });
+      void recordInteraction(card.realId!, "accepted");
       sfx.like();
       toast.success(`Squadded up with ${card.username}!`, {
         description: "Friend request sent + chat opened.",
@@ -195,7 +244,10 @@ export function FindTab() {
     setDismissed((prev) => new Set(prev).add(top.id));
     if (top.isLfg) {
       if (dir === "squad") void handleLfgSquad(top);
-      else sfx.tap();
+      else {
+        sfx.tap();
+        if (top.realId) void recordInteraction(top.realId, "dismissed");
+      }
       return;
     }
     swipe(top.id, dir);
@@ -248,11 +300,37 @@ export function FindTab() {
             <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
               <SheetHeader><SheetTitle>Filter your search</SheetTitle></SheetHeader>
               <div className="mt-6 space-y-6 px-4 pb-10">
-                <FilterSection label={`Age: ${filters.ageRange[0]}–${filters.ageRange[1]}`}>
-                  <Slider value={filters.ageRange} onValueChange={(v) => setFilters((f) => ({ ...f, ageRange: v as [number, number] }))} min={16} max={50} step={1} />
+                <FilterSection label={`Age`}>
+                  <div className="pt-6 pb-1 px-1 relative">
+                    {/* Live thumb labels — visible at both extremes on mobile. */}
+                    <div className="relative h-6 mb-1">
+                      <span
+                        className="absolute -translate-x-1/2 text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground shadow"
+                        style={{ left: `${((filters.ageRange[0] - 16) / (50 - 16)) * 100}%` }}
+                      >{filters.ageRange[0]}</span>
+                      <span
+                        className="absolute -translate-x-1/2 text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground shadow"
+                        style={{ left: `${((filters.ageRange[1] - 16) / (50 - 16)) * 100}%` }}
+                      >{filters.ageRange[1]}</span>
+                    </div>
+                    <Slider
+                      value={filters.ageRange}
+                      onValueChange={(v) => setFilters((f) => ({ ...f, ageRange: v as [number, number] }))}
+                      min={16}
+                      max={50}
+                      step={1}
+                      minStepsBetweenThumbs={1}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-2">
+                      <span>16</span><span>50</span>
+                    </div>
+                  </div>
                 </FilterSection>
-                <FilterSection label="Games" icon={Gamepad2}>
-                  <ChipGroup options={popularGames} selected={filters.games} onToggle={(g) => setFilters((f) => ({ ...f, games: f.games.includes(g) ? f.games.filter((x) => x !== g) : [...f.games, g] }))} />
+                <FilterSection label={`Games${filters.games.length ? ` · ${filters.games.length}` : ""}`} icon={Gamepad2}>
+                  <GamesMultiSelect
+                    value={filters.games}
+                    onChange={(games) => setFilters((f) => ({ ...f, games }))}
+                  />
                 </FilterSection>
                 <FilterSection label="Region" icon={Globe}>
                   <div className="flex flex-wrap gap-2">
@@ -267,8 +345,10 @@ export function FindTab() {
                   </div>
                 </FilterSection>
                 <FilterSection label="Country">
-                  <input value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))} placeholder="e.g. Germany"
-                    className="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <CountryCombobox
+                    value={filters.country}
+                    onChange={(country) => setFilters((f) => ({ ...f, country }))}
+                  />
                 </FilterSection>
                 <FilterSection label="Traits">
                   <ChipGroup options={allTraits} selected={filters.traits} onToggle={(t) => setFilters((f) => ({ ...f, traits: f.traits.includes(t) ? f.traits.filter((x) => x !== t) : [...f.traits, t] }))} />
@@ -384,9 +464,6 @@ export function FindTab() {
               <button onClick={() => handle("squad")} disabled={busy} className="h-16 w-16 rounded-full bg-primary text-primary-foreground grid place-items-center glow-orange hover:scale-105 transition-transform disabled:opacity-60">
                 <Heart className="h-7 w-7 fill-current" />
               </button>
-              <button onClick={() => toast("Super-boost coming soon ✨")} className="h-14 w-14 rounded-full border-2 border-border bg-card grid place-items-center hover:border-primary hover:text-primary transition-colors">
-                <Sparkles className="h-6 w-6" />
-              </button>
             </div>
           </div>
         ) : (
@@ -470,5 +547,107 @@ function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }
     <button onClick={onRemove} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25">
       {label} <X className="h-3 w-3" />
     </button>
+  );
+}
+
+function CountryCombobox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between rounded-lg bg-surface border-border font-normal">
+          <span className={cn("truncate", !value && "text-muted-foreground")}>
+            {value || "Any country"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+        <Command>
+          <CommandInput placeholder="Search country…" />
+          <CommandList>
+            <CommandEmpty>No country found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="__any" onSelect={() => { onChange(""); setOpen(false); }}>
+                <Check className={cn("mr-2 h-4 w-4", !value ? "opacity-100" : "opacity-0")} />
+                Any country
+              </CommandItem>
+              {COUNTRIES.map((c) => (
+                <CommandItem key={c} value={c} onSelect={() => { onChange(c); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", value === c ? "opacity-100" : "opacity-0")} />
+                  {c}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function GamesMultiSelect({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const merged = useMemo(() => {
+    const set = new Set([...popularGames, ...value]);
+    return Array.from(set);
+  }, [value]);
+  const trimmed = query.trim();
+  const showAdd = trimmed.length > 0 && !merged.some((g) => g.toLowerCase() === trimmed.toLowerCase());
+  const toggle = (g: string) => {
+    onChange(value.includes(g) ? value.filter((x) => x !== g) : [...value, g]);
+  };
+  return (
+    <div className="space-y-2">
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((g) => (
+            <button
+              key={g}
+              onClick={() => toggle(g)}
+              className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25"
+            >
+              {g} <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+      )}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" className="w-full justify-between rounded-lg bg-surface border-border font-normal">
+            <span className="text-muted-foreground">{value.length ? "Add / remove games…" : "Select games…"}</span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+          <Command>
+            <CommandInput placeholder="Search or type a game…" value={query} onValueChange={setQuery} />
+            <CommandList>
+              <CommandEmpty>{showAdd ? "Press add below." : "No games found."}</CommandEmpty>
+              <CommandGroup>
+                {merged
+                  .filter((g) => !trimmed || g.toLowerCase().includes(trimmed.toLowerCase()))
+                  .map((g) => (
+                    <CommandItem key={g} value={g} onSelect={() => toggle(g)}>
+                      <Check className={cn("mr-2 h-4 w-4", value.includes(g) ? "opacity-100" : "opacity-0")} />
+                      {g}
+                    </CommandItem>
+                  ))}
+                {showAdd && (
+                  <CommandItem
+                    value={`__add_${trimmed}`}
+                    onSelect={() => { onChange([...value, trimmed]); setQuery(""); }}
+                  >
+                    <Check className="mr-2 h-4 w-4 opacity-0" />
+                    Add "{trimmed}"
+                  </CommandItem>
+                )}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
