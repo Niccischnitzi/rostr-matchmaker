@@ -110,6 +110,23 @@ export function FindTab() {
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [user?.id]);
 
+  // Hydrate durable per-user dismissals so swiped LFG ads stay gone across refreshes.
+  useEffect(() => {
+    if (!user?.id) { setDismissed(new Set()); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("lfg_ad_interactions" as any)
+        .select("ad_owner_id")
+        .eq("user_id", user.id);
+      if (cancelled) return;
+      const ids = new Set<string>();
+      ((data as any[]) ?? []).forEach((r) => { if (r.ad_owner_id) ids.add(`lfg-${r.ad_owner_id}`); });
+      setDismissed(ids);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -128,7 +145,18 @@ export function FindTab() {
         id: string; username: string; display_name: string | null; avatar_url: string | null;
         lfg_title: string | null; lfg_body: string | null; lfg_games: string[] | null; country: string | null;
       }>;
-      const mapped: DeckCard[] = rows.map((r) => ({
+      // Exclude ads the current user already dismissed/accepted (server-side truth of record).
+      let already = new Set<string>();
+      if (user?.id) {
+        const { data: ints } = await supabase
+          .from("lfg_ad_interactions" as any)
+          .select("ad_owner_id")
+          .eq("user_id", user.id);
+        already = new Set(((ints as any[]) ?? []).map((r) => r.ad_owner_id));
+      }
+      const mapped: DeckCard[] = rows
+        .filter((r) => !already.has(r.id))
+        .map((r) => ({
         id: `lfg-${r.id}`,
         realId: r.id,
         username: r.display_name ?? r.username,
@@ -149,6 +177,16 @@ export function FindTab() {
       setLoading(false);
     })();
   }, [user?.id]);
+
+  async function recordInteraction(adOwnerId: string, action: "dismissed" | "accepted") {
+    if (!user?.id) return;
+    await supabase.from("lfg_ad_interactions" as any).upsert(
+      { user_id: user.id, ad_owner_id: adOwnerId, action },
+      { onConflict: "user_id,ad_owner_id" },
+    );
+  }
+
+
 
   const deck: DeckCard[] = useMemo(() => [
     ...lfgCards.filter((c) => !dismissed.has(c.id)),
