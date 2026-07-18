@@ -32,7 +32,7 @@ describe("Batch C UI surfaces", () => {
   it("applies public equipped cosmetics to other users' avatars", async () => {
     const { container } = render(<UserAvatar userId="other" avatarUrl="https://example.test/a.png" fallback="OP" />);
 
-    expect(screen.getByRole("img", { hidden: true })).toBeTruthy();
+    expect(container.querySelector('img[src="https://example.test/a.png"]')).not.toBeNull();
     await waitFor(() => expect(container.querySelector(".halo-public")).not.toBeNull());
     expect(container.querySelector(".frame-public")).not.toBeNull();
   });
