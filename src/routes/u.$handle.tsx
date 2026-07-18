@@ -124,7 +124,7 @@ function UserProfilePage() {
         .eq("is_public", true)
         .maybeSingle();
       if (cancelled || !data) return;
-      const row = data as VoiceSnippet;
+      const row = data as unknown as VoiceSnippet;
       setSnippet(row);
       const signed = await supabase.storage.from("media-clips").createSignedUrl(row.storage_path, 60 * 10);
       if (!cancelled) setVoiceUrl(signed.data?.signedUrl ?? null);
@@ -254,7 +254,7 @@ function UserProfilePage() {
             <p className="text-xs text-muted-foreground">{rating.rating_count} teammate rating{rating.rating_count === 1 ? "" : "s"}</p>
             {rating.top_tags?.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {rating.top_tags.map((tag) => <span key={tag} className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{tag}</span>)}
+                {(rating.top_tags as string[]).map((tag: string) => <span key={tag} className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{tag}</span>)}
               </div>
             )}
           </div>
