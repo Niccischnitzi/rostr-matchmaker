@@ -144,6 +144,17 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
             </Row>
           </Section>
 
+          <Section icon={Accessibility} title="Accessibility">
+            <ToggleRow
+              label="High contrast mode"
+              value={prefs.highContrast}
+              onChange={(v) => set("highContrast", v)}
+            />
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Boosts contrast on backgrounds, text, and borders. Off by default.
+            </p>
+          </Section>
+
           {user && <PurchasesSection userId={user.id} />}
 
           {/* HIGH-CONTRAST QUICK LINKS */}
