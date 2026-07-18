@@ -295,24 +295,34 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
     if (!user) return;
     let cancelled = false;
     (async () => {
-      const [{ data: c }, { data: chs }, { data: mems }] = await Promise.all([
-        supabase.from("clubs").select("*").eq("id", clubId).single(),
-        supabase.from("club_channels").select("*").eq("club_id", clubId).order("position"),
-        supabase.from("club_members").select("*").eq("club_id", clubId),
-      ]);
-      if (cancelled) return;
-      setClub(c ?? null);
-      setChannels(chs ?? []);
-      if (chs && chs.length) setActiveChannel(chs[0].id);
-      const profiles = await fetchProfiles((mems ?? []).map((m) => m.user_id));
-      const byId = new Map(profiles.map((p) => [p.id, p]));
-      setMembers((mems ?? []).map((m) => ({ ...m, profile: byId.get(m.user_id) ?? null })));
-      setLoading(false);
+      try {
+        const [{ data: c, error: e1 }, { data: chs, error: e2 }, { data: mems, error: e3 }] = await Promise.all([
+          supabase.from("clubs").select("*").eq("id", clubId).maybeSingle(),
+          supabase.from("club_channels").select("*").eq("club_id", clubId).order("position"),
+          supabase.from("club_members").select("*").eq("club_id", clubId),
+        ]);
+        if (cancelled) return;
+        if (e1) toast.error(`Club load failed: ${e1.message}`);
+        if (e2) toast.error(`Channels load failed: ${e2.message}`);
+        if (e3) toast.error(`Members load failed: ${e3.message}`);
+        setClub(c ?? null);
+        setChannels(chs ?? []);
+        if (chs && chs.length) setActiveChannel(chs[0].id);
+        const profiles = await fetchProfiles((mems ?? []).map((m) => m.user_id));
+        if (cancelled) return;
+        const byId = new Map(profiles.map((p) => [p.id, p]));
+        setMembers((mems ?? []).map((m) => ({ ...m, profile: byId.get(m.user_id) ?? null })));
+      } catch (err: any) {
+        if (!cancelled) toast.error(err?.message ?? "Couldn't open club");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [clubId, user]);
+
 
   const myMembership = members.find((m) => m.user_id === user?.id);
   const isOwner = myMembership?.role === "owner";
