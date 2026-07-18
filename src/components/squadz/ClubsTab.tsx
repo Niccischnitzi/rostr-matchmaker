@@ -28,14 +28,20 @@ export function ClubsTab() {
 
   async function reload() {
     if (!user) return;
-    const [{ data: allClubs }, { data: myMem }] = await Promise.all([
-      supabase.from("clubs").select("*").order("created_at", { ascending: false }),
-      supabase.from("club_members").select("club_id").eq("user_id", user.id),
-    ]);
-    setClubs(allClubs ?? []);
-    setMemberships(new Set((myMem ?? []).map((r) => r.club_id)));
-    setLoading(false);
+    try {
+      const [{ data: allClubs, error: e1 }, { data: myMem, error: e2 }] = await Promise.all([
+        supabase.from("clubs").select("*").order("created_at", { ascending: false }),
+        supabase.from("club_members").select("club_id").eq("user_id", user.id),
+      ]);
+      if (e1) toast.error(`Couldn't load clubs: ${e1.message}`);
+      if (e2) toast.error(`Couldn't load memberships: ${e2.message}`);
+      setClubs(allClubs ?? []);
+      setMemberships(new Set((myMem ?? []).map((r) => r.club_id)));
+    } finally {
+      setLoading(false);
+    }
   }
+
 
   useEffect(() => {
     reload();
