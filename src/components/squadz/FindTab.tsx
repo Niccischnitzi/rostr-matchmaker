@@ -464,9 +464,6 @@ export function FindTab() {
               <button onClick={() => handle("squad")} disabled={busy} className="h-16 w-16 rounded-full bg-primary text-primary-foreground grid place-items-center glow-orange hover:scale-105 transition-transform disabled:opacity-60">
                 <Heart className="h-7 w-7 fill-current" />
               </button>
-              <button onClick={() => toast("Super-boost coming soon ✨")} className="h-14 w-14 rounded-full border-2 border-border bg-card grid place-items-center hover:border-primary hover:text-primary transition-colors">
-                <Sparkles className="h-6 w-6" />
-              </button>
             </div>
           </div>
         ) : (
