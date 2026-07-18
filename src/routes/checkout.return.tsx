@@ -96,7 +96,7 @@ function CheckoutReturn() {
         title: "Payment confirmed",
         body:
           grant?.tokens_granted && grant.tokens_granted > 0
-            ? `+${grant.tokens_granted.toLocaleString()} tokens have been added to your wallet.`
+            ? `+${grant.tokens_granted.toLocaleString()} Shards have been added to your wallet.`
             : "Your purchase is active. Perks unlock automatically.",
       };
     }
