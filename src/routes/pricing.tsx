@@ -138,15 +138,14 @@ function PricingPage() {
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-2">
           <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Power up your Rostr</h1>
-          <p className="text-muted-foreground">Tokens, Pro perks, and paid cups — all in one place.</p>
+          <p className="text-muted-foreground">Shards & Pro perks. No real-money wagers, no cash-out.</p>
         </div>
 
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-muted p-1">
             {([
-              ["tokens", "Tokens", Coins],
+              ["shards", "Shards", Coins],
               ["pro", "Pro", Crown],
-              ["tournaments", "Cups", Trophy],
             ] as const).map(([id, label, Icon]) => (
               <button
                 key={id}
@@ -163,9 +162,9 @@ function PricingPage() {
           </div>
         </div>
 
-        {tab === "tokens" && (
+        {tab === "shards" && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TOKEN_PACKS.map((p) => (
+            {SHARD_PACKS.map((p) => (
               <div
                 key={p.priceId}
                 className="relative rounded-2xl border border-border bg-card p-6 flex flex-col gap-3 hover:border-primary/60 transition"
@@ -176,8 +175,8 @@ function PricingPage() {
                   </span>
                 )}
                 <Coins className="h-6 w-6 text-primary" />
-                <div className="font-display text-3xl font-bold">{p.tokens.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">tokens</div>
+                <div className="font-display text-3xl font-bold">{p.shards.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">Shards</div>
                 <div className="mt-auto pt-4 flex items-center justify-between">
                   <span className="font-semibold">{p.price}</span>
                   <button
@@ -189,6 +188,9 @@ function PricingPage() {
                 </div>
               </div>
             ))}
+            <p className="sm:col-span-2 lg:col-span-4 text-center text-xs text-muted-foreground">
+              Shards are an in-app currency for cosmetics and LFG boosts. They have no cash value and cannot be cashed out or used to enter real-money tournaments.
+            </p>
           </div>
         )}
 
@@ -236,24 +238,6 @@ function PricingPage() {
           </div>
         )}
 
-        {tab === "tournaments" && (
-          <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {ENTRY_TIERS.map((t) => (
-              <div key={t.priceId} className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-3">
-                <Trophy className="h-6 w-6 text-amber-500" />
-                <div className="font-semibold">{t.label}</div>
-                <div className="font-display text-3xl font-bold">{t.price}</div>
-                <p className="text-xs text-muted-foreground">{t.blurb}</p>
-                <button
-                  onClick={() => t.priceId === "entry_free" ? alert("Free cups open in the Tournaments tab.") : setActivePrice(t.priceId)}
-                  className="mt-auto rounded-md border border-primary text-primary px-3 py-1.5 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition"
-                >
-                  {t.cta}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         {isPro && subscription?.cancel_at_period_end && subscription.current_period_end && (
           <p className="text-center text-sm text-muted-foreground">
