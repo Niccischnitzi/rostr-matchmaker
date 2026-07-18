@@ -14,7 +14,7 @@ import { YourLfgCard } from "./YourLfgCard";
 import { EmptyState } from "./EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { getOrCreateConversation } from "@/lib/squadz-supabase";
+import { joinLfgAd, requestFriend, sendDirectMessageToUser } from "@/lib/squadz-supabase";
 import { openChat, switchTab } from "@/lib/app-bus";
 import type { Player, Trait } from "@/lib/squadz-data";
 
@@ -30,7 +30,7 @@ const popularGames = ["Valorant", "League of Legends", "CS2", "Fortnite", "Overw
 const regions = ["EU", "NA", "SA", "APAC", "OCE", "AF"];
 const COUNTRIES = ["Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Czechia","Denmark","Finland","France","Germany","Greece","Hong Kong","Hungary","India","Indonesia","Ireland","Israel","Italy","Japan","Malaysia","Mexico","Netherlands","New Zealand","Norway","Philippines","Poland","Portugal","Romania","Saudi Arabia","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Taiwan","Thailand","Turkey","Ukraine","United Arab Emirates","United Kingdom","United States","Vietnam"];
 
-type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string };
+type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string; lfgAdId?: string };
 
 type Filters = {
   ageRange: [number, number];
@@ -211,28 +211,18 @@ export function FindTab() {
     if (!user || !card.realId || busy) return;
     setBusy(true);
     try {
-      // 1. Send friend request (idempotent).
-      const { error: fErr } = await supabase.from("friends").upsert(
-        { requester_id: user.id, addressee_id: card.realId, status: "pending" },
-        { onConflict: "requester_id,addressee_id" },
-      );
-      if (fErr) throw fErr;
+      if (card.lfgAdId) await joinLfgAd(card.lfgAdId);
+      await requestFriend(card.realId);
       setExistingFriendIds((prev) => new Set(prev).add(card.realId!));
-      // 2. Open (or get) a DM conversation, drop a first message, then jump.
-      const conv = await getOrCreateConversation(user.id, card.realId);
-      await supabase.from("direct_messages").insert({
-        conversation_id: conv.id,
-        sender_id: user.id,
-        body: `Hey! Loved your LFG "${card.lfgTitle ?? "post"}" — wanna squad up?`,
-      });
+      const sent = await sendDirectMessageToUser(card.realId, `Hey! Loved your LFG "${card.lfgTitle ?? "post"}" — wanna squad up?`);
       void recordInteraction(card.realId!, "accepted");
       sfx.like();
       toast.success(`Squadded up with ${card.username}!`, {
         description: "Friend request sent + chat opened.",
-        action: { label: "Open chat", onClick: () => { switchTab("chat"); openChat({ conversationId: conv.id }); } },
+        action: { label: "Open chat", onClick: () => { switchTab("chat"); openChat({ conversationId: sent.conversation.id }); } },
       });
       switchTab("chat");
-      openChat({ conversationId: conv.id });
+      openChat({ conversationId: sent.conversation.id });
     } catch (e: any) {
       toast.error(e?.message ?? "Something went wrong");
     } finally {
@@ -440,19 +430,16 @@ export function FindTab() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
                     if (!user || !top.realId) return;
-                    supabase.from("friends").upsert(
-                      { requester_id: user.id, addressee_id: top.realId, status: "pending" },
-                      { onConflict: "requester_id,addressee_id" },
-                    ).then(() => toast.success("Friend request sent"));
+                    requestFriend(top.realId).then(() => toast.success("Friend request sent")).catch((e) => toast.error(e?.message ?? "Could not send request"));
                   }}>
                     <UserPlus className="h-3.5 w-3.5" /> Friend
                   </Button>
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={async () => {
                     if (!user || !top.realId) return;
                     try {
-                      const conv = await getOrCreateConversation(user.id, top.realId);
+                      const sent = await sendDirectMessageToUser(top.realId, `Hey — saw your LFG${top.lfgTitle ? ` "${top.lfgTitle}"` : ""}.`);
                       switchTab("chat");
-                      openChat({ conversationId: conv.id });
+                      openChat({ conversationId: sent.conversation.id });
                     } catch (e: any) { toast.error(e?.message ?? "Couldn't open chat"); }
                   }}>
                     <MessageCircle className="h-3.5 w-3.5" /> Message

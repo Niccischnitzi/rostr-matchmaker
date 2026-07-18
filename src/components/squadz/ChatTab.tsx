@@ -25,6 +25,7 @@ import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
 import { GlowButton } from "./GlowButton";
 import { UserAvatar } from "./UserAvatar";
+import { LfgAdSheet } from "./LfgAdSheet";
 
 
 
@@ -641,7 +642,7 @@ function LFGBoard() {
         <Button size="sm" onClick={() => setPosting(true)}>Post LFG</Button>
       </div>
 
-      <LfgAdSheet open={posting} onOpenChange={(v) => { setPosting(v); if (!v) void load(); }} />
+      <LfgAdSheet open={posting} onOpenChange={(v: boolean) => { setPosting(v); if (!v) void load(); }} />
 
       <div className="grid gap-3">
         {loading ? (
