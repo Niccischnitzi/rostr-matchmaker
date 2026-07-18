@@ -48,7 +48,7 @@ const SHARD_PACKS = [
 function PricingPage() {
   const { user, loading: authLoading } = useAuth();
   const { isPro, subscription } = useSubscription();
-  const [tab, setTab] = useState<Tab>("tokens");
+  const [tab, setTab] = useState<Tab>("shards");
   const [activePrice, setActivePrice] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const createPortal = useServerFn(createPortalSession);
