@@ -300,11 +300,37 @@ export function FindTab() {
             <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
               <SheetHeader><SheetTitle>Filter your search</SheetTitle></SheetHeader>
               <div className="mt-6 space-y-6 px-4 pb-10">
-                <FilterSection label={`Age: ${filters.ageRange[0]}–${filters.ageRange[1]}`}>
-                  <Slider value={filters.ageRange} onValueChange={(v) => setFilters((f) => ({ ...f, ageRange: v as [number, number] }))} min={16} max={50} step={1} />
+                <FilterSection label={`Age`}>
+                  <div className="pt-6 pb-1 px-1 relative">
+                    {/* Live thumb labels — visible at both extremes on mobile. */}
+                    <div className="relative h-6 mb-1">
+                      <span
+                        className="absolute -translate-x-1/2 text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground shadow"
+                        style={{ left: `${((filters.ageRange[0] - 16) / (50 - 16)) * 100}%` }}
+                      >{filters.ageRange[0]}</span>
+                      <span
+                        className="absolute -translate-x-1/2 text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-primary text-primary-foreground shadow"
+                        style={{ left: `${((filters.ageRange[1] - 16) / (50 - 16)) * 100}%` }}
+                      >{filters.ageRange[1]}</span>
+                    </div>
+                    <Slider
+                      value={filters.ageRange}
+                      onValueChange={(v) => setFilters((f) => ({ ...f, ageRange: v as [number, number] }))}
+                      min={16}
+                      max={50}
+                      step={1}
+                      minStepsBetweenThumbs={1}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-2">
+                      <span>16</span><span>50</span>
+                    </div>
+                  </div>
                 </FilterSection>
-                <FilterSection label="Games" icon={Gamepad2}>
-                  <ChipGroup options={popularGames} selected={filters.games} onToggle={(g) => setFilters((f) => ({ ...f, games: f.games.includes(g) ? f.games.filter((x) => x !== g) : [...f.games, g] }))} />
+                <FilterSection label={`Games${filters.games.length ? ` · ${filters.games.length}` : ""}`} icon={Gamepad2}>
+                  <GamesMultiSelect
+                    value={filters.games}
+                    onChange={(games) => setFilters((f) => ({ ...f, games }))}
+                  />
                 </FilterSection>
                 <FilterSection label="Region" icon={Globe}>
                   <div className="flex flex-wrap gap-2">
@@ -319,8 +345,10 @@ export function FindTab() {
                   </div>
                 </FilterSection>
                 <FilterSection label="Country">
-                  <input value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))} placeholder="e.g. Germany"
-                    className="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <CountryCombobox
+                    value={filters.country}
+                    onChange={(country) => setFilters((f) => ({ ...f, country }))}
+                  />
                 </FilterSection>
                 <FilterSection label="Traits">
                   <ChipGroup options={allTraits} selected={filters.traits} onToggle={(t) => setFilters((f) => ({ ...f, traits: f.traits.includes(t) ? f.traits.filter((x) => x !== t) : [...f.traits, t] }))} />
