@@ -26,6 +26,7 @@ type Prefs = {
   sound: boolean;
   visibility: "public" | "squad";
   defaultPlatform: string;
+  highContrast: boolean;
 };
 
 const DEFAULTS: Prefs = {
@@ -36,6 +37,7 @@ const DEFAULTS: Prefs = {
   sound: true,
   visibility: "public",
   defaultPlatform: "PC",
+  highContrast: false,
 };
 
 const KEY = "rostr:settings";
