@@ -983,6 +983,30 @@ export type Database = {
           },
         ]
       }
+      lfg_ad_interactions: {
+        Row: {
+          action: string
+          ad_owner_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          ad_owner_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          ad_owner_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lfg_ad_joiners: {
         Row: {
           ad_id: string
@@ -1692,6 +1716,7 @@ export type Database = {
           country: string | null
           created_at: string
           current_game_activity: string | null
+          custom_traits: string[]
           customization_options: Json
           date_of_birth: string | null
           display_name: string | null
@@ -1722,6 +1747,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_game_activity?: string | null
+          custom_traits?: string[]
           customization_options?: Json
           date_of_birth?: string | null
           display_name?: string | null
@@ -1752,6 +1778,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_game_activity?: string | null
+          custom_traits?: string[]
           customization_options?: Json
           date_of_birth?: string | null
           display_name?: string | null
