@@ -47,15 +47,22 @@ export function ChallengesTab() {
   }
 
   async function respond(c: Challenge, accept: boolean) {
-    const { error } = await supabase.from("challenges").update({ status: accept ? "accepted" : "cancelled" }).eq("id", c.id);
+    const { error } = await supabase.rpc(
+      accept ? "accept_challenge" : "decline_challenge",
+      { _challenge_id: c.id },
+    );
     if (error) return toast.error(error.message);
     toast.success(accept ? "Challenge accepted — funds held in escrow" : "Challenge declined");
   }
 
   async function settle(c: Challenge, winnerId: string) {
-    const { error } = await supabase.from("challenges").update({ status: "settled", winner_id: winnerId }).eq("id", c.id);
+    const { data, error } = await supabase.rpc("report_challenge_winner", {
+      _challenge_id: c.id,
+      _winner_id: winnerId,
+    });
     if (error) return toast.error(error.message);
-    toast.success("Match settled — winnings released");
+    const settled = (data as { settled?: boolean } | null)?.settled;
+    toast.success(settled ? "Match settled — winnings released" : "Result reported — waiting for the other player to confirm");
   }
 
   return (

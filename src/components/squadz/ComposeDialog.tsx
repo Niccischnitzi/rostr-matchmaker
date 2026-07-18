@@ -102,10 +102,8 @@ export function ComposeDialog({
           toast.error(`Needs ${tokensNeeded} tokens — you have ${balance}`);
           return;
         }
-        if (tokensNeeded > 0) {
-          const { error: spendErr } = await supabase.rpc("spend_tokens", { _amount: tokensNeeded });
-          if (spendErr) throw spendErr;
-        }
+        // Token cost is charged server-side by the enforce_media_post_cost trigger
+        // when the media_posts row is inserted — never trust client-side spend calls.
         const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
         const path = `${userId}/${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("media-clips").upload(path, file, {
