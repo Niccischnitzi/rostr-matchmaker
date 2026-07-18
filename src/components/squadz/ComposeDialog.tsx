@@ -99,10 +99,10 @@ export function ComposeDialog({
         if (tooBig || tooLong) { toast.error("File exceeds 5 min / 250 MB hard cap"); return; }
         if (overRes) { toast.error(`Resolution capped at ${resCap}p${isPro ? "" : " — upgrade to Pro for 1080p"}`); return; }
         if (tokensNeeded > 0 && !canPay) {
-          toast.error(`Needs ${tokensNeeded} tokens — you have ${balance}`);
+          toast.error(`Needs ${tokensNeeded} Shards — you have ${balance}`);
           return;
         }
-        // Token cost is charged server-side by the enforce_media_post_cost trigger
+        // Shard cost is charged server-side by the enforce_media_post_cost trigger
         // when the media_posts row is inserted — never trust client-side spend calls.
         const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
         const path = `${userId}/${Date.now()}.${ext}`;
@@ -199,7 +199,7 @@ export function ComposeDialog({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5 font-semibold">
                     <Coins className="h-3.5 w-3.5 text-primary" />
-                    {tokensNeeded === 0 ? "Free upload" : `${tokensNeeded} tokens`}
+                    {tokensNeeded === 0 ? "Free upload" : `${tokensNeeded} Shards`}
                   </span>
                   <span className="text-muted-foreground">Balance: {balance}</span>
                 </div>
@@ -217,7 +217,7 @@ export function ComposeDialog({
                 {tooBig && <p className="mt-1 text-destructive">Over 250 MB hard cap.</p>}
                 {tooLong && <p className="mt-1 text-destructive">Over 5 min hard cap.</p>}
                 {tokensNeeded > 0 && !canPay && (
-                  <p className="mt-1 text-destructive">Not enough tokens — earn more by winning challenges.</p>
+                  <p className="mt-1 text-destructive">Not enough Shards — earn more by winning challenges.</p>
                 )}
               </div>
             )}

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { signOut } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
 import { useSquadz } from "@/lib/squadz-store";
-import { Check, Copy, Plus, Trophy, Users, Loader2, Pencil, LogOut, Camera, X, Trash2 } from "lucide-react";
+import { Check, Copy, Plus, Trophy, Users, Loader2, Pencil, LogOut, Camera, X, Trash2, Mic, StopCircle, UploadCloud, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AvailabilityGrid } from "./AvailabilityGrid";
@@ -52,6 +52,15 @@ type LinkedAccount = {
   platform: string;
   gamertag: string;
   current_rank_display: string | null;
+};
+
+type VoiceSnippet = {
+  user_id: string;
+  storage_path: string;
+  duration_seconds: number;
+  transcript: string | null;
+  is_public: boolean;
+  updated_at: string;
 };
 
 async function resolveAvatarUrl(value: string | null): Promise<string | null> {
@@ -286,6 +295,8 @@ export function ProfileTab() {
         </div>
       </div>
 
+      <VoiceSnippetSection userId={userId!} />
+
       {/* Battlecard — aggregated stats from linked platforms */}
       <div className="mt-6">
         <BattleCard username={profile.username} linkedPlatforms={linked.map((l) => l.platform)} />
@@ -376,6 +387,174 @@ export function ProfileTab() {
           onClose={() => setAdding(false)}
         />
       )}
+    </div>
+  );
+}
+
+function VoiceSnippetSection({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startedAtRef = useRef<number>(0);
+  const [recording, setRecording] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [transcript, setTranscript] = useState("");
+
+  const { data: snippet } = useQuery<VoiceSnippet | null>({
+    queryKey: ["voice-snippet", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("voice_snippets" as any)
+        .select("user_id, storage_path, duration_seconds, transcript, is_public, updated_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      setTranscript((data as VoiceSnippet | null)?.transcript ?? "");
+      return data as VoiceSnippet | null;
+    },
+  });
+
+  const { data: audioUrl } = useQuery({
+    queryKey: ["voice-snippet-url", snippet?.storage_path],
+    enabled: !!snippet?.storage_path,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("media-clips").createSignedUrl(snippet!.storage_path, 60 * 10);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  });
+
+  async function saveBlob(blob: Blob, duration: number) {
+    setBusy(true);
+    try {
+      const path = `${userId}/voice-snippets/profile-${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage.from("media-clips").upload(path, blob, {
+        contentType: blob.type || "audio/webm",
+        upsert: true,
+      });
+      if (uploadError) throw uploadError;
+      if (snippet?.storage_path) {
+        await supabase.storage.from("media-clips").remove([snippet.storage_path]);
+      }
+      const { error } = await supabase.from("voice_snippets" as any).upsert({
+        user_id: userId,
+        storage_path: path,
+        duration_seconds: Math.max(1, Math.min(15, Math.round(duration))),
+        transcript: transcript.trim() || null,
+        is_public: true,
+      } as any, { onConflict: "user_id" });
+      if (error) throw error;
+      toast.success("Voice intro saved");
+      qc.invalidateQueries({ queryKey: ["voice-snippet", userId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save voice intro");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startRecording() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Recording is not available in this browser");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      chunksRef.current = [];
+      startedAtRef.current = Date.now();
+      recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const duration = (Date.now() - startedAtRef.current) / 1000;
+        void saveBlob(new Blob(chunksRef.current, { type: "audio/webm" }), duration);
+      };
+      recorder.start();
+      setRecording(true);
+      setTimeout(() => {
+        if (recorderRef.current?.state === "recording") stopRecording();
+      }, 15_000);
+    } catch {
+      toast.error("Microphone permission denied");
+    }
+  }
+
+  function stopRecording() {
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    setRecording(false);
+  }
+
+  async function uploadFile(file: File) {
+    if (!file.type.startsWith("audio/")) { toast.error("Choose an audio file"); return; }
+    if (file.size > 6 * 1024 * 1024) { toast.error("Audio must be under 6 MB"); return; }
+    await saveBlob(file, snippet?.duration_seconds ?? 15);
+  }
+
+  async function remove() {
+    if (!snippet) return;
+    setBusy(true);
+    try {
+      await supabase.storage.from("media-clips").remove([snippet.storage_path]);
+      const { error } = await supabase.from("voice_snippets" as any).delete().eq("user_id", userId);
+      if (error) throw error;
+      toast.success("Voice intro removed");
+      qc.invalidateQueries({ queryKey: ["voice-snippet", userId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not remove voice intro");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveTranscript() {
+    if (!snippet) return;
+    const { error } = await supabase.from("voice_snippets" as any).update({ transcript: transcript.trim() || null }).eq("user_id", userId);
+    if (error) toast.error(error.message);
+    else { toast.success("Caption saved"); qc.invalidateQueries({ queryKey: ["voice-snippet", userId] }); }
+  }
+
+  return (
+    <div className="mt-5 rounded-2xl border border-border bg-surface p-4 animate-fade-in">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg font-black flex items-center gap-2"><Mic className="h-4 w-4 text-primary" /> Voice intro</h2>
+          <p className="text-xs text-muted-foreground mt-1">Record a 15 second vibe check for your public profile.</p>
+        </div>
+        {snippet && <span className="text-[10px] uppercase tracking-widest font-black text-primary">{Number(snippet.duration_seconds).toFixed(0)}s</span>}
+      </div>
+      {audioUrl && (
+        <div className="mt-3 rounded-xl bg-card border border-border p-3">
+          <audio controls src={audioUrl} className="w-full h-9" preload="metadata" />
+        </div>
+      )}
+      <div className="mt-3 grid sm:grid-cols-[1fr_auto] gap-2">
+        <input
+          value={transcript}
+          onChange={(e) => setTranscript(e.target.value)}
+          placeholder="Optional caption, e.g. calm IGL, EU evenings"
+          maxLength={140}
+          className={inputCls}
+        />
+        <button onClick={saveTranscript} disabled={!snippet || busy} className="h-10 px-4 rounded-xl border border-border bg-card text-sm font-bold hover:bg-surface-2 disabled:opacity-50">Save text</button>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button onClick={recording ? stopRecording : startRecording} disabled={busy} className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold inline-flex items-center gap-2 disabled:opacity-50">
+          {recording ? <StopCircle className="h-4 w-4" /> : <Mic className="h-4 w-4" />} {recording ? "Stop" : "Record"}
+        </button>
+        <label className="h-10 px-4 rounded-xl border border-border bg-card text-sm font-bold inline-flex items-center gap-2 hover:bg-surface-2 cursor-pointer">
+          <UploadCloud className="h-4 w-4" /> Upload
+          <input type="file" accept="audio/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadFile(f); e.target.value = ""; }} />
+        </label>
+        {snippet && (
+          <button onClick={remove} disabled={busy} className="h-10 px-4 rounded-xl border border-destructive/40 text-destructive text-sm font-bold inline-flex items-center gap-2 hover:bg-destructive/10 disabled:opacity-50">
+            <Trash2 className="h-4 w-4" /> Remove
+          </button>
+        )}
+        {busy && <span className="inline-flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Saving…</span>}
+      </div>
+      {snippet?.transcript && <p className="mt-3 text-xs text-muted-foreground inline-flex items-center gap-1.5"><Volume2 className="h-3 w-3" /> {snippet.transcript}</p>}
     </div>
   );
 }

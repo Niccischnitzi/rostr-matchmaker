@@ -12,9 +12,10 @@ import { sfx } from "@/lib/sfx";
 import { LfgAdSheet } from "./LfgAdSheet";
 import { YourLfgCard } from "./YourLfgCard";
 import { EmptyState } from "./EmptyState";
+import { UserAvatar } from "./UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { getOrCreateConversation } from "@/lib/squadz-supabase";
+import { getPairChemistry, joinLfgAd, requestFriend, sendDirectMessageToUser } from "@/lib/squadz-supabase";
 import { openChat, switchTab } from "@/lib/app-bus";
 import type { Player, Trait } from "@/lib/squadz-data";
 
@@ -30,7 +31,7 @@ const popularGames = ["Valorant", "League of Legends", "CS2", "Fortnite", "Overw
 const regions = ["EU", "NA", "SA", "APAC", "OCE", "AF"];
 const COUNTRIES = ["Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Czechia","Denmark","Finland","France","Germany","Greece","Hong Kong","Hungary","India","Indonesia","Ireland","Israel","Italy","Japan","Malaysia","Mexico","Netherlands","New Zealand","Norway","Philippines","Poland","Portugal","Romania","Saudi Arabia","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Taiwan","Thailand","Turkey","Ukraine","United Arab Emirates","United Kingdom","United States","Vietnam"];
 
-type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string };
+type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string; lfgAdId?: string };
 
 type Filters = {
   ageRange: [number, number];
@@ -133,19 +134,23 @@ export function FindTab() {
     (async () => {
       setLoading(true);
       let q = supabase
-        .from("profiles" as any)
-        .select("id, username, display_name, avatar_url, lfg_title, lfg_body, lfg_games, country, is_public")
-        .eq("is_public", true)
-        .not("lfg_title", "is", null)
-        .order("updated_at", { ascending: false })
+        .from("lfg_ads" as any)
+        .select("id, host_id, game, mode, region, description, tags, created_at")
+        .is("closed_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
         .limit(30);
-      if (user?.id) q = q.neq("id", user.id);
+      if (user?.id) q = q.neq("host_id", user.id);
       const { data } = await q;
       if (cancelled) return;
       const rows = ((data as any) ?? []) as Array<{
-        id: string; username: string; display_name: string | null; avatar_url: string | null;
-        lfg_title: string | null; lfg_body: string | null; lfg_games: string[] | null; country: string | null;
+        id: string; host_id: string; game: string; mode: string | null; region: string | null; description: string | null; tags: string[] | null;
       }>;
+      const { data: hostRows } = await supabase
+        .from("profiles" as any)
+        .select("id, username, display_name, avatar_url, country, is_public")
+        .in("id", Array.from(new Set(rows.map((r) => r.host_id))));
+      const hostById = new Map(((hostRows as any[]) ?? []).filter((h) => h.is_public !== false).map((h) => [h.id, h]));
       // Exclude ads the current user already dismissed/accepted (server-side truth of record).
       let already = new Set<string>();
       if (user?.id) {
@@ -156,24 +161,28 @@ export function FindTab() {
         already = new Set(((ints as any[]) ?? []).map((r) => r.ad_owner_id));
       }
       const mapped: DeckCard[] = rows
-        .filter((r) => !already.has(r.id))
-        .map((r) => ({
+        .filter((r) => !already.has(r.host_id) && hostById.has(r.host_id))
+        .map((r) => {
+        const host = hostById.get(r.host_id);
+        const username = host?.display_name ?? host?.username ?? "Player";
+        return ({
         id: `lfg-${r.id}`,
-        realId: r.id,
-        username: r.display_name ?? r.username,
-        avatar: r.avatar_url ?? `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${r.username}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`,
-        playstyle: r.lfg_title ?? "Looking for Rostr",
-        location: r.country ?? "—",
+        realId: r.host_id,
+        lfgAdId: r.id,
+        username,
+        avatar: host?.avatar_url ?? `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${username}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`,
+        playstyle: r.mode ?? "Looking for Rostr",
+        location: host?.country ?? r.region ?? "—",
         timezone: "",
         age: 21,
         gender: "NB",
-        country: r.country ?? "",
-        games: (r.lfg_games ?? []).slice(0, 4).map((g) => ({ name: g, rank: "", color: "var(--primary)" })),
+        country: host?.country ?? "",
+        games: [r.game, ...((r.tags ?? []).filter((g) => g !== r.game))].slice(0, 4).map((g) => ({ name: g, rank: "", color: "var(--primary)" })),
         traits: [] as Trait[],
         isLfg: true,
-        lfgTitle: r.lfg_title,
-        lfgBody: r.lfg_body,
-      }));
+        lfgTitle: r.mode,
+        lfgBody: r.description,
+      });});
       setLfgCards(mapped);
       setLoading(false);
     })();
@@ -211,28 +220,18 @@ export function FindTab() {
     if (!user || !card.realId || busy) return;
     setBusy(true);
     try {
-      // 1. Send friend request (idempotent).
-      const { error: fErr } = await supabase.from("friends").upsert(
-        { requester_id: user.id, addressee_id: card.realId, status: "pending" },
-        { onConflict: "requester_id,addressee_id" },
-      );
-      if (fErr) throw fErr;
+      if (card.lfgAdId) await joinLfgAd(card.lfgAdId);
+      await requestFriend(card.realId);
       setExistingFriendIds((prev) => new Set(prev).add(card.realId!));
-      // 2. Open (or get) a DM conversation, drop a first message, then jump.
-      const conv = await getOrCreateConversation(user.id, card.realId);
-      await supabase.from("direct_messages").insert({
-        conversation_id: conv.id,
-        sender_id: user.id,
-        body: `Hey! Loved your LFG "${card.lfgTitle ?? "post"}" — wanna squad up?`,
-      });
+      const sent = await sendDirectMessageToUser(card.realId, `Hey! Loved your LFG "${card.lfgTitle ?? "post"}" — wanna squad up?`);
       void recordInteraction(card.realId!, "accepted");
       sfx.like();
       toast.success(`Squadded up with ${card.username}!`, {
         description: "Friend request sent + chat opened.",
-        action: { label: "Open chat", onClick: () => { switchTab("chat"); openChat({ conversationId: conv.id }); } },
+        action: { label: "Open chat", onClick: () => { switchTab("chat"); openChat({ conversationId: sent.conversation.id }); } },
       });
       switchTab("chat");
-      openChat({ conversationId: conv.id });
+      openChat({ conversationId: sent.conversation.id });
     } catch (e: any) {
       toast.error(e?.message ?? "Something went wrong");
     } finally {
@@ -405,9 +404,13 @@ export function FindTab() {
             </div>
             <div className="relative">
               <div className="absolute -top-12 left-6 z-10">
-                <div className="h-20 w-20 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden shadow-xl">
-                  <img src={top.avatar} alt={top.username} className="h-full w-full object-cover" />
-                </div>
+                <UserAvatar
+                  userId={top.realId ?? top.id}
+                  avatarUrl={top.avatar}
+                  fallback={top.username}
+                  size={80}
+                  className="rounded-2xl border-4 border-card bg-surface-2 shadow-xl"
+                />
               </div>
             </div>
             <div className="px-6 pt-12 pb-6">
@@ -440,25 +443,30 @@ export function FindTab() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
                     if (!user || !top.realId) return;
-                    supabase.from("friends").upsert(
-                      { requester_id: user.id, addressee_id: top.realId, status: "pending" },
-                      { onConflict: "requester_id,addressee_id" },
-                    ).then(() => toast.success("Friend request sent"));
+                    requestFriend(top.realId)
+                      .then(() => {
+                        setExistingFriendIds((prev) => new Set(prev).add(top.realId!));
+                        setDismissed((prev) => new Set(prev).add(top.id));
+                        void recordInteraction(top.realId!, "accepted");
+                        toast.success("Friend request sent");
+                      })
+                      .catch((e) => toast.error(e?.message ?? "Could not send request"));
                   }}>
                     <UserPlus className="h-3.5 w-3.5" /> Friend
                   </Button>
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={async () => {
                     if (!user || !top.realId) return;
                     try {
-                      const conv = await getOrCreateConversation(user.id, top.realId);
+                      const sent = await sendDirectMessageToUser(top.realId, `Hey — saw your LFG${top.lfgTitle ? ` "${top.lfgTitle}"` : ""}.`);
                       switchTab("chat");
-                      openChat({ conversationId: conv.id });
+                      openChat({ conversationId: sent.conversation.id });
                     } catch (e: any) { toast.error(e?.message ?? "Couldn't open chat"); }
                   }}>
                     <MessageCircle className="h-3.5 w-3.5" /> Message
                   </Button>
                 </div>
               )}
+              {top.realId && <PairChemistryBadge userId={top.realId} />}
             </div>
             <div className="border-t border-border bg-surface/40 p-4 flex items-center justify-center gap-5">
               <button onClick={() => handle("skip")} disabled={busy} className="h-14 w-14 rounded-full border-2 border-border bg-card grid place-items-center hover:border-destructive hover:text-destructive transition-colors disabled:opacity-50">
@@ -501,6 +509,26 @@ export function FindTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PairChemistryBadge({ userId }: { userId: string }) {
+  const { user } = useAuth();
+  const [chem, setChem] = useState<{ score: number; sessions: number; label: string } | null>(null);
+  useEffect(() => {
+    if (!user?.id || user.id === userId) return;
+    let cancelled = false;
+    getPairChemistry(userId)
+      .then((row) => { if (!cancelled) setChem(row); })
+      .catch(() => { if (!cancelled) setChem(null); });
+    return () => { cancelled = true; };
+  }, [user?.id, userId]);
+  if (!chem) return null;
+  return (
+    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary animate-fade-in">
+      <Sparkles className="h-3.5 w-3.5" /> {chem.label} · {chem.score}%
+      {chem.sessions > 0 && <span className="text-muted-foreground">({chem.sessions})</span>}
     </div>
   );
 }

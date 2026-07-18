@@ -94,7 +94,7 @@ function ModerationPage() {
   }, {});
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto px-4 py-3 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
           <Link to="/" className="h-9 w-9 grid place-items-center rounded-lg bg-surface hover:bg-surface-2 shrink-0">

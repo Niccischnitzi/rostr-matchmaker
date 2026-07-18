@@ -159,9 +159,13 @@ const themeInitScript = `
     var raw = localStorage.getItem("rostr:settings");
     var pref = raw ? (JSON.parse(raw).theme || "system") : "system";
     var dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var highContrast = !!(raw && JSON.parse(raw).highContrast);
+    var reduceMotion = !!(raw && JSON.parse(raw).reduceMotion);
     var el = document.documentElement;
     if (dark) { el.classList.add("dark"); } else { el.classList.remove("dark"); }
     el.style.colorScheme = dark ? "dark" : "light";
+    if (highContrast) el.setAttribute("data-contrast", "high"); else el.removeAttribute("data-contrast");
+    if (reduceMotion) el.setAttribute("data-motion", "reduced"); else el.removeAttribute("data-motion");
   } catch (e) {
     document.documentElement.classList.add("dark");
   }
@@ -170,7 +174,7 @@ const themeInitScript = `
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
