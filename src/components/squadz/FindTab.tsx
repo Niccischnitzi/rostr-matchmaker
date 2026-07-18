@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus } from "lucide-react";
+import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus, Check, ChevronsUpDown } from "lucide-react";
 import { useSquadz } from "@/lib/squadz-store";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
@@ -15,9 +17,17 @@ import { getOrCreateConversation } from "@/lib/squadz-supabase";
 import { openChat, switchTab } from "@/lib/app-bus";
 import type { Player, Trait } from "@/lib/squadz-data";
 
-const allTraits = ["Toxic-free", "Tryhard", "Chill", "Shot-caller", "Night Owl", "Funny", "Mic'd up"];
-const popularGames = ["Valorant", "League of Legends", "CS2", "Fortnite", "Overwatch 2", "Apex Legends", "Rocket League", "Minecraft"];
+const allTraits = [
+  // Role
+  "IGL", "Shot-caller", "Support main", "Entry fragger", "Coach available",
+  // Availability
+  "Weekend only", "Night owl", "Grinder", "Casual", "Mic'd up",
+  // Vibe
+  "Chill", "Toxic-free", "Voice-shy", "Funny", "Content creator", "Tryhard", "Competitive", "Beginner-friendly", "LGBTQ+ friendly", "Non-toxic queue",
+];
+const popularGames = ["Valorant", "League of Legends", "CS2", "Fortnite", "Overwatch 2", "Apex Legends", "Rocket League", "Minecraft", "Marvel Rivals", "Dota 2", "R6 Siege", "PUBG", "Warzone", "Palworld", "The Finals"];
 const regions = ["EU", "NA", "SA", "APAC", "OCE", "AF"];
+const COUNTRIES = ["Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Czechia","Denmark","Finland","France","Germany","Greece","Hong Kong","Hungary","India","Indonesia","Ireland","Israel","Italy","Japan","Malaysia","Mexico","Netherlands","New Zealand","Norway","Philippines","Poland","Portugal","Romania","Saudi Arabia","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Taiwan","Thailand","Turkey","Ukraine","United Arab Emirates","United Kingdom","United States","Vietnam"];
 
 type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string };
 
