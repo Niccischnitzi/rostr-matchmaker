@@ -348,13 +348,22 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
     onBack();
   }
 
-  if (loading || !club) {
+  if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 pt-10 pb-10 grid place-items-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
   }
+  if (!club) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 pt-10 pb-10 text-center space-y-3">
+        <p className="text-sm text-muted-foreground">Couldn't load this club. It may have been deleted or you may not have access.</p>
+        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4 mr-1.5" />Back</Button>
+      </div>
+    );
+  }
+
 
   return (
     <div
