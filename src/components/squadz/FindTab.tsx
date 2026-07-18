@@ -12,6 +12,7 @@ import { sfx } from "@/lib/sfx";
 import { LfgAdSheet } from "./LfgAdSheet";
 import { YourLfgCard } from "./YourLfgCard";
 import { EmptyState } from "./EmptyState";
+import { UserAvatar } from "./UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { joinLfgAd, requestFriend, sendDirectMessageToUser } from "@/lib/squadz-supabase";
@@ -403,9 +404,13 @@ export function FindTab() {
             </div>
             <div className="relative">
               <div className="absolute -top-12 left-6 z-10">
-                <div className="h-20 w-20 rounded-2xl border-4 border-card bg-surface-2 overflow-hidden shadow-xl">
-                  <img src={top.avatar} alt={top.username} className="h-full w-full object-cover" />
-                </div>
+                <UserAvatar
+                  userId={top.realId ?? top.id}
+                  avatarUrl={top.avatar}
+                  fallback={top.username}
+                  size={80}
+                  className="rounded-2xl border-4 border-card bg-surface-2 shadow-xl"
+                />
               </div>
             </div>
             <div className="px-6 pt-12 pb-6">

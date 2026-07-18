@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import type { Challenge, Profile, Wallet } from "@/lib/squadz-supabase";
+import { submitMatchRating, type Challenge, type Profile, type Wallet } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Coins, Swords, Trophy, X, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Coins, Swords, Trophy, X, Check, Star, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ export function ChallengesTab() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [challenges, setChallenges] = useState<(Challenge & { challenger: Profile | null; opponent: Profile | null })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ratingTarget, setRatingTarget] = useState<{ challenge: Challenge; player: Profile } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -62,7 +64,12 @@ export function ChallengesTab() {
     });
     if (error) return toast.error(error.message);
     const settled = (data as { settled?: boolean } | null)?.settled;
-    toast.success(settled ? "Match settled — winnings released" : "Result reported — waiting for the other player to confirm");
+      toast.success(settled ? "Match settled — quick rate unlocked" : "Result reported — waiting for the other player to confirm");
+      if (settled) {
+        const full = challenges.find((item) => item.id === c.id);
+        const other = full ? (full.challenger_id === user?.id ? full.opponent : full.challenger) : null;
+        if (other) setRatingTarget({ challenge: c, player: other });
+      }
   }
 
   return (
@@ -94,10 +101,11 @@ export function ChallengesTab() {
       </div>
 
       {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : challenges.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center animate-fade-in">
           <Swords className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <p className="font-semibold">No challenges yet</p>
           <p className="text-sm text-muted-foreground mt-1">Issue a 1v1 to put your points on the line.</p>
+          <div className="mt-4"><NewChallengeDialog onCreated={load} /></div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -136,11 +144,104 @@ export function ChallengesTab() {
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => settle(c, other!.id)}>They won</Button>
                   </div>
                 )}
+                {c.status === "settled" && other && (
+                  <Button size="sm" className="mt-3 w-full gap-1.5" onClick={() => setRatingTarget({ challenge: c, player: other })}>
+                    <Star className="h-4 w-4" /> Quick rate teammate
+                  </Button>
+                )}
               </div>
             );
           })}
         </div>
       )}
+      <QuickRateDialog
+        target={ratingTarget}
+        onOpenChange={(open) => { if (!open) setRatingTarget(null); }}
+      />
+    </div>
+  );
+}
+
+const RATE_TAGS = ["Good comms", "Chill", "Great teammate", "Smart plays", "On time", "Positive vibe", "Clutch", "Reliable"];
+
+function QuickRateDialog({
+  target,
+  onOpenChange,
+}: {
+  target: { challenge: Challenge; player: Profile } | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [chemistry, setChemistry] = useState([5]);
+  const [comms, setComms] = useState([5]);
+  const [reliability, setReliability] = useState([5]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const open = Boolean(target);
+
+  async function submit() {
+    if (!target || busy) return;
+    setBusy(true);
+    try {
+      await submitMatchRating({
+        targetUserId: target.player.id,
+        challengeId: target.challenge.id,
+        chemistry: chemistry[0],
+        comms: comms[0],
+        reliability: reliability[0],
+        tags,
+        note,
+      });
+      toast.success("Rating saved", { description: "Chemistry score updated for future matchmaking." });
+      onOpenChange(false);
+      setTags([]); setNote(""); setChemistry([5]); setComms([5]); setReliability([5]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save rating");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-display text-2xl font-black">
+            <Sparkles className="h-5 w-5 text-primary" /> Quick rate
+          </DialogTitle>
+          <DialogDescription>
+            Rate your match with {target?.player.display_name || target?.player.username || "this player"}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-5">
+          <RatingSlider label="Chemistry" value={chemistry} onChange={setChemistry} />
+          <RatingSlider label="Comms" value={comms} onChange={setComms} />
+          <RatingSlider label="Reliability" value={reliability} onChange={setReliability} />
+          <div>
+            <p className="text-xs font-semibold mb-2">Tags</p>
+            <div className="flex flex-wrap gap-2">
+              {RATE_TAGS.map((tag) => {
+                const on = tags.includes(tag);
+                return (
+                  <button key={tag} type="button" onClick={() => setTags((cur) => on ? cur.filter((x) => x !== tag) : [...cur, tag].slice(0, 6))}
+                    className={cn("text-xs px-3 py-1.5 rounded-full border transition-colors", on ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-surface")}>{tag}</button>
+                );
+              })}
+            </div>
+          </div>
+          <Input value={note} onChange={(e) => setNote(e.target.value)} maxLength={240} placeholder="Optional note" />
+          <Button onClick={submit} disabled={busy} className="w-full">{busy ? "Saving…" : "Save rating"}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RatingSlider({ label, value, onChange }: { label: string; value: number[]; onChange: (v: number[]) => void }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between text-sm font-semibold"><span>{label}</span><span className="text-primary">{value[0]}/5</span></div>
+      <Slider value={value} onValueChange={onChange} min={1} max={5} step={1} />
     </div>
   );
 }
