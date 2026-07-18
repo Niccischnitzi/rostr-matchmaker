@@ -110,8 +110,9 @@ export function LfgAdSheet({ open, onOpenChange }: { open: boolean; onOpenChange
         expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
         closed_at: isPublic ? null : new Date().toISOString(),
       };
-      const adWrite = active.data?.id
-        ? await supabase.from("lfg_ads" as any).update(adPayload).eq("id", active.data.id)
+      const activeAdId = (active.data as any)?.id as string | undefined;
+      const adWrite = activeAdId
+        ? await supabase.from("lfg_ads" as any).update(adPayload).eq("id", activeAdId)
         : await supabase.from("lfg_ads" as any).insert(adPayload);
       if (adWrite.error) {
         setBusy(false);
