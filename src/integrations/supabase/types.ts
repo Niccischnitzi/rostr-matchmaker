@@ -2698,6 +2698,14 @@ export type Database = {
           friend_count: number
         }[]
       }
+      public_user_cosmetics: {
+        Args: { _user_id: string }
+        Returns: {
+          frame_class: string
+          halo_class: string
+          tag_name: string
+        }[]
+      }
       purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
       record_daily_login: {
         Args: never
