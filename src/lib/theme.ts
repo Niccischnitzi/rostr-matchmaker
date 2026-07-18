@@ -31,6 +31,14 @@ export function applyTheme() {
   const el = document.documentElement;
   el.classList.toggle("dark", dark);
   el.style.colorScheme = dark ? "dark" : "light";
+  // High-contrast opt-in (Accessibility)
+  let hc = false;
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) hc = Boolean(JSON.parse(raw)?.highContrast);
+  } catch { /* noop */ }
+  if (hc) el.setAttribute("data-contrast", "high");
+  else el.removeAttribute("data-contrast");
 }
 
 export function initThemeListeners() {
