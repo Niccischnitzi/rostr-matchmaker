@@ -28,14 +28,20 @@ export function ClubsTab() {
 
   async function reload() {
     if (!user) return;
-    const [{ data: allClubs }, { data: myMem }] = await Promise.all([
-      supabase.from("clubs").select("*").order("created_at", { ascending: false }),
-      supabase.from("club_members").select("club_id").eq("user_id", user.id),
-    ]);
-    setClubs(allClubs ?? []);
-    setMemberships(new Set((myMem ?? []).map((r) => r.club_id)));
-    setLoading(false);
+    try {
+      const [{ data: allClubs, error: e1 }, { data: myMem, error: e2 }] = await Promise.all([
+        supabase.from("clubs").select("*").order("created_at", { ascending: false }),
+        supabase.from("club_members").select("club_id").eq("user_id", user.id),
+      ]);
+      if (e1) toast.error(`Couldn't load clubs: ${e1.message}`);
+      if (e2) toast.error(`Couldn't load memberships: ${e2.message}`);
+      setClubs(allClubs ?? []);
+      setMemberships(new Set((myMem ?? []).map((r) => r.club_id)));
+    } finally {
+      setLoading(false);
+    }
   }
+
 
   useEffect(() => {
     reload();
@@ -289,24 +295,34 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
     if (!user) return;
     let cancelled = false;
     (async () => {
-      const [{ data: c }, { data: chs }, { data: mems }] = await Promise.all([
-        supabase.from("clubs").select("*").eq("id", clubId).single(),
-        supabase.from("club_channels").select("*").eq("club_id", clubId).order("position"),
-        supabase.from("club_members").select("*").eq("club_id", clubId),
-      ]);
-      if (cancelled) return;
-      setClub(c ?? null);
-      setChannels(chs ?? []);
-      if (chs && chs.length) setActiveChannel(chs[0].id);
-      const profiles = await fetchProfiles((mems ?? []).map((m) => m.user_id));
-      const byId = new Map(profiles.map((p) => [p.id, p]));
-      setMembers((mems ?? []).map((m) => ({ ...m, profile: byId.get(m.user_id) ?? null })));
-      setLoading(false);
+      try {
+        const [{ data: c, error: e1 }, { data: chs, error: e2 }, { data: mems, error: e3 }] = await Promise.all([
+          supabase.from("clubs").select("*").eq("id", clubId).maybeSingle(),
+          supabase.from("club_channels").select("*").eq("club_id", clubId).order("position"),
+          supabase.from("club_members").select("*").eq("club_id", clubId),
+        ]);
+        if (cancelled) return;
+        if (e1) toast.error(`Club load failed: ${e1.message}`);
+        if (e2) toast.error(`Channels load failed: ${e2.message}`);
+        if (e3) toast.error(`Members load failed: ${e3.message}`);
+        setClub(c ?? null);
+        setChannels(chs ?? []);
+        if (chs && chs.length) setActiveChannel(chs[0].id);
+        const profiles = await fetchProfiles((mems ?? []).map((m) => m.user_id));
+        if (cancelled) return;
+        const byId = new Map(profiles.map((p) => [p.id, p]));
+        setMembers((mems ?? []).map((m) => ({ ...m, profile: byId.get(m.user_id) ?? null })));
+      } catch (err: any) {
+        if (!cancelled) toast.error(err?.message ?? "Couldn't open club");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [clubId, user]);
+
 
   const myMembership = members.find((m) => m.user_id === user?.id);
   const isOwner = myMembership?.role === "owner";
@@ -332,13 +348,22 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
     onBack();
   }
 
-  if (loading || !club) {
+  if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 pt-10 pb-10 grid place-items-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
   }
+  if (!club) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 pt-10 pb-10 text-center space-y-3">
+        <p className="text-sm text-muted-foreground">Couldn't load this club. It may have been deleted or you may not have access.</p>
+        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4 mr-1.5" />Back</Button>
+      </div>
+    );
+  }
+
 
   return (
     <div

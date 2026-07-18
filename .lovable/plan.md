@@ -1,97 +1,61 @@
-# Rostr — Mockup → Production Roadmap
+This pass is genuinely huge. To ship it end-to-end without leaving half-broken surfaces behind, I want to do it in 5 sequenced sub-batches inside this one turn, in this order. Each sub-batch is independently shippable so if we hit a snag we still land value.
 
-Right now Rostr looks like a real app but most data is hard-coded in `src/lib/squadz-data.ts` and pushed through `SquadzProvider` (in-memory React state). Auth, theme, payments, and some Supabase tables are real; the social graph, media, clubs, chat, LFG, clips, and ranking are not. Here's what's needed to make it an actual product.
+## Sub-batch 1 — Fix "ghost platform" (highest impact, do first)
 
-## 1. Real data layer (replace mock store)
+Root causes I can already see from the network log:
+- Search shows no users because `profiles` SELECT policy filters out non-public rows and most seeded/real users have `is_public` = false or never set → widen the public-profile discovery predicate and audit `search_all`.
+- Clubs "constant loading" is a client bug: the Clubs tab already receives club rows in <200 ms (network confirms), so the spinner is a state bug in `ClansTab.tsx` / `ClubsTab.tsx` loader — not a data bug. Fix the loading flag + add error surface + `try/finally`.
+- DM to real user "silently fails": likely the same pattern as Friends — the row inserts but the recipient's realtime channel key is stale after our earlier randomization, or the conversation row is created but the recipient can't `SELECT` it under RLS. Verify `conversations` + `direct_messages` policies cover both participants, add a `getOrCreateConversation` server round-trip check, and surface send errors with a toast instead of swallowing.
+- Add a real "Add friend" button on public profile / search result cards that calls a `send_friend_request` RPC (idempotent) so adds actually create a `friends` row with `status='pending'`.
 
-Move every screen off `squadz-store.tsx` mock arrays onto Supabase tables with RLS + GRANTs:
+## Sub-batch 2 — Universal light/dark that actually works
 
-- **profiles** (exists) — finish: bio, country, languages, primary games, rank, availability JSON.
-- **friends / connections** (exists) — wire swipe → insert; mutual = match.
-- **clubs, club_members, club_channels, club_messages** (exist) — bind ClubsTab + ChatTab to live data; add banner/logo storage bucket.
-- **lfg_ads** (new) — host, game, mode, region, slots, expires_at; realtime list.
-- **clips / media_posts** (new) — uploader, video_url, thumb_url, likes, views, duration; Storage bucket with 720p cap.
-- **clip_likes, comments, reports** (new) — interactions + moderation.
-- **clans, clan_members, challenges, tournaments, leaderboard_entries** (exist) — connect ClansTab, ChallengesTab, TournamentsTab to live queries.
-- **wallets, transactions** (exist) — show real balance in profile.
-- **presence** — Supabase Realtime channel for Online/In-Game/Busy/LFG status.
+- Split `src/styles.css` into `:root` (light) + `.dark` (dark) token sets so **every** palette (Editorial Sport, Ink & Cream, all 8 backgrounds) has both variants. Right now several palettes only define dark tokens.
+- Theme controller already writes `.dark` — verify each `@theme inline` mapping resolves in both modes and re-verify contrast at 4.5:1 minimum for body / 3:1 for large text using Playwright + axe-core sweep on 6 key routes (index, /shop, /inbox, /u/$handle, /pricing, settings sheet open).
+- Add a visible "Theme" toggle at the top of the Look & Feel accordion (currently buried inside `ThemeCustomizer`).
 
-Each new public table: GRANT on insert/update/delete to `authenticated`, RLS scoped to `auth.uid()`, separate `user_roles` table for admin/mod (already noted in plan.md).
+## Sub-batch 3 — Batch C §1 Post-Game Quick Rate
 
-## 2. Real interactions
+- New table `match_ratings(rater_id, rated_id, challenge_id?, tournament_id?, thumbs, tag, created_at)` with unique `(rater_id, rated_id, coalesce(challenge_id, tournament_id))`.
+- RLS: insert only when the pair actually shares a completed challenge/tournament match (checked via subquery). Aggregate-only SELECT for others; individual rows never leak.
+- SECURITY DEFINER `rating_summary(_user_id)` returning `{positive_pct, total, top_tags[]}`, gated at `total >= 5` (returns null pct below threshold).
+- Post-match prompt component `<PostGameRatePrompt />` mounted on the challenges tab after settlement, one-tap thumb + tag chip, dismissible, dedup'd per match.
+- Profile card `<TrustSignalCard />` on `/u/$handle`.
 
-- **Swipe → friend request** instead of fake mock-id mapping.
-- **Chat (DM + club)** via Supabase Realtime subscriptions on `direct_messages` / `club_messages`.
-- **LFG ads**: create / join / auto-expire (pg_cron or `expires_at` filter).
-- **Clip feed**: upload (signed URL → Storage), transcode/thumb (client-side capture or edge function), like/comment, report.
-- **Reels autoplay**: already implemented; needs real video URLs + view counter RPC.
-- **Notifications**: new friend, new message, club invite, LFG match — `notifications` table + bell badge.
+## Sub-batch 4 — Batch C §2 Chemistry Score
 
-## 3. Account & onboarding completeness
+- SQL view/function `chemistry_pair(_a, _b)` aggregating over `challenges` + `club_wars` where both users participated: `games_together, wins_together, current_streak, last_played_at, trend_last5`.
+- Only computed from Rostr-native tracked matches (no external stat APIs).
+- `<ChemistryCard />` on `/u/$handle` — hidden entirely when `games_together = 0`. Win% hidden below 3 games.
+- Friends list gets a "Best duo" badge on highest chemistry pair.
 
-- Finish `OnboardingWizard` write-through (game picks, platforms, region, availability grid → profile).
-- **Steam linking**: `STEAM_WEB_API_KEY` secret + `steam.return.ts` (file exists, needs key + UI completion).
-- Add **PSN / Xbox / Riot / Epic / Discord** OAuth or manual handle entry into `linked_accounts` table.
-- Password reset page (`/reset-password`) — currently missing.
-- Avatar upload to Storage with the central `<Avatar>` fallback already planned.
+## Sub-batch 5 — Batch C §3 Voice Snippets + branding + tests
 
-## 4. Voice / video calls
+- New table `voice_snippets(user_id PK, storage_path, duration_seconds, created_at)` — one row per user (PK is user_id so re-record UPSERTs).
+- Reuse `media-clips` bucket with a `voice/` prefix + storage RLS.
+- 15 s hard cap client (MediaRecorder auto-stop) + server (trigger rejects `duration_seconds > 15`).
+- `<VoiceSnippet />` player with tap-to-play (no autoplay), reused on profile header + swipe deck. Age-gated: only rendered when viewer + owner both passed 16+ gate (profiles.date_of_birth check).
+- Report action routes through existing `ReportDialog` with `kind='voice_snippet'`.
+- Shard label normalization: sweep for any remaining "token(s)" strings in user-facing UI, replace with "Shard(s)"; internal column names stay `balance_points` / `token_transactions` (schema is fine, don't touch).
+- Logo unification: audit all `<RostrMark>` / `<img src=logo>` usages, force everyone to `<RostrMark>` with size prop only.
+- **UI test coverage** (Vitest components + Playwright flows):
+  - Vitest: `<RostrMark>`, `<ShardIcon>`, `<GlowButton>`, `<UserAvatar>`, `<EmptyState>`, `<TrustSignalCard>`, `<ChemistryCard>`, `<VoiceSnippet>` — render + prop variants + accessibility roles.
+  - Playwright flows against `http://localhost:8080`: sign in via injected session → send DM to a real friend and assert recipient row → swipe LFG card and assert `lfg_ad_interactions` insert → buy shard item and assert wallet debit + inventory row → equip cosmetic and assert `data-halo` on rendered avatar → toggle light/dark and assert `documentElement.classList` + computed contrast on body text.
+  - CI wire-up in `.github/workflows/ci.yml` to run `bun test` + `bunx playwright test` on PR.
 
-- 1:1 WebRTC via Supabase Realtime for SDP/ICE signaling, Google STUN.
-- `CallSheet.tsx` exists — wire it. Group calls (>2) need an SFU; out of scope for v1.
+## Migration budget
 
-## 5. Payments (real money)
+3 migrations total: (1) match_ratings + RPC + policies, (2) chemistry view/function, (3) voice_snippets + storage policies + duration trigger. Grouped by feature so each is reviewable in isolation.
 
-- Stripe Checkout for: upload-overage (exponential pricing helper exists), club boosts, tournament entry, cosmetics.
-- Add **PayPal + Twint** to `payment_method_types` (Twint needs CH Stripe account).
-- Webhook at `/api/public/payments/webhook` (file exists) → update `transactions` + `wallets`.
-- PaymentTestModeBanner already there.
+## What I'm NOT doing this pass (explicit)
 
-## 6. Moderation & safety
+- No external game-API stat integration for Chemistry (per spec §4).
+- No voice snippet library / multiple clips per user.
+- No public per-user rating history — aggregate only, hard requirement.
+- No changes to the `balance_points` column name (breaking, unnecessary — only the user-facing label needs to say "Shards").
 
-- `ReportDialog` → write to `user_reports` (table exists) with reason categories + optional chat log.
-- `/moderation` route gated by `has_role(uid, 'admin')`.
-- Block/mute lists, content takedown action, soft-delete on clips.
+## Order & checkpoints
 
-## 7. Discovery & growth
+I ship 1 → 2 → 3 → 4 → 5. After sub-batch 1 and after sub-batch 2 I'll do a quick Playwright smoke to confirm the "real users appear + clubs open + DM lands" before piling Batch C features on top. If any sub-batch turns into a rabbit hole (e.g. RLS on `match_ratings` needs a schema change to challenges to add `winner_settled_at`), I'll stop, report, and get your call before proceeding.
 
-- Search (players, clubs, clips) via Postgres full-text or trigram.
-- Public profile pages (`/u/$handle`) SSR-rendered for SEO with OG image per user.
-- Public club pages (`/c/$slug`) likewise.
-- Sitemap (exists) + per-route head() metadata for shareable links.
-
-## 8. Polish & reliability
-
-- Replace remaining `Loader2` spinners with skeleton-shine variants.
-- Error boundaries on every tab (TabErrorBoundary exists — apply universally).
-- AbortController on every Supabase fetch in tab effects (Phase 1 of existing plan.md).
-- Empty states + retry UI for failed loads.
-- Mobile: bottom nav over reels, sheet-based comments, 100dvh full-screen reels.
-- Light mode contrast pass for every palette in ThemeCustomizer.
-
-## 9. Legal / launch
-
-- `/privacy`, `/terms`, `/community-guidelines` routes.
-- Cookie/consent banner if targeting EU.
-- Age gate (13+ / 16+ depending on region).
-- Support email + report-abuse contact.
-- Custom domain after first publish.
-
-## Suggested phasing
-
-```
-Phase A  Data layer: schema + RLS + GRANTs for clips, lfg_ads, comments, likes, notifications
-Phase B  Swap each tab off mock store → live Supabase queries + realtime
-Phase C  Clip upload + Storage + reels backed by real videos
-Phase D  Steam/PSN/Xbox linking + onboarding write-through
-Phase E  Payments (Stripe Checkout + webhook + wallet credit)
-Phase F  Calls (WebRTC 1:1) + notifications
-Phase G  Moderation, public profiles/clubs, SEO, legal pages, launch
-```
-
-## Open questions before I start building
-
-1. Which phase do you want first? (My recommendation: Phase A + B together — without real data nothing else matters.)
-2. Clip uploads: cap at 720p / 60s / 50MB like the existing `uploadPricing.ts`, or different limits?
-3. Which platform linking is must-have for v1? (Steam is half-wired; PSN/Xbox need their own API access.)
-4. Payments at launch, or after first user cohort?
+Approve to start, or tell me to reorder / drop a sub-batch.

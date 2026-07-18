@@ -47,7 +47,7 @@ export function DevPanel() {
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(`${delta > 0 ? "+" : ""}${delta} tokens → ${target?.username ?? "you"}. New balance: ${data}`);
+    toast.success(`${delta > 0 ? "+" : ""}${delta} Shards → ${target?.username ?? "you"}. New balance: ${data}`);
     if (uid === user!.id) refresh();
   }
 
@@ -118,7 +118,7 @@ export function DevPanel() {
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Adjust tokens</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Adjust Shards</p>
               <div className="flex gap-2">
                 <input
                   type="number"
