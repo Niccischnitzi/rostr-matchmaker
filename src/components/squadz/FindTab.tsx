@@ -133,19 +133,23 @@ export function FindTab() {
     (async () => {
       setLoading(true);
       let q = supabase
-        .from("profiles" as any)
-        .select("id, username, display_name, avatar_url, lfg_title, lfg_body, lfg_games, country, is_public")
-        .eq("is_public", true)
-        .not("lfg_title", "is", null)
-        .order("updated_at", { ascending: false })
+        .from("lfg_ads" as any)
+        .select("id, host_id, game, mode, region, description, tags, created_at")
+        .is("closed_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
         .limit(30);
-      if (user?.id) q = q.neq("id", user.id);
+      if (user?.id) q = q.neq("host_id", user.id);
       const { data } = await q;
       if (cancelled) return;
       const rows = ((data as any) ?? []) as Array<{
-        id: string; username: string; display_name: string | null; avatar_url: string | null;
-        lfg_title: string | null; lfg_body: string | null; lfg_games: string[] | null; country: string | null;
+        id: string; host_id: string; game: string; mode: string | null; region: string | null; description: string | null; tags: string[] | null;
       }>;
+      const { data: hostRows } = await supabase
+        .from("profiles" as any)
+        .select("id, username, display_name, avatar_url, country, is_public")
+        .in("id", Array.from(new Set(rows.map((r) => r.host_id))));
+      const hostById = new Map(((hostRows as any[]) ?? []).filter((h) => h.is_public !== false).map((h) => [h.id, h]));
       // Exclude ads the current user already dismissed/accepted (server-side truth of record).
       let already = new Set<string>();
       if (user?.id) {
@@ -156,24 +160,28 @@ export function FindTab() {
         already = new Set(((ints as any[]) ?? []).map((r) => r.ad_owner_id));
       }
       const mapped: DeckCard[] = rows
-        .filter((r) => !already.has(r.id))
-        .map((r) => ({
+        .filter((r) => !already.has(r.host_id) && hostById.has(r.host_id))
+        .map((r) => {
+        const host = hostById.get(r.host_id);
+        const username = host?.display_name ?? host?.username ?? "Player";
+        return ({
         id: `lfg-${r.id}`,
-        realId: r.id,
-        username: r.display_name ?? r.username,
-        avatar: r.avatar_url ?? `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${r.username}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`,
-        playstyle: r.lfg_title ?? "Looking for Rostr",
-        location: r.country ?? "—",
+        realId: r.host_id,
+        lfgAdId: r.id,
+        username,
+        avatar: host?.avatar_url ?? `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${username}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`,
+        playstyle: r.mode ?? "Looking for Rostr",
+        location: host?.country ?? r.region ?? "—",
         timezone: "",
         age: 21,
         gender: "NB",
-        country: r.country ?? "",
-        games: (r.lfg_games ?? []).slice(0, 4).map((g) => ({ name: g, rank: "", color: "var(--primary)" })),
+        country: host?.country ?? "",
+        games: [r.game, ...((r.tags ?? []).filter((g) => g !== r.game))].slice(0, 4).map((g) => ({ name: g, rank: "", color: "var(--primary)" })),
         traits: [] as Trait[],
         isLfg: true,
-        lfgTitle: r.lfg_title,
-        lfgBody: r.lfg_body,
-      }));
+        lfgTitle: r.mode,
+        lfgBody: r.description,
+      });});
       setLfgCards(mapped);
       setLoading(false);
     })();
