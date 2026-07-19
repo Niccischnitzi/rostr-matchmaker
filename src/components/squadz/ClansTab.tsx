@@ -372,7 +372,7 @@ function ClanDetail({ clan, members, onBack, onChanged }: { clan: Clan; members:
                 onClick={() => transfer(m.user_id)}
                 className="w-full text-left p-3 hover:bg-surface flex items-center gap-3"
               >
-                <UserAvatar userId={m.user_id} src={m.profile?.avatar_url} name={m.profile?.username} size={32} />
+                <UserAvatar userId={m.user_id} avatarUrl={m.profile?.avatar_url} fallback={m.profile?.username || "?"} size={32} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{m.profile?.display_name || m.profile?.username}</p>
                   <p className="text-xs text-muted-foreground">{String(m.role).replace("_", "-")}</p>
