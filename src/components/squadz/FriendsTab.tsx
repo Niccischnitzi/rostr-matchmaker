@@ -95,7 +95,7 @@ export function FriendsTab() {
     if (error) return toast.error(error.message);
     load();
   }
-  async function add(profile: Profile) {
+  async function add(profile: ProfileLite) {
     if (!user) return;
     try {
       const res = await requestFriend(profile.id);

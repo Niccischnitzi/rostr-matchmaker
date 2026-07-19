@@ -16,7 +16,6 @@ import {
   fetchProfiles,
   type Conversation,
   type DirectMessage,
-  type Profile,
   type ProfileLite,
 } from "@/lib/squadz-supabase";
 import { FriendsTab } from "./FriendsTab";
@@ -236,7 +235,7 @@ function NewDMModal({ onClose, onOpen }: { onClose: () => void; onOpen: (id: str
     );
   }, [profiles, q]);
 
-  async function start(other: Profile) {
+  async function start(other: ProfileLite) {
     if (!user) return;
     setBusy(true);
     try {
