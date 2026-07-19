@@ -1,76 +1,68 @@
-## What I verified
+# Rostr — Notifications, Clans, Light Mode & Hardening
 
-- **Settings:** `Your cosmetics` is currently a separate settings accordion section. I will move it under **Look & feel** as requested.
-- **LFG interactions:** the visible Find deck still uses profile-level LFG fields (`profiles.lfg_title`, etc.), while the Chat tab's LFG Board uses the old mock/local store. The real `lfg_ads` table currently has **0 open rows**, so the LFG Board cannot be interacted with as a real product surface yet.
-- **Messaging:** the database has conversations and direct messages, and RLS exists, but the app creates DMs directly from the browser using the unordered pair rules. I will move this into a reliable backend function so creating/opening/sending a DM is idempotent and works consistently.
-- **Friends:** friend requests exist, but there is no single reliable “add/request/message” action shared by Find, Friends, profiles, and LFG.
+Scope is large. I'll ship in five ordered sub-batches so you can review after each. Anything ambiguous stops for your call instead of guessing.
 
-## Plan
+## 1. Notifications (friend requests, LFG, DM)
 
-### 1. Fix real user interactions first
-- Add backend RPCs for:
-  - `get_or_create_conversation(other_user_id)`
-  - `send_dm(other_user_id, body)`
-  - `request_friend(target_user_id)`
-  - `join_lfg_ad(ad_id)`
-- Make each action idempotent so repeated taps do not fail or create duplicates.
-- Keep all authorization tied to the signed-in user.
-- Return clear errors for blocked/self/full/expired cases.
+Backend
+- Extend the existing `notifications` table with kinds: `friend_request`, `friend_accepted`, `dm_received`, `lfg_joined`, `lfg_accepted`, `clan_invite`, `clan_role_changed`.
+- Add DB triggers so notifications are written server-side (no client trust):
+  - `after insert on friends` where `status='pending'` → notify recipient.
+  - `after update on friends` where transition to `accepted` → notify requester.
+  - `after insert on direct_messages` → notify the other participant (dedup within 60s per conversation).
+  - `after insert on lfg_ad_joiners` → notify LFG ad owner.
+- Keep `mark_all_notifications_read` RPC; add `mark_notification_read(_id uuid)`.
 
-### 2. Replace mock LFG Board with real LFG data
-- Rebuild the Chat tab **LFG Board** to read/write `lfg_ads` instead of the local mock store.
-- Let users post a real LFG ticket, join another user's ticket, and message the host.
-- Add animated empty state with a large primary CTA when there are no open LFGs.
-- Keep the existing Find swipe deck working, but unify its “squad up” action with the new real interaction functions.
+Frontend
+- `NotificationsBell` already toasts new rows — extend `iconFor` and `/inbox` rendering to include LFG + clan icons and link targets (`/inbox` → deep link via `row.link`).
+- Row click marks that one read and navigates to `link` (DM thread, LFG card, clan page).
 
-### 3. Repair DM UX end-to-end
-- Update Chat “New DM”, Friends “message”, Find “message/squad”, and profile actions to all use the same reliable DM helper.
-- Add optimistic UI for sending messages and roll back on failure.
-- Add visible loading/error/empty states so the tab never looks stuck.
-- Make realtime channel names unique to avoid collisions.
+## 2. Clan hierarchy admin + leave/delete
 
-### 4. Move cosmetics into Look & feel
-- Remove the separate `Your cosmetics` accordion section.
-- Place `OwnedCosmeticsSection` inside **Look & feel**, below theme controls.
-- Keep text labels explicit: theme, accent, backgrounds, avatar frames, halos, tags.
-- Ensure the save/apply behavior is obvious and consistent.
+- New RPC `set_clan_member_role(_clan uuid, _user uuid, _role text)`:
+  - Only `leader` or `co_leader` can promote/demote, cannot exceed own rank, only leader can set co_leader, cannot demote the leader.
+- New RPC `kick_clan_member(_clan uuid, _user uuid)` with same rank rules.
+- New RPC `leave_clan(_clan uuid)`:
+  - If caller is leader and other members remain → block with clear error asking to transfer leadership first (or auto-promote highest-ranked officer if `force=true`).
+- New RPC `delete_clan(_clan uuid)` — leader only, cascades members/invites.
+- `ClansTab` / `ClanDetail`:
+  - Roster row → context menu (promote/demote/kick) for leaders+co_leaders.
+  - "Transfer leadership" dialog.
+  - "Delete clan" in danger zone for leader; "Leave clan" everywhere else with proper confirmation.
 
-### 5. Universal light/dark mode cleanup
-- Audit the remaining hardcoded dark/light styles in the major tabs.
-- Replace them with semantic theme tokens where needed.
-- Ensure all theme palettes obey the global **Light / Dark / System** setting.
-- Verify contrast for normal and high-contrast modes.
+## 3. Clan cosmetics application
 
-### 6. Add “the rest” of Batch C in order
-- **Post-Game Quick Rate**
-  - Add `match_ratings` table, safe fixed tags, aggregate-only profile display, and minimum sample-size threshold.
-- **Chemistry Score**
-  - Add pairwise tracked-match aggregation for challenges/club wars only.
-  - Show chemistry only when shared history exists and sample size is meaningful.
-- **Voice Snippets**
-  - Add one active 15-second profile voice snippet per user.
-  - Enforce duration client-side and backend-side.
-  - Require deliberate tap to play, never autoplay.
-  - Add report action.
+- Add `clans.cosmetic` jsonb (banner_id, badge_id, accent_hex, tag_style).
+- `ClanAppearance` sheet (leaders only) — pick from clan-eligible items in `shop_items` (new `scope='clan'` category) and equipped items in `user_inventory` owned by a leader.
+- Render across surfaces: `ClanCard`, `ClanDetail` header, roster tag chip, and member profile chips (`UserAvatar` reads clan cosmetic when a user's active clan has one equipped).
+- Reuse cosmetics application layer in `use-equipped-cosmetics` — add a `useClanCosmetic(clanId)` hook.
 
-### 7. Normalize branding and Shards labels
-- Sweep remaining “tokens” copy in visible UI and change it to **Shards**.
-- Keep database/internal names unchanged where renaming would be risky.
-- Ensure logo/brand treatment is consistent across settings, shop, pricing, chat, and empty states.
+## 4. Universal light mode
 
-### 8. UI test coverage
-- Add tests for:
-  - Settings: cosmetics live under Look & feel.
-  - Chat: empty state shows a large New DM CTA.
-  - Friends: add/request/message actions are present.
-  - LFG Board: real empty state and post/join controls.
-  - Theme: light/dark/high-contrast attributes persist after refresh.
+- Audit hardcoded `bg-black/white`, `text-white/black`, `#hex` in components — replace with tokens.
+- Extend `src/styles.css` `:root` light palette so `--surface`, `--surface-2`, `--card`, `--muted`, gradient stops, and glow colors all have light-mode counterparts. Test each tab (Find, Chat, Clans, Reels, Shop, Settings, Inbox, Profile) in light.
+- Verify Reels/Media overlays remain legible (add scrim tokens instead of hardcoded blacks).
+- Ensure `data-contrast="high"` still overrides.
 
-## Still necessary after this pass
+## 5. Security + graphical bugs
 
-- Real users need actual LFG rows, not profile-only mock ads.
-- DM/friend/LFG actions need one reliable backend path instead of several direct browser insert paths.
-- Chat LFG Board must be converted from mock local state to database-backed state.
-- Batch C database migrations and UI surfaces still need to be built.
-- Contrast and theme persistence need a final Playwright sweep after the UI changes.
-- Tests need to be added after the interaction surfaces are stabilized.
+- Run `security--run_security_scan`, fix outstanding findings, log rationale to security memory.
+- Common bug pass:
+  - `NotificationsBell` compact size + pip alignment on mobile header.
+  - `ClansTab` avatar fallback uses external dicebear — swap to `UserAvatar` (unifies halo/frame + avoids third-party requests).
+  - `FindTab` / `Inbox` skeleton height jump.
+  - Empty `EmptyState` CTA button contrast in light mode.
+
+## Technical notes
+
+- Notification triggers use `SECURITY DEFINER` + `search_path=public` and guard with `has_role`/ownership checks; grants: `authenticated` `select/update(read_at)` on `notifications`, no anon.
+- All new RPCs: `SECURITY DEFINER`, revoke from anon, rate-limited via `check_rate_limit`.
+- Realtime: `notifications` is already in the publication; verify.
+- No changes to auto-generated Supabase files.
+
+## What I won't touch this pass
+
+- No new payment flows, no MCP tool changes, no schema for a full "clan wars" bracket (existing table stays as-is).
+- No redesign of the Reels player beyond token-swap.
+
+Stop me between any sub-batch if priorities shift. Otherwise I'll execute 1→5 in order.

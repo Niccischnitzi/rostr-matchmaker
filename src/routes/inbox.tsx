@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Inbox as InboxIcon, CheckCheck, UserPlus, MessageCircle, Trophy, ShieldAlert, Bell } from "lucide-react";
+import { ArrowLeft, Inbox as InboxIcon, CheckCheck, UserPlus, MessageCircle, Trophy, ShieldAlert, Bell, Users, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications, type NotificationRow } from "@/hooks/use-notifications";
 import { formatDistanceToNow } from "date-fns";
@@ -22,12 +22,16 @@ export const Route = createFileRoute("/inbox")({
 });
 
 function iconFor(kind: string) {
+  if (kind === "friend_accepted") return Users;
   if (kind.includes("friend")) return UserPlus;
+  if (kind === "clan_role_changed" || kind.includes("clan")) return Crown;
+  if (kind === "lfg_join" || kind.includes("lfg")) return Users;
   if (kind.includes("message") || kind.includes("dm")) return MessageCircle;
   if (kind.includes("tournament") || kind.includes("cup") || kind.includes("challenge")) return Trophy;
   if (kind.includes("report") || kind.includes("moderation")) return ShieldAlert;
   return Bell;
 }
+
 
 function InboxPage() {
   const { rows, unread, loading, markAllRead, reload } = useNotifications();
