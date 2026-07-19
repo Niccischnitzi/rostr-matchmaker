@@ -285,7 +285,7 @@ function ClanDetail({ clan, members, onBack, onChanged }: { clan: Clan; members:
               const nextDown = ROLE_ORDER[Math.max(0, rank(targetRole) - 1)];
               return (
                 <div key={m.user_id} className="flex items-center gap-3 p-3">
-                  <UserAvatar userId={m.user_id} src={m.profile?.avatar_url} name={m.profile?.display_name || m.profile?.username} size={36} />
+                  <UserAvatar userId={m.user_id} avatarUrl={m.profile?.avatar_url} fallback={m.profile?.display_name || m.profile?.username || "?"} size={36} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{m.profile?.display_name || m.profile?.username || "Player"}</p>
                     <p className="text-xs text-muted-foreground">@{m.profile?.username}</p>
