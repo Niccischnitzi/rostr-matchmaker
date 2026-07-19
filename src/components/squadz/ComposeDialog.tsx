@@ -103,34 +103,43 @@ export function ComposeDialog({
           return;
         }
         // Shard cost is charged server-side by the enforce_media_post_cost trigger
-        // when the media_posts row is inserted — never trust client-side spend calls.
+        // inside the create_media_post RPC — never trust client-side spend calls.
         const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
         const path = `${userId}/${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("media-clips").upload(path, file, {
           contentType: file.type || "video/mp4",
         });
         if (upErr) throw upErr;
-        const { error: insErr } = await supabase.from("media_posts").insert({
-          user_id: userId, kind: "video", title: title.trim() || file.name, game: game.trim() || null,
-          media_path: path, duration_s: duration, size_bytes: file.size, tokens_spent: tokensNeeded,
-        });
+        const { error: insErr } = await supabase.rpc("create_media_post" as never, {
+          _kind: "video",
+          _media_path: path,
+          _title: title.trim() || file.name,
+          _game: game.trim() || null,
+          _duration_s: duration,
+          _size_bytes: file.size,
+        } as never);
         if (insErr) throw insErr;
       } else if (kind === "text") {
         if (!title.trim()) { toast.error("Subject is required"); return; }
         if (!body.trim()) { toast.error("Write something"); return; }
-        const { error } = await supabase.from("media_posts").insert({
-          user_id: userId, kind: "text", title: title.trim().slice(0, 80), body: body.trim().slice(0, 280),
-        });
+        const { error } = await supabase.rpc("create_media_post" as never, {
+          _kind: "text",
+          _title: title.trim().slice(0, 80),
+          _body: body.trim().slice(0, 280),
+        } as never);
         if (error) throw error;
       } else {
         if (!title.trim()) { toast.error("Subject is required"); return; }
         if (!/^https?:\/\/(twitter|x)\.com\//.test(url.trim())) {
           toast.error("Paste a valid X/Twitter URL"); return;
         }
-        const { error } = await supabase.from("media_posts").insert({
-          user_id: userId, kind: "tweet", source_url: url.trim(), title: title.trim().slice(0, 80),
-        });
+        const { error } = await supabase.rpc("create_media_post" as never, {
+          _kind: "tweet",
+          _source_url: url.trim(),
+          _title: title.trim().slice(0, 80),
+        } as never);
         if (error) throw error;
+
       }
 
 
