@@ -275,6 +275,7 @@ export type Database = {
       clans: {
         Row: {
           banner_url: string | null
+          cosmetic: Json
           created_at: string
           description: string | null
           elo: number
@@ -288,6 +289,7 @@ export type Database = {
         }
         Insert: {
           banner_url?: string | null
+          cosmetic?: Json
           created_at?: string
           description?: string | null
           elo?: number
@@ -301,6 +303,7 @@ export type Database = {
         }
         Update: {
           banner_url?: string | null
+          cosmetic?: Json
           created_at?: string
           description?: string | null
           elo?: number
@@ -1546,6 +1549,7 @@ export type Database = {
           link: string | null
           payload: Json
           read_at: string | null
+          ref_id: string | null
           title: string
           user_id: string
         }
@@ -1557,6 +1561,7 @@ export type Database = {
           link?: string | null
           payload?: Json
           read_at?: string | null
+          ref_id?: string | null
           title: string
           user_id: string
         }
@@ -1568,6 +1573,7 @@ export type Database = {
           link?: string | null
           payload?: Json
           read_at?: string | null
+          ref_id?: string | null
           title?: string
           user_id?: string
         }
@@ -2582,11 +2588,16 @@ export type Database = {
         Args: { _clan: string; _user: string }
         Returns: Database["public"]["Enums"]["clan_role"]
       }
+      clan_role_rank: {
+        Args: { _role: Database["public"]["Enums"]["clan_role"] }
+        Returns: number
+      }
       club_role_of: {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
       }
       decline_challenge: { Args: { _challenge_id: string }; Returns: boolean }
+      delete_clan: { Args: { _clan: string }; Returns: boolean }
       equip_cosmetic: {
         Args: { _equip: boolean; _item_id: string }
         Returns: boolean
@@ -2635,6 +2646,11 @@ export type Database = {
         Returns: boolean
       }
       join_lfg_ad: { Args: { _ad_id: string }; Returns: Json }
+      kick_clan_member: {
+        Args: { _clan: string; _user: string }
+        Returns: boolean
+      }
+      leave_clan: { Args: { _clan: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: number }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
@@ -2724,6 +2740,14 @@ export type Database = {
         Args: { _attachment_url?: string; _body?: string; _other_user: string }
         Returns: Json
       }
+      set_clan_member_role: {
+        Args: {
+          _clan: string
+          _role: Database["public"]["Enums"]["clan_role"]
+          _user: string
+        }
+        Returns: boolean
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       spend_tokens: { Args: { _amount: number }; Returns: number }
@@ -2750,11 +2774,19 @@ export type Database = {
             }
             Returns: Json
           }
+      transfer_clan_leadership: {
+        Args: { _clan: string; _new_leader: string }
+        Returns: boolean
+      }
       unlock_cosmetic: {
         Args: { _cost: number; _key: string }
         Returns: boolean
       }
       unread_notification_count: { Args: never; Returns: number }
+      update_clan_cosmetic: {
+        Args: { _clan: string; _cosmetic: Json }
+        Returns: boolean
+      }
       upsert_voice_snippet: {
         Args: { _duration_seconds: number; _storage_path: string }
         Returns: Json
