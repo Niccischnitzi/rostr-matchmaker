@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Inbox as InboxIcon, CheckCheck, UserPlus, MessageCircle, Trophy, ShieldAlert, Bell } from "lucide-react";
+import { ArrowLeft, Inbox as InboxIcon, CheckCheck, UserPlus, MessageCircle, Trophy, ShieldAlert, Bell, Users, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications, type NotificationRow } from "@/hooks/use-notifications";
 import { formatDistanceToNow } from "date-fns";
