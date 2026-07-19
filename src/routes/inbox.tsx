@@ -22,12 +22,16 @@ export const Route = createFileRoute("/inbox")({
 });
 
 function iconFor(kind: string) {
+  if (kind === "friend_accepted") return Users;
   if (kind.includes("friend")) return UserPlus;
+  if (kind === "clan_role_changed" || kind.includes("clan")) return Crown;
+  if (kind === "lfg_join" || kind.includes("lfg")) return Users;
   if (kind.includes("message") || kind.includes("dm")) return MessageCircle;
   if (kind.includes("tournament") || kind.includes("cup") || kind.includes("challenge")) return Trophy;
   if (kind.includes("report") || kind.includes("moderation")) return ShieldAlert;
   return Bell;
 }
+
 
 function InboxPage() {
   const { rows, unread, loading, markAllRead, reload } = useNotifications();
