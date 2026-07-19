@@ -9,10 +9,10 @@ import { SteamClaimListener } from "@/components/squadz/SteamClaimListener";
 
 export const Route = createFileRoute("/")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/auth", search: { next: location.pathname + location.searchStr } });
     }
     return { user: data.user };
   },

@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileLite = Pick<Profile, "id" | "username" | "display_name" | "avatar_url" | "bio">;
 export type Conversation = Database["public"]["Tables"]["conversations"]["Row"];
 export type DirectMessage = Database["public"]["Tables"]["direct_messages"]["Row"];
 export type Club = Database["public"]["Tables"]["clubs"]["Row"];
@@ -88,7 +89,7 @@ export async function getProfileRatingSummary(userId: string) {
 
 export async function fetchProfiles(ids: string[]) {
   if (ids.length === 0) return [] as Profile[];
-  const { data, error } = await supabase.from("profiles").select("*").in("id", ids);
+  const { data, error } = await supabase.from("profiles").select("id, username, display_name, avatar_url, bio").in("id", ids);
   if (error) throw error;
   return data;
 }

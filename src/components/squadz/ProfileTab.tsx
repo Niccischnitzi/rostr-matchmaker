@@ -179,7 +179,7 @@ export function ProfileTab() {
     await qc.cancelQueries();
     qc.clear();
     await signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", replace: true, search: { next: "/" } });
   };
 
   const fallbackAvatar = useMemo(
@@ -689,7 +689,7 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
     setConnecting(provider);
     // Brief visual delay before navigating to the mock callback route.
     setTimeout(() => {
-      navigate({ to: "/auth/callback/$provider", params: { provider: slug } });
+      toast.success(`${platformName} connected (mock)`);
     }, 250);
   };
 

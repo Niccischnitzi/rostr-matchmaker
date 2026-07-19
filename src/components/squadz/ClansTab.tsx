@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import type { Clan, ClanMember, Profile } from "@/lib/squadz-supabase";
+import type { Clan, ClanMember, ProfileLite } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,7 @@ export function ClansTab() {
   const [clans, setClans] = useState<Clan[]>([]);
   const [myClans, setMyClans] = useState<Clan[]>([]);
   const [active, setActive] = useState<Clan | null>(null);
-  const [members, setMembers] = useState<(ClanMember & { profile: Profile | null })[]>([]);
+  const [members, setMembers] = useState<(ClanMember & { profile: ProfileLite | null })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function ClansTab() {
 
   async function openClan(clan: Clan) {
     setActive(clan);
-    const { data } = await supabase.from("clan_members").select("*, profile:profiles(*)").eq("clan_id", clan.id);
+    const { data } = await supabase.from("clan_members").select("*, profile:profiles(id, username, display_name, avatar_url, bio)").eq("clan_id", clan.id);
     if (data) setMembers(data as never);
   }
 
@@ -160,7 +160,7 @@ function CreateClanDialog({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-function ClanDetail({ clan, members, onBack, onChanged }: { clan: Clan; members: (ClanMember & { profile: Profile | null })[]; onBack: () => void; onChanged: () => void }) {
+function ClanDetail({ clan, members, onBack, onChanged }: { clan: Clan; members: (ClanMember & { profile: ProfileLite | null })[]; onBack: () => void; onChanged: () => void }) {
   const { user } = useAuth();
   const isLeader = members.find((m) => m.user_id === user?.id)?.role === "leader";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { submitMatchRating, type Challenge, type Profile, type Wallet } from "@/lib/squadz-supabase";
+import { submitMatchRating, type Challenge, type Profile, type ProfileLite, type Wallet } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -41,7 +41,7 @@ export function ChallengesTab() {
     await loadWallet();
     const { data } = await supabase
       .from("challenges")
-      .select("*, challenger:profiles!challenges_challenger_id_fkey(*), opponent:profiles!challenges_opponent_id_fkey(*)")
+      .select("*, challenger:profiles!challenges_challenger_id_fkey(id, username, display_name, avatar_url, bio), opponent:profiles!challenges_opponent_id_fkey(id, username, display_name, avatar_url, bio)")
       .or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
     if (data) setChallenges(data as never);
@@ -250,8 +250,8 @@ function NewChallengeDialog({ onCreated }: { onCreated: () => void }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<Profile[]>([]);
-  const [opponent, setOpponent] = useState<Profile | null>(null);
+  const [results, setResults] = useState<ProfileLite[]>([]);
+  const [opponent, setOpponent] = useState<ProfileLite | null>(null);
   const [game, setGame] = useState("Valorant");
   const [wager, setWager] = useState(50);
   const [busy, setBusy] = useState(false);
@@ -259,7 +259,7 @@ function NewChallengeDialog({ onCreated }: { onCreated: () => void }) {
   useEffect(() => {
     if (!open || !search.trim()) { setResults([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from("profiles").select("*")
+      const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url, bio")
         .ilike("username", `%${search.trim()}%`).neq("id", user?.id ?? "").limit(8);
       if (data) setResults(data);
     }, 200);

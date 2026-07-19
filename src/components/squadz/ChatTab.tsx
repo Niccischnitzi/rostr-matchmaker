@@ -16,7 +16,7 @@ import {
   fetchProfiles,
   type Conversation,
   type DirectMessage,
-  type Profile,
+  type ProfileLite,
 } from "@/lib/squadz-supabase";
 import { FriendsTab } from "./FriendsTab";
 import { CallSheet } from "./CallSheet";
@@ -30,7 +30,7 @@ import { LfgAdSheet } from "./LfgAdSheet";
 
 
 type ConvWithPeer = Conversation & {
-  peer: Profile | null;
+  peer: ProfileLite | null;
   lastMessage?: DirectMessage;
 };
 
@@ -211,14 +211,14 @@ function DMList({ onOpen }: { onOpen: (id: string) => void }) {
 function NewDMModal({ onClose, onOpen }: { onClose: () => void; onOpen: (id: string) => void }) {
   const { user } = useAuth();
   const [q, setQ] = useState("");
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, display_name, avatar_url, bio")
       .neq("id", user.id)
       .order("username")
       .limit(50)
@@ -235,7 +235,7 @@ function NewDMModal({ onClose, onOpen }: { onClose: () => void; onOpen: (id: str
     );
   }, [profiles, q]);
 
-  async function start(other: Profile) {
+  async function start(other: ProfileLite) {
     if (!user) return;
     setBusy(true);
     try {
@@ -301,7 +301,7 @@ function NewDMModal({ onClose, onOpen }: { onClose: () => void; onOpen: (id: str
 function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: () => void }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<DirectMessage[]>([]);
-  const [peer, setPeer] = useState<Profile | null>(null);
+  const [peer, setPeer] = useState<ProfileLite | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [typingPeer, setTypingPeer] = useState(false);
@@ -324,7 +324,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
       if (!conv || cancelled) return;
       const otherId = conv.user_a === user.id ? conv.user_b : conv.user_a;
       const [{ data: profile }, { data: msgs }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", otherId).single(),
+        supabase.from("profiles").select("id, username, display_name, avatar_url, bio").eq("id", otherId).single(),
         supabase
           .from("direct_messages")
           .select("*")
@@ -577,7 +577,7 @@ type RealLfg = {
   tags: string[] | null;
   expires_at: string;
   created_at: string;
-  host?: Profile | null;
+  host?: ProfileLite | null;
 };
 
 function LFGBoard() {
@@ -696,7 +696,7 @@ function LFGBoard() {
 
 /* -------------------- Helpers -------------------- */
 
-function Avatar({ profile, size = 12 }: { profile: Profile | null; size?: number }) {
+function Avatar({ profile, size = 12 }: { profile: ProfileLite | null; size?: number }) {
   const px = size * 4;
   return (
     <UserAvatar

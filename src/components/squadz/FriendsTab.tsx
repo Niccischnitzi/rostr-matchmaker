@@ -5,7 +5,7 @@ import { Users, UserPlus, Check, X, Loader2, MessageCircle, Search } from "lucid
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
-import { fetchProfiles, getOrCreateConversation, requestFriend, type Profile } from "@/lib/squadz-supabase";
+import { fetchProfiles, getOrCreateConversation, requestFriend, type Profile, type ProfileLite } from "@/lib/squadz-supabase";
 import { useSquadz } from "@/lib/squadz-store";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
@@ -25,8 +25,8 @@ export function FriendsTab() {
   const { user } = useAuth();
   const { connected } = useSquadz();
   const [rows, setRows] = useState<Friend[]>([]);
-  const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
-  const [discover, setDiscover] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<Map<string, ProfileLite>>(new Map());
+  const [discover, setDiscover] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
@@ -44,11 +44,11 @@ export function FriendsTab() {
       const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
       const [friendProfiles, discoverRows] = await Promise.all([
         fetchProfiles(ids),
-        supabase.from("profiles").select("*").neq("id", user.id).order("username").limit(50),
+        supabase.from("profiles").select("id, username, display_name, avatar_url, bio").neq("id", user.id).order("username").limit(50),
       ]);
       setRows(list);
       setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));
-      setDiscover((discoverRows.data ?? []) as Profile[]);
+      setDiscover((discoverRows.data ?? []) as ProfileLite[]);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not load friends");
     } finally {
@@ -95,7 +95,7 @@ export function FriendsTab() {
     if (error) return toast.error(error.message);
     load();
   }
-  async function add(profile: Profile) {
+  async function add(profile: ProfileLite) {
     if (!user) return;
     try {
       const res = await requestFriend(profile.id);

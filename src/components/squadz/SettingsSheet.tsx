@@ -89,7 +89,7 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
     await qc.cancelQueries();
     qc.clear();
     await signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", replace: true, search: { next: "/" } });
   };
 
   const goto = (to: string) => { onOpenChange(false); navigate({ to }); };

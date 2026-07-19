@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import type { Tournament, TournamentEntry, LeaderboardEntry, Profile } from "@/lib/squadz-supabase";
+import type { Tournament, TournamentEntry, LeaderboardEntry, ProfileLite } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -159,7 +159,7 @@ function CreateTournamentDialog({ onCreated }: { onCreated: () => void }) {
 }
 
 function TournamentDetail({ tournament, onBack }: { tournament: Tournament; onBack: () => void }) {
-  const [board, setBoard] = useState<(LeaderboardEntry & { profile: Profile | null })[]>([]);
+  const [board, setBoard] = useState<(LeaderboardEntry & { profile: ProfileLite | null })[]>([]);
 
   useEffect(() => {
     void load();
@@ -172,7 +172,7 @@ function TournamentDetail({ tournament, onBack }: { tournament: Tournament; onBa
   async function load() {
     const { data } = await supabase
       .from("leaderboard_entries")
-      .select("*, profile:profiles(*)")
+      .select("*, profile:profiles(id, username, display_name, avatar_url, bio)")
       .eq("tournament_id", tournament.id)
       .order("value", { ascending: false })
       .limit(50);

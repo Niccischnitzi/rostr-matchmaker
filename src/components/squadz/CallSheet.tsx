@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, ScreenShare, ScreenShareOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sfx } from "@/lib/sfx";
-import type { Profile } from "@/lib/squadz-supabase";
+import type { ProfileLite } from "@/lib/squadz-supabase";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  peer: Profile | null;
+  peer: ProfileLite | null;
   conversationId: string;
   selfId: string;
   /** Caller initiates and creates the WebRTC offer. Callee waits for it. */

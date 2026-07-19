@@ -7,9 +7,9 @@ import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/inbox")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) throw redirect({ to: "/auth", search: { next: location.pathname + location.searchStr } });
   },
   head: () => ({
     meta: [
