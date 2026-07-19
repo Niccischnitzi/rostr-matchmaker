@@ -5,11 +5,18 @@ import type { Clan, ClanMember, ProfileLite } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Shield, Crown, Swords, Users } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { Plus, Shield, Crown, Swords, Users, MoreVertical, Trash2, UserMinus, ArrowUp, ArrowDown, ArrowRightLeft, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { CardGridSkeleton } from "@/components/squadz/LoadingSkeletons";
+import { UserAvatar } from "@/components/squadz/UserAvatar";
+
+type ClanRole = "leader" | "co_leader" | "officer" | "veteran" | "member" | "recruit";
+const ROLE_ORDER: ClanRole[] = ["recruit", "member", "veteran", "officer", "co_leader", "leader"];
+const rank = (r: ClanRole) => ROLE_ORDER.indexOf(r);
+
 
 export function ClansTab() {
   const { user } = useAuth();
