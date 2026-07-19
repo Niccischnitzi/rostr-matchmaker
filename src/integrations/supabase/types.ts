@@ -2596,6 +2596,38 @@ export type Database = {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
       }
+      create_media_post: {
+        Args: {
+          _body?: string
+          _duration_s?: number
+          _game?: string
+          _kind: string
+          _media_path?: string
+          _size_bytes?: number
+          _source_url?: string
+          _title?: string
+        }
+        Returns: {
+          body: string | null
+          created_at: string
+          duration_s: number | null
+          game: string | null
+          id: string
+          kind: string
+          media_path: string | null
+          size_bytes: number | null
+          source_url: string | null
+          title: string | null
+          tokens_spent: number
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "media_posts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       decline_challenge: { Args: { _challenge_id: string }; Returns: boolean }
       delete_clan: { Args: { _clan: string }; Returns: boolean }
       equip_cosmetic: {
