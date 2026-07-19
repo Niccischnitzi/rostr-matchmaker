@@ -141,7 +141,7 @@ function GuidePage() {
             <div className="pt-2">
               <Link
                 to="/auth"
-                search={{}}
+                search={{ next: "/guides/finding-gamers" }}
                 className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
               >
                 Create your Rostr passport

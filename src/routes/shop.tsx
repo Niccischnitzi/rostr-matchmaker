@@ -121,7 +121,7 @@ function ShopPage() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-sm text-center space-y-3">
           <h1 className="text-xl font-semibold">Sign in to visit the shop</h1>
-          <Link to="/auth" search={{}} className="inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+          <Link to="/auth" search={{ next: "/shop" }} className="inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
             Sign in
           </Link>
         </div>

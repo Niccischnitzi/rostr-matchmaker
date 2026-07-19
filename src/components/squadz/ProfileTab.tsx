@@ -179,7 +179,7 @@ export function ProfileTab() {
     await qc.cancelQueries();
     qc.clear();
     await signOut();
-    navigate({ to: "/auth", replace: true, search: {} });
+    navigate({ to: "/auth", replace: true, search: { next: "/" } });
   };
 
   const fallbackAvatar = useMemo(
