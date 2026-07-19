@@ -18,7 +18,8 @@ export type ReportTargetType =
   | "crew"
   | "comment"
   | "club"
-  | "club_message";
+  | "club_message"
+  | "voice_snippet";
 
 const REASONS = [
   { key: "cheating", label: "Cheating / hacking" },

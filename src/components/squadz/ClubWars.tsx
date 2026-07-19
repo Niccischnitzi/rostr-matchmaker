@@ -31,7 +31,7 @@ export function ClubWars({ club }: { club: Club; isOfficer?: boolean }) {
           Clan Wars for {club.name}
         </h3>
         <p className="text-sm text-muted-foreground max-w-md">
-          Challenge rival clubs, stake tokens, and climb the seasonal
+          Challenge rival clubs, stake Shards, and climb the seasonal
           leaderboard. We're rebuilding this system from the ground up — stay
           tuned for a launch soon.
         </p>

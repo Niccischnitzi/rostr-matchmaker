@@ -983,6 +983,30 @@ export type Database = {
           },
         ]
       }
+      lfg_ad_interactions: {
+        Row: {
+          action: string
+          ad_owner_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          ad_owner_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          ad_owner_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lfg_ad_joiners: {
         Row: {
           ad_id: string
@@ -1244,6 +1268,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      match_ratings: {
+        Row: {
+          challenge_id: string | null
+          chemistry: number
+          club_war_id: string | null
+          comms: number
+          created_at: string
+          id: string
+          note: string | null
+          rated_id: string
+          rater_id: string
+          reliability: number
+          tag: string | null
+          tags: string[]
+          thumbs: Database["public"]["Enums"]["match_rating_thumb"]
+          updated_at: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          chemistry?: number
+          club_war_id?: string | null
+          comms?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          rated_id: string
+          rater_id: string
+          reliability?: number
+          tag?: string | null
+          tags?: string[]
+          thumbs: Database["public"]["Enums"]["match_rating_thumb"]
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string | null
+          chemistry?: number
+          club_war_id?: string | null
+          comms?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          rated_id?: string
+          rater_id?: string
+          reliability?: number
+          tag?: string | null
+          tags?: string[]
+          thumbs?: Database["public"]["Enums"]["match_rating_thumb"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       media_comments: {
         Row: {
@@ -1692,6 +1767,7 @@ export type Database = {
           country: string | null
           created_at: string
           current_game_activity: string | null
+          custom_traits: string[]
           customization_options: Json
           date_of_birth: string | null
           display_name: string | null
@@ -1722,6 +1798,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_game_activity?: string | null
+          custom_traits?: string[]
           customization_options?: Json
           date_of_birth?: string | null
           display_name?: string | null
@@ -1752,6 +1829,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_game_activity?: string | null
+          custom_traits?: string[]
           customization_options?: Json
           date_of_birth?: string | null
           display_name?: string | null
@@ -2283,6 +2361,36 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_snippets: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          is_public: boolean
+          storage_path: string
+          transcript: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds: number
+          is_public?: boolean
+          storage_path: string
+          transcript?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          is_public?: boolean
+          storage_path?: string
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           balance_points: number
@@ -2457,6 +2565,15 @@ export type Database = {
         Returns: number
       }
       boost_lfg: { Args: { _cost: number; _hours: number }; Returns: string }
+      can_rate_match: {
+        Args: {
+          _challenge?: string
+          _club_war?: string
+          _rated: string
+          _rater: string
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: { _action: string; _limit: number; _window_seconds: number }
         Returns: boolean
@@ -2473,6 +2590,22 @@ export type Database = {
       equip_cosmetic: {
         Args: { _equip: boolean; _item_id: string }
         Returns: boolean
+      }
+      get_or_create_conversation: {
+        Args: { _other_user: string }
+        Returns: {
+          created_at: string
+          id: string
+          last_message_at: string
+          user_a: string
+          user_b: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       has_active_pro_subscription: {
         Args: { _user_id: string }
@@ -2501,9 +2634,18 @@ export type Database = {
         Args: { _group: string; _user: string }
         Returns: boolean
       }
+      join_lfg_ad: { Args: { _ad_id: string }; Returns: Json }
       mark_all_notifications_read: { Args: never; Returns: number }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
+      pair_chemistry: {
+        Args: { _other_user: string }
+        Returns: {
+          label: string
+          score: number
+          sessions: number
+        }[]
+      }
       process_payment_grant: {
         Args: {
           p_amount_paid: number
@@ -2517,6 +2659,14 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      profile_rating_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          avg_score: number
+          rating_count: number
+          top_tags: string[]
+        }[]
       }
       public_profile: {
         Args: { _username: string }
@@ -2548,6 +2698,14 @@ export type Database = {
           friend_count: number
         }[]
       }
+      public_user_cosmetics: {
+        Args: { _user_id: string }
+        Returns: {
+          frame_class: string
+          halo_class: string
+          tag_name: string
+        }[]
+      }
       purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
       record_daily_login: {
         Args: never
@@ -2560,15 +2718,47 @@ export type Database = {
         Args: { _challenge_id: string; _winner_id: string }
         Returns: Json
       }
+      request_friend: { Args: { _target_user: string }; Returns: Json }
       search_all: { Args: { _limit?: number; _q: string }; Returns: Json }
+      send_dm_to_user: {
+        Args: { _attachment_url?: string; _body?: string; _other_user: string }
+        Returns: Json
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       spend_tokens: { Args: { _amount: number }; Returns: number }
+      submit_match_rating:
+        | {
+            Args: {
+              _challenge_id?: string
+              _club_war_id?: string
+              _rated_id: string
+              _tag?: string
+              _thumbs: Database["public"]["Enums"]["match_rating_thumb"]
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _challenge_id?: string
+              _chemistry?: number
+              _comms?: number
+              _note?: string
+              _reliability?: number
+              _tags?: string[]
+              _target_user: string
+            }
+            Returns: Json
+          }
       unlock_cosmetic: {
         Args: { _cost: number; _key: string }
         Returns: boolean
       }
       unread_notification_count: { Args: never; Returns: number }
+      upsert_voice_snippet: {
+        Args: { _duration_seconds: number; _storage_path: string }
+        Returns: Json
+      }
     }
     Enums: {
       activity_kind:
@@ -2596,6 +2786,7 @@ export type Database = {
         | "recruit"
       club_role: "owner" | "officer" | "member" | "recruit"
       escrow_status: "held" | "released" | "refunded"
+      match_rating_thumb: "up" | "down"
       play_session_kind: "call" | "lfg_match" | "crew_event"
       report_status: "open" | "reviewing" | "upheld" | "dismissed"
       report_target:
@@ -2761,6 +2952,7 @@ export const Constants = {
       ],
       club_role: ["owner", "officer", "member", "recruit"],
       escrow_status: ["held", "released", "refunded"],
+      match_rating_thumb: ["up", "down"],
       play_session_kind: ["call", "lfg_match", "crew_event"],
       report_status: ["open", "reviewing", "upheld", "dismissed"],
       report_target: [

@@ -28,7 +28,7 @@ function formatMoney(cents: number | null, currency: string | null) {
 }
 
 function labelForGrant(g: Grant) {
-  if (g.kind === "tokens") return `${g.tokens_granted?.toLocaleString() ?? 0} tokens`;
+  if (g.kind === "tokens") return `${g.tokens_granted?.toLocaleString() ?? 0} shards`;
   if (g.kind === "tournament_entry") return "Tournament entry";
   return g.price_id;
 }
@@ -87,7 +87,7 @@ export function PurchasesSection({ userId }: { userId: string }) {
         />
         <Stat
           icon={<Coins className="h-4 w-4 text-amber-400" />}
-          label="Tokens bought"
+          label="SHARDS BOUGHT"
           value={totalTokens.toLocaleString()}
           tone="muted"
         />
@@ -112,7 +112,7 @@ export function PurchasesSection({ userId }: { userId: string }) {
         >
           <p className="text-sm font-semibold">No purchases yet</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Grab a token pack, unlock Rostr Pro, or enter a paid cup.
+            Grab a shard pack, unlock Rostr Pro, or enter a paid cup.
           </p>
         </Link>
       ) : (

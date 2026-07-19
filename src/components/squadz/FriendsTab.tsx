@@ -5,7 +5,7 @@ import { Users, UserPlus, Check, X, Loader2, MessageCircle, Search } from "lucid
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
-import { fetchProfiles, type Profile } from "@/lib/squadz-supabase";
+import { fetchProfiles, getOrCreateConversation, requestFriend, type Profile } from "@/lib/squadz-supabase";
 import { useSquadz } from "@/lib/squadz-store";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
@@ -97,13 +97,29 @@ export function FriendsTab() {
   }
   async function add(profile: Profile) {
     if (!user) return;
-    const { error } = await supabase.from("friends").upsert(
-      { requester_id: user.id, addressee_id: profile.id, status: "pending" },
-      { onConflict: "requester_id,addressee_id" },
-    );
-    if (error) return toast.error(error.message);
-    toast.success(`Request sent to ${profile.display_name ?? profile.username}`);
-    load();
+    try {
+      const res = await requestFriend(profile.id);
+      if (res.matched) {
+        sfx.win();
+        toast.success("It's a match! 🎉", { description: `${profile.display_name ?? profile.username} is now on your rostr.` });
+      } else {
+        toast.success(`Request sent to ${profile.display_name ?? profile.username}`);
+      }
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send request");
+    }
+  }
+
+  async function message(profileId?: string | null) {
+    if (!user || !profileId) return;
+    try {
+      const conv = await getOrCreateConversation(user.id, profileId);
+      window.dispatchEvent(new CustomEvent("rostr:go-tab", { detail: "chat" }));
+      window.dispatchEvent(new CustomEvent("rostr:open-chat", { detail: { conversationId: conv.id } }));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not open chat");
+    }
   }
 
   if (!user) return null;
@@ -186,7 +202,7 @@ export function FriendsTab() {
               return (
                 <Row key={r.id} profile={p}>
                   <UserSafetyActions targetId={p?.id} targetLabel={p?.display_name ?? p?.username} onBlocked={() => remove(r.id)} />
-                  <Button size="sm" variant="outline" onClick={() => toast("Open chat from the Chat tab")}>
+                  <Button size="sm" variant="outline" onClick={() => message(p?.id)}>
                     <MessageCircle className="h-4 w-4" />
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>

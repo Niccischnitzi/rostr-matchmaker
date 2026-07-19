@@ -31,6 +31,19 @@ export function applyTheme() {
   const el = document.documentElement;
   el.classList.toggle("dark", dark);
   el.style.colorScheme = dark ? "dark" : "light";
+  // Accessibility opt-ins
+  let hc = false;
+  let rm = false;
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      hc = Boolean(parsed?.highContrast);
+      rm = Boolean(parsed?.reduceMotion);
+    }
+  } catch { /* noop */ }
+  if (hc) el.setAttribute("data-contrast", "high"); else el.removeAttribute("data-contrast");
+  if (rm) el.setAttribute("data-motion", "reduced"); else el.removeAttribute("data-motion");
 }
 
 export function initThemeListeners() {

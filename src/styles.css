@@ -67,28 +67,51 @@
 }
 
 .dark {
-  /* Editorial Sport — ink #0A0A0A, cream #F5F5F0, orange #FF5722, graphite #1F1F1F */
-  --background: oklch(0.09 0 0);
-  --foreground: oklch(0.965 0.005 90);
-  --surface: oklch(0.16 0 0);
-  --surface-2: oklch(0.22 0 0);
-  --card: oklch(0.13 0 0);
-  --card-foreground: oklch(0.965 0.005 90);
-  --popover: oklch(0.13 0 0);
-  --popover-foreground: oklch(0.965 0.005 90);
+  /* Editorial Sport — softer default: dimmer bg, keeps orange punch. */
+  --background: oklch(0.14 0.004 270);
+  --foreground: oklch(0.93 0.005 90);
+  --surface: oklch(0.19 0.005 270);
+  --surface-2: oklch(0.24 0.006 270);
+  --card: oklch(0.17 0.005 270);
+  --card-foreground: oklch(0.93 0.005 90);
+  --popover: oklch(0.17 0.005 270);
+  --popover-foreground: oklch(0.93 0.005 90);
   /* NOTE: --primary, --primary-foreground, --primary-glow, --ring, --accent,
      --accent-foreground are intentionally NOT set here — they are controlled
      globally by src/lib/customization.ts so the user's accent choice wins
      inside any `.dark` wrapper (e.g. routes/index.tsx). */
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.965 0.005 90);
-  --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.66 0.005 90);
+  --secondary: oklch(0.24 0.005 270);
+  --secondary-foreground: oklch(0.93 0.005 90);
+  --muted: oklch(0.24 0.005 270);
+  --muted-foreground: oklch(0.72 0.008 90);
   --destructive: oklch(0.65 0.22 27);
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.72 0.18 152);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+}
+
+/* Accessibility: opt-in High Contrast (Settings → Accessibility).
+   Punches surfaces + text, thickens borders. Layered on top of theme. */
+:root[data-contrast="high"] {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.08 0 0);
+  --muted-foreground: oklch(0.28 0.008 270);
+  --border: oklch(0.55 0.008 270);
+  --input: oklch(0.7 0.008 270);
+}
+:root[data-contrast="high"].dark {
+  --background: oklch(0.04 0 0);
+  --foreground: oklch(1 0 0);
+  --surface: oklch(0.09 0 0);
+  --surface-2: oklch(0.14 0 0);
+  --card: oklch(0.07 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.07 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --muted-foreground: oklch(0.88 0.006 90);
+  --border: oklch(1 0 0 / 35%);
+  --input: oklch(1 0 0 / 45%);
 }
 
 @layer base {
@@ -799,3 +822,13 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
 }
 
 
+
+/* Accessibility: Reduce motion (opt-in from Settings → Accessibility) */
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

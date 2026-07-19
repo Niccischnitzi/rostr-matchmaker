@@ -62,11 +62,11 @@ export function ThemeCustomizer() {
       const { error } = await supabase.rpc("unlock_cosmetic", { _key: key, _cost: cost });
       setPending(null);
       if (error) {
-        toast.error(error.message.includes("Insufficient") ? "Not enough tokens" : error.message);
+        toast.error(error.message.includes("Insufficient") ? "Not enough Shards" : error.message);
         return false;
       }
       setUnlocked((prev) => new Set(prev).add(key));
-      toast.success(`${label} unlocked · -${cost} tokens`);
+      toast.success(`${label} unlocked · -${cost} Shards`);
       return true;
     },
     [unlocked, user],

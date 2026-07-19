@@ -19,10 +19,10 @@ export const Route = createFileRoute("/shop")({
   notFoundComponent: () => <div className="p-6">Not found.</div>,
   head: () => ({
     meta: [
-      { title: "Token Shop — Rostr" },
-      { name: "description", content: "Buy Rostr tokens and unlock halos, avatar frames, and animated backgrounds." },
-      { property: "og:title", content: "Token Shop — Rostr" },
-      { property: "og:description", content: "Buy Rostr tokens and unlock cosmetics." },
+      { title: "Shard Shop — Rostr" },
+      { name: "description", content: "Buy Rostr Shards and unlock halos, avatar frames, and animated backgrounds." },
+      { property: "og:title", content: "Shard Shop — Rostr" },
+      { property: "og:description", content: "Buy Rostr Shards and unlock cosmetics." },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -61,7 +61,7 @@ function ShopPage() {
   const buy = async (item: ShopItem) => {
     if (!user) return;
     if ((balance ?? 0) < item.cost_tokens) {
-      toast.error("Not enough tokens", { description: "Grab a token pack below." });
+      toast.error("Not enough Shards", { description: "Grab a Shard pack below." });
       setTab("tokens");
       return;
     }
@@ -161,15 +161,15 @@ function ShopPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Token Shop</h1>
-          <p className="text-muted-foreground">Unlock halos, frames, and animated backgrounds with tokens.</p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Shard Shop</h1>
+          <p className="text-muted-foreground">Unlock halos, frames, and animated backgrounds with Shards.</p>
         </div>
 
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-muted p-1">
             {([
               ["cosmetics", "Cosmetics"],
-              ["tokens", "Buy Tokens"],
+              ["tokens", "Buy Shards"],
             ] as const).map(([id, label]) => (
               <button
                 key={id}
@@ -353,7 +353,7 @@ function ShopPage() {
                 )}
                 <Coins className="h-6 w-6 text-primary" />
                 <div className="font-display text-3xl font-bold">{p.tokens.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">tokens</div>
+                <div className="text-sm text-muted-foreground">Shards</div>
                 <div className="mt-auto pt-4 flex items-center justify-between">
                   <span className="font-semibold">{p.price}</span>
                   <button

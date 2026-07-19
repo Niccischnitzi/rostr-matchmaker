@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useSquadz } from "@/lib/squadz-store";
 import {
   getOrCreateConversation,
+  joinLfgAd,
+  requestFriend,
+  sendDirectMessageToUser,
   fetchProfiles,
   type Conversation,
   type DirectMessage,
@@ -23,6 +25,7 @@ import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
 import { GlowButton } from "./GlowButton";
 import { UserAvatar } from "./UserAvatar";
+import { LfgAdSheet } from "./LfgAdSheet";
 
 
 
@@ -405,16 +408,13 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const body = text.trim();
-    if (!body || !user || sending) return;
+    if (!body || !user || !peer || sending) return;
     setSending(true);
     setText("");
-    const { error } = await supabase.from("direct_messages").insert({
-      conversation_id: conversationId,
-      sender_id: user.id,
-      body,
-    });
-    if (error) {
-      toast.error(error.message);
+    try {
+      await sendDirectMessageToUser(peer.id, body);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send message");
       setText(body);
     }
     setSending(false);
@@ -511,7 +511,7 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
       </div>
 
       <form onSubmit={(e) => { sfx.send(); send(e); }} className="p-3 border-t border-border flex items-center gap-2">
-        <AttachButton conversationId={conversationId} senderId={user.id} />
+        <AttachButton conversationId={conversationId} peerId={peer?.id} />
         <input
           value={text}
           onChange={(e) => handleTyping(e.target.value)}
@@ -526,13 +526,13 @@ function DMWindow({ conversationId, onBack }: { conversationId: string; onBack: 
   );
 }
 
-function AttachButton({ conversationId, senderId }: { conversationId: string; senderId: string }) {
+function AttachButton({ conversationId, peerId }: { conversationId: string; peerId?: string | null }) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     e.target.value = "";
-    if (!f) return;
+    if (!f || !peerId) return;
     if (f.size > 20 * 1024 * 1024) return toast.error("Max 20 MB");
     setBusy(true);
     const ext = (f.name.split(".").pop() || "bin").toLowerCase();
@@ -540,11 +540,13 @@ function AttachButton({ conversationId, senderId }: { conversationId: string; se
     const { error: upErr } = await supabase.storage.from("dm-attachments").upload(path, f, { contentType: f.type });
     if (upErr) { setBusy(false); return toast.error(upErr.message); }
     const body = encodeAttachment({ path, name: f.name, mime: f.type || "application/octet-stream", size: f.size });
-    const { error } = await supabase.from("direct_messages").insert({
-      conversation_id: conversationId, sender_id: senderId, body,
-    });
+    try {
+      await sendDirectMessageToUser(peerId, body);
+    } catch (e: any) {
+      setBusy(false);
+      return toast.error(e?.message ?? "Could not send attachment");
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
     sfx.send();
   }
   return (
@@ -559,88 +561,134 @@ function AttachButton({ conversationId, senderId }: { conversationId: string; se
 }
 
 
-/* -------------------- LFG Board (unchanged local) -------------------- */
+/* -------------------- LFG Board (real database) -------------------- */
+
+type RealLfg = {
+  id: string;
+  host_id: string;
+  game: string;
+  mode: string | null;
+  region: string | null;
+  description: string | null;
+  slots_total: number;
+  slots_filled: number;
+  mic_required: boolean;
+  min_rank: string | null;
+  tags: string[] | null;
+  expires_at: string;
+  created_at: string;
+  host?: Profile | null;
+};
 
 function LFGBoard() {
-  const { lfg, joinLFG, postLFG } = useSquadz();
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ game: "Valorant", mode: "Ranked", rank: "Any", slotsOpen: 3, slotsTotal: 4 });
+  const { user } = useAuth();
+  const [rows, setRows] = useState<RealLfg[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("lfg_ads" as any)
+        .select("id, host_id, game, mode, region, description, slots_total, slots_filled, mic_required, min_rank, tags, expires_at, created_at")
+        .is("closed_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const list = ((data as any[]) ?? []) as RealLfg[];
+      const profiles = await fetchProfiles(Array.from(new Set(list.map((r) => r.host_id))));
+      const byId = new Map(profiles.map((p) => [p.id, p]));
+      setRows(list.map((r) => ({ ...r, host: byId.get(r.host_id) ?? null })));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not load LFG board");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    const ch = supabase
+      .channel(`lfg-board-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "lfg_ads" }, () => void load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
+  async function join(row: RealLfg) {
+    if (!user || busy) return;
+    setBusy(row.id);
+    try {
+      await joinLfgAd(row.id);
+      await requestFriend(row.host_id);
+      const sent = await sendDirectMessageToUser(row.host_id, `Joined your ${row.game} LFG — ready to squad up?`);
+      toast.success("Joined LFG", { description: "Friend request sent and DM opened." });
+      window.dispatchEvent(new CustomEvent("rostr:open-chat", { detail: { conversationId: sent.conversation.id } }));
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not join LFG");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">{lfg.length} active tickets</p>
-        <Button size="sm" onClick={() => setShowForm((s) => !s)}>{showForm ? "Cancel" : "Post Ticket"}</Button>
+        <p className="text-sm text-muted-foreground">{rows.length} active ticket{rows.length === 1 ? "" : "s"}</p>
+        <Button size="sm" onClick={() => setPosting(true)}>Post LFG</Button>
       </div>
 
-      {showForm && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            postLFG(form);
-            setShowForm(false);
-            toast.success("LFG ticket posted!");
-          }}
-          className="rounded-2xl border border-primary/30 bg-card p-4 mb-4 grid grid-cols-2 gap-3"
-        >
-          {[["game", "Game"], ["mode", "Mode"], ["rank", "Rank needed"]].map(([k, l]) => (
-            <div key={k} className={k === "rank" ? "col-span-2 sm:col-span-1" : ""}>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{l}</label>
-              <input
-                value={form[k as keyof typeof form] as string}
-                onChange={(e) => setForm((p) => ({ ...p, [k]: e.target.value }))}
-                className="w-full mt-1 bg-surface rounded-lg px-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-          ))}
-          <div>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Slots open</label>
-            <input
-              type="number"
-              min={1}
-              max={9}
-              value={form.slotsOpen}
-              onChange={(e) => setForm((p) => ({ ...p, slotsOpen: +e.target.value, slotsTotal: Math.max(+e.target.value, p.slotsTotal) }))}
-              className="w-full mt-1 bg-surface rounded-lg px-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <Button type="submit" className="col-span-2">Post Ticket</Button>
-        </form>
-      )}
+      <LfgAdSheet open={posting} onOpenChange={(v: boolean) => { setPosting(v); if (!v) void load(); }} />
 
       <div className="grid gap-3">
-        {lfg.map((t) => (
-          <div key={t.id} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-4">
+        {loading ? (
+          <div className="rounded-2xl border border-border bg-card p-10 grid place-items-center text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        ) : rows.length === 0 ? (
+          <EmptyState
+            variant="controller"
+            title="No LFGs live"
+            body="Post the first squad ticket and make the board feel alive."
+            action={<GlowButton onClick={() => setPosting(true)} icon={<Gamepad2 className="h-5 w-5" />}>Post LFG</GlowButton>}
+          />
+        ) : rows.map((t) => {
+          const openSlots = Math.max(0, t.slots_total - t.slots_filled);
+          const hostName = t.host?.display_name ?? t.host?.username ?? "Player";
+          return (
+          <div key={t.id} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-4 soft-rise">
             <div className="h-12 w-12 rounded-xl bg-primary/15 text-primary grid place-items-center shrink-0">
               <Gamepad2 className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2 flex-wrap">
                 <p className="font-bold">{t.game}</p>
-                <span className="text-xs text-muted-foreground">· {t.mode}</span>
+                <span className="text-xs text-muted-foreground">· {t.mode ?? "Squad"}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {t.rank} · hosted by <span className="text-foreground font-semibold">{t.host}</span> · {t.postedAt}
+                {t.min_rank ?? "Any rank"} · hosted by <span className="text-foreground font-semibold">{hostName}</span> · {relTime(t.created_at)}
               </p>
+              {t.description && <p className="text-xs text-foreground/80 mt-1 line-clamp-2">{t.description}</p>}
             </div>
             <div className="text-right shrink-0">
-              <p className={cn("text-sm font-bold font-mono", t.slotsOpen === 0 ? "text-muted-foreground" : "text-primary")}>
-                {t.slotsOpen}/{t.slotsTotal}
+              <p className={cn("text-sm font-bold font-mono", openSlots === 0 ? "text-muted-foreground" : "text-primary")}>
+                {openSlots}/{t.slots_total}
               </p>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">slots</p>
             </div>
             <Button
               size="sm"
-              disabled={t.slotsOpen === 0}
-              onClick={() => {
-                joinLFG(t.id);
-                toast.success(`Joined ${t.host}'s ${t.game} party!`);
-              }}
+              disabled={openSlots === 0 || busy === t.id || t.host_id === user?.id}
+              onClick={() => join(t)}
             >
-              {t.slotsOpen === 0 ? "Full" : "Join"}
+              {busy === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t.host_id === user?.id ? "Mine" : openSlots === 0 ? "Full" : "Join"}
             </Button>
           </div>
-        ))}
+        );})}
       </div>
     </div>
   );

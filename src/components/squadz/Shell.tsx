@@ -73,7 +73,7 @@ export function Shell() {
   }, []);
   useEffect(() => {
     recordDailyLoginOnce().then((r) => {
-      if (r) toast.success(`Day ${r.streak} streak! +${r.reward} tokens`, { description: "Login bonus credited." });
+      if (r) toast.success(`Day ${r.streak} streak! +${r.reward} Shards`, { description: "Login bonus credited." });
     });
   }, []);
 

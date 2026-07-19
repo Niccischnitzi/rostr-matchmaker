@@ -13,6 +13,8 @@ type Props = {
   className?: string;
 };
 
+type PublicCosmetics = { halo_class: string | null; frame_class: string | null; tag_name: string | null };
+
 /**
  * Universal avatar. Auto-applies the CURRENT user's equipped halo/frame.
  * For other users, still renders the CosmeticAvatar wrapper (no overlays)
@@ -22,6 +24,7 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
   const { user } = useAuth();
   const equipped = useEquippedCosmetics();
   const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
+  const [otherCosmetics, setOtherCosmetics] = useState<PublicCosmetics | null>(null);
 
   const isSelf = user && userId && user.id === userId;
 
@@ -42,9 +45,23 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
     };
   }, [userId, avatarUrl, isSelf]);
 
+  useEffect(() => {
+    if (!userId || isSelf) { setOtherCosmetics(null); return; }
+    let cancelled = false;
+    supabase
+      .rpc("public_user_cosmetics" as any, { _user_id: userId })
+      .then(({ data }) => {
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!cancelled) setOtherCosmetics((row as PublicCosmetics | null) ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, isSelf]);
+
   const src = avatarUrl ?? otherAvatar ?? undefined;
-  const halo = isSelf ? equipped.halo?.css_class : undefined;
-  const frame = isSelf ? equipped.avatar_frame?.css_class : undefined;
+  const halo = isSelf ? equipped.halo?.css_class : otherCosmetics?.halo_class ?? undefined;
+  const frame = isSelf ? equipped.avatar_frame?.css_class : otherCosmetics?.frame_class ?? undefined;
 
   return (
     <CosmeticAvatar size={size} haloClass={halo} frameClass={frame} className={className}>
