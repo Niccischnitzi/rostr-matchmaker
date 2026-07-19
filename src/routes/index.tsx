@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/auth", search: {} });
     }
     return { user: data.user };
   },

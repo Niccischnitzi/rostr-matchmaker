@@ -5,7 +5,7 @@ import { Users, UserPlus, Check, X, Loader2, MessageCircle, Search } from "lucid
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { sfx } from "@/lib/sfx";
-import { fetchProfiles, getOrCreateConversation, requestFriend, type Profile } from "@/lib/squadz-supabase";
+import { fetchProfiles, getOrCreateConversation, requestFriend, type Profile, type ProfileLite } from "@/lib/squadz-supabase";
 import { useSquadz } from "@/lib/squadz-store";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
@@ -25,8 +25,8 @@ export function FriendsTab() {
   const { user } = useAuth();
   const { connected } = useSquadz();
   const [rows, setRows] = useState<Friend[]>([]);
-  const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
-  const [discover, setDiscover] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<Map<string, ProfileLite>>(new Map());
+  const [discover, setDiscover] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
@@ -48,7 +48,7 @@ export function FriendsTab() {
       ]);
       setRows(list);
       setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));
-      setDiscover((discoverRows.data ?? []) as Profile[]);
+      setDiscover((discoverRows.data ?? []) as ProfileLite[]);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not load friends");
     } finally {

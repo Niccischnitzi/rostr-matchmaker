@@ -13,10 +13,11 @@ import type {
   ClubMember,
   ClubMessage,
   Profile,
+  ProfileLite,
 } from "@/lib/squadz-supabase";
 import { fetchProfiles } from "@/lib/squadz-supabase";
 
-type MemberRow = ClubMember & { profile: Profile | null };
+type MemberRow = ClubMember & { profile: ProfileLite | null };
 
 export function ClubsTab() {
   const { user } = useAuth();
@@ -554,7 +555,7 @@ function NewChannelButton({ clubId, onCreated }: { clubId: string; onCreated: (c
 function ChannelView({ clubId, channelId, channelName }: { clubId: string; channelId: string; channelName: string }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ClubMessage[]>([]);
-  const [senderMap, setSenderMap] = useState<Map<string, Profile>>(new Map());
+  const [senderMap, setSenderMap] = useState<Map<string, ProfileLite>>(new Map());
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);

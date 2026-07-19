@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { submitMatchRating, type Challenge, type Profile, type Wallet } from "@/lib/squadz-supabase";
+import { submitMatchRating, type Challenge, type Profile, type ProfileLite, type Wallet } from "@/lib/squadz-supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -250,8 +250,8 @@ function NewChallengeDialog({ onCreated }: { onCreated: () => void }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<Profile[]>([]);
-  const [opponent, setOpponent] = useState<Profile | null>(null);
+  const [results, setResults] = useState<ProfileLite[]>([]);
+  const [opponent, setOpponent] = useState<ProfileLite | null>(null);
   const [game, setGame] = useState("Valorant");
   const [wager, setWager] = useState(50);
   const [busy, setBusy] = useState(false);
