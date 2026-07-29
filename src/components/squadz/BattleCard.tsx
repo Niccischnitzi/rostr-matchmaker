@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { refreshBattlecardStats, deterministicStubStats } from "@/lib/playerStats.functions";
+import { refreshBattlecardStats } from "@/lib/playerStats.functions";
+import { deterministicStubStats } from "@/lib/playerStats.stub";
 
 type Props = {
   username: string;
