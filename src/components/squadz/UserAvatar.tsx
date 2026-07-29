@@ -36,16 +36,18 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
   const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
   const [otherCosmetics, setOtherCosmetics] = useState<PublicCosmetics | null>(null);
 
-  const isSelf = user && userId && user.id === userId;
+  // Demo/mock rows use non-UUID ids — never hit the API with those.
+  const realId = userId && UUID_RE.test(userId) ? userId : null;
+  const isSelf = Boolean(user && realId && user.id === realId);
 
   // Fill missing avatar for known user ids (best-effort, single lookup).
   useEffect(() => {
-    if (avatarUrl || !userId || isSelf) return;
+    if (avatarUrl || !realId || isSelf) return;
     let cancelled = false;
     supabase
       .from("profiles")
       .select("avatar_url")
-      .eq("id", userId)
+      .eq("id", realId)
       .maybeSingle()
       .then(({ data }) => {
         if (!cancelled) setOtherAvatar(data?.avatar_url ?? null);
@@ -53,13 +55,13 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
     return () => {
       cancelled = true;
     };
-  }, [userId, avatarUrl, isSelf]);
+  }, [realId, avatarUrl, isSelf]);
 
   useEffect(() => {
-    if (!userId || isSelf) { setOtherCosmetics(null); return; }
+    if (!realId || isSelf) { setOtherCosmetics(null); return; }
     let cancelled = false;
     supabase
-      .rpc("public_user_cosmetics" as any, { _user_id: userId })
+      .rpc("public_user_cosmetics" as any, { _user_id: realId })
       .then(({ data }) => {
         const row = Array.isArray(data) ? data[0] : data;
         if (!cancelled) setOtherCosmetics((row as PublicCosmetics | null) ?? null);
@@ -67,9 +69,9 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
     return () => {
       cancelled = true;
     };
-  }, [userId, isSelf]);
+  }, [realId, isSelf]);
 
-  const src = avatarUrl ?? otherAvatar ?? undefined;
+  const src = resolveAvatar(avatarUrl ?? otherAvatar);
   const halo = isSelf ? equipped.halo?.css_class : otherCosmetics?.halo_class ?? undefined;
   const frame = isSelf ? equipped.avatar_frame?.css_class : otherCosmetics?.frame_class ?? undefined;
 
