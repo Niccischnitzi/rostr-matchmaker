@@ -4,6 +4,7 @@ Allow: /
 Disallow: /auth
 Disallow: /auth/
 Disallow: /moderation
+Disallow: /seo
 Disallow: /checkout/
 Disallow: /api/
 

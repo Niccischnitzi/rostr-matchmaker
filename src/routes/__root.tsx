@@ -88,6 +88,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Rostr is your gaming social hub to build your roster, join clubs, share clips, and link every gaming platform in one passport.",
       },
       { name: "author", content: "Rostr" },
+      {
+        name: "google-site-verification",
+        content: "okMYUq1P7Z_VPOyncYvnM6M4Mm9MlRMawN8T6jh3-kk",
+      },
       { property: "og:site_name", content: "Rostr" },
       { property: "og:title", content: "Rostr — Gaming Social Hub & Player Passport" },
       {
