@@ -54,7 +54,7 @@ function Icon({ size, className }: { size: number; className?: string }) {
         alt=""
         width={size}
         height={size}
-        className="h-[86%] w-[86%] object-contain"
+        className="h-[86%] w-[86%] rounded-[inherit] object-contain"
         draggable={false}
       />
     </span>
