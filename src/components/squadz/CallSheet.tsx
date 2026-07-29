@@ -18,6 +18,7 @@ type Props = {
   mode?: "audio" | "video";
 };
 
+type Phase = "ringing" | "connecting" | "in-call" | "ended";
 
 /**
  * Turns an opaque getUserMedia/WebRTC failure into a message that tells the
