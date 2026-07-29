@@ -15,6 +15,16 @@ type Props = {
 
 type PublicCosmetics = { halo_class: string | null; frame_class: string | null; tag_name: string | null };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Resolves a stored avatar value (full URL or storage object path) to a loadable src. */
+function resolveAvatar(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  if (/^(https?:|data:|blob:)/.test(value)) return value;
+  const path = value.replace(/^\/+/, "");
+  return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+}
+
 /**
  * Universal avatar. Auto-applies the CURRENT user's equipped halo/frame.
  * For other users, still renders the CosmeticAvatar wrapper (no overlays)
@@ -26,16 +36,18 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
   const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
   const [otherCosmetics, setOtherCosmetics] = useState<PublicCosmetics | null>(null);
 
-  const isSelf = user && userId && user.id === userId;
+  // Demo/mock rows use non-UUID ids — never hit the API with those.
+  const realId = userId && UUID_RE.test(userId) ? userId : null;
+  const isSelf = Boolean(user && realId && user.id === realId);
 
   // Fill missing avatar for known user ids (best-effort, single lookup).
   useEffect(() => {
-    if (avatarUrl || !userId || isSelf) return;
+    if (avatarUrl || !realId || isSelf) return;
     let cancelled = false;
     supabase
       .from("profiles")
       .select("avatar_url")
-      .eq("id", userId)
+      .eq("id", realId)
       .maybeSingle()
       .then(({ data }) => {
         if (!cancelled) setOtherAvatar(data?.avatar_url ?? null);
@@ -43,13 +55,13 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
     return () => {
       cancelled = true;
     };
-  }, [userId, avatarUrl, isSelf]);
+  }, [realId, avatarUrl, isSelf]);
 
   useEffect(() => {
-    if (!userId || isSelf) { setOtherCosmetics(null); return; }
+    if (!realId || isSelf) { setOtherCosmetics(null); return; }
     let cancelled = false;
     supabase
-      .rpc("public_user_cosmetics" as any, { _user_id: userId })
+      .rpc("public_user_cosmetics" as any, { _user_id: realId })
       .then(({ data }) => {
         const row = Array.isArray(data) ? data[0] : data;
         if (!cancelled) setOtherCosmetics((row as PublicCosmetics | null) ?? null);
@@ -57,9 +69,9 @@ export function UserAvatar({ userId, avatarUrl, fallback, size = 40, className }
     return () => {
       cancelled = true;
     };
-  }, [userId, isSelf]);
+  }, [realId, isSelf]);
 
-  const src = avatarUrl ?? otherAvatar ?? undefined;
+  const src = resolveAvatar(avatarUrl ?? otherAvatar);
   const halo = isSelf ? equipped.halo?.css_class : otherCosmetics?.halo_class ?? undefined;
   const frame = isSelf ? equipped.avatar_frame?.css_class : otherCosmetics?.frame_class ?? undefined;
 
