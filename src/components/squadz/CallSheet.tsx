@@ -18,7 +18,38 @@ type Props = {
   mode?: "audio" | "video";
 };
 
-type Phase = "ringing" | "connecting" | "in-call" | "ended";
+
+/**
+ * Turns an opaque getUserMedia/WebRTC failure into a message that tells the
+ * user exactly what went wrong and what to do about it.
+ */
+function describeCallFailure(e: unknown, mode: "audio" | "video"): string {
+  const need = mode === "video" ? "camera and microphone" : "microphone";
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    return "Calls need a secure (https) connection — open the published site to call.";
+  }
+  if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
+    return `This browser blocks ${need} access here. Open rostr in its own tab and try again.`;
+  }
+  const err = e as { name?: string; message?: string };
+  switch (err?.name) {
+    case "NotAllowedError":
+    case "SecurityError":
+      return typeof window !== "undefined" && window.self !== window.top
+        ? `${need[0].toUpperCase()}${need.slice(1)} is blocked inside the preview frame — open rostr in a new tab to call.`
+        : `Permission denied — allow ${need} access in your browser's site settings, then retry.`;
+    case "NotFoundError":
+    case "OverconstrainedError":
+      return `No ${need} found on this device.`;
+    case "NotReadableError":
+      return `Your ${need} is already in use by another app. Close it and retry.`;
+    case "AbortError":
+      return "The call was interrupted before it connected.";
+    default:
+      return err?.message ? `Call failed: ${err.message}` : "Call failed for an unknown reason.";
+  }
+}
+
 
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -144,7 +175,7 @@ export function CallSheet({ open, onClose, peer, conversationId, selfId, role = 
           }
         });
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Camera/Mic access denied");
+        toast.error(describeCallFailure(e, mode));
         end();
       }
     })();
