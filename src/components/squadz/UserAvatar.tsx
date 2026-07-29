@@ -15,6 +15,16 @@ type Props = {
 
 type PublicCosmetics = { halo_class: string | null; frame_class: string | null; tag_name: string | null };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Resolves a stored avatar value (full URL or storage object path) to a loadable src. */
+function resolveAvatar(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  if (/^(https?:|data:|blob:)/.test(value)) return value;
+  const path = value.replace(/^\/+/, "");
+  return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+}
+
 /**
  * Universal avatar. Auto-applies the CURRENT user's equipped halo/frame.
  * For other users, still renders the CosmeticAvatar wrapper (no overlays)
