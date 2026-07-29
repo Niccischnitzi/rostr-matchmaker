@@ -59,6 +59,19 @@ export function FriendsTab() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
 
+  // Live friend requests / accepts across accounts
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`friends-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friends" }, () => {
+        load();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    /* eslint-disable-next-line */
+  }, [user?.id]);
+
   const accepted = rows.filter((r) => r.status === "accepted");
   const incoming = rows.filter((r) => r.status === "pending" && r.addressee_id === user?.id);
   const outgoing = rows.filter((r) => r.status === "pending" && r.requester_id === user?.id);
