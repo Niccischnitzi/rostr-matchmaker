@@ -133,3 +133,50 @@ export async function riotAdapter(_externalUid: string, _gameKey: string): Promi
   if (!key) return [];
   return [];
 }
+
+export type SteamPassport = {
+  steam_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  profile_url: string | null;
+  country: string | null;
+  created_at: string | null;
+  library_count: number;
+  total_hours: number;
+  top_games: Array<{ appid: number; name: string | null; hours: number }>;
+  synced_at: string;
+};
+
+/**
+ * Rich Steam passport snapshot stored on linked_accounts.aggregated_stats so
+ * the Universal Gaming Passport (and matched players' public profiles) can
+ * render real Steam details without hitting the Steam API per view.
+ */
+export async function fetchSteamPassport(steamId: string): Promise<SteamPassport | null> {
+  const key = process.env.STEAM_WEB_API_KEY;
+  if (!key) return null;
+  const persona = await fetchSteamPersona(steamId);
+  const owned = await steamJson(
+    `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${key}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`,
+  );
+  const games: Array<{ appid: number; playtime_forever?: number; name?: string }> =
+    owned?.response?.games ?? [];
+  const totalMinutes = games.reduce((a, g) => a + (g.playtime_forever ?? 0), 0);
+  const top = [...games]
+    .sort((a, b) => (b.playtime_forever ?? 0) - (a.playtime_forever ?? 0))
+    .slice(0, 5)
+    .map((g) => ({ appid: g.appid, name: g.name ?? null, hours: Math.round((g.playtime_forever ?? 0) / 60) }));
+
+  return {
+    steam_id: steamId,
+    display_name: persona?.display_name ?? null,
+    avatar_url: persona?.avatar_url ?? null,
+    profile_url: persona?.profile_url ?? `https://steamcommunity.com/profiles/${steamId}`,
+    country: persona?.country ?? null,
+    created_at: persona?.created_at ?? null,
+    library_count: games.length,
+    total_hours: Math.round(totalMinutes / 60),
+    top_games: top,
+    synced_at: new Date().toISOString(),
+  };
+}
