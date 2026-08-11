@@ -2716,6 +2716,17 @@ export type Database = {
           top_tags: string[]
         }[]
       }
+      public_linked_accounts: {
+        Args: { _user_id: string }
+        Returns: {
+          aggregated_stats: Json
+          current_rank_display: string
+          external_uid: string
+          gamertag: string
+          platform: string
+          verified: boolean
+        }[]
+      }
       public_profile: {
         Args: { _username: string }
         Returns: {
