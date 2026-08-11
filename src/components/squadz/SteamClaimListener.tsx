@@ -5,9 +5,11 @@ import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { linkSteam } from "@/lib/steam.functions";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function SteamClaimListener() {
   const link = useServerFn(linkSteam);
+  const qc = useQueryClient();
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
@@ -25,13 +27,17 @@ export function SteamClaimListener() {
         },
       }).then((res: any) => {
         if (res?.error) toast.error(res.error);
-        else if (res?.ok) toast.success("Steam linked");
+        else if (res?.ok) {
+          toast.success("Steam linked");
+          qc.invalidateQueries({ queryKey: ["linked-accounts"] });
+          qc.invalidateQueries({ queryKey: ["battlecard"] });
+        }
       }).catch((e) => {
         toast.error(e instanceof Error ? e.message : "Could not link Steam");
       });
     } catch {
       toast.error("Steam link payload was invalid");
     }
-  }, [link]);
+  }, [link, qc]);
   return null;
 }

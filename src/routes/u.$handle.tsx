@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, Zap, Users, Film, Shield, Flame, Share2, Volume2, Star, Flag } from "lucide-react";
 import { CosmeticAvatar } from "@/components/cosmetics/CosmeticAvatar";
 import { ReportDialog } from "@/components/squadz/ReportDialog";
+import { SteamPassportCard, type SteamPassportData } from "@/components/squadz/SteamPassportCard";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -27,6 +28,15 @@ type PublicProfile = {
   frame_class: string | null;
 };
 
+type PublicLinked = {
+  platform: string;
+  gamertag: string;
+  external_uid: string | null;
+  verified: boolean | null;
+  current_rank_display: string | null;
+  aggregated_stats: SteamPassportData | null;
+};
+
 type Stats = { friend_count: number; clip_count: number; crew_count: number };
 type RatingSummary = { avg_score: number; rating_count: number; top_tags: string[] };
 type VoiceSnippet = { user_id: string; storage_path: string; duration_seconds: number; transcript: string | null; is_public: boolean };
@@ -42,7 +52,9 @@ export const Route = createFileRoute("/u/$handle")({
     const s = (Array.isArray(statsRes) ? statsRes[0] : statsRes) as Stats | null;
     const { data: ratingRes } = await supabase.rpc("profile_rating_summary" as any, { _user_id: p.id });
     const rating = (Array.isArray(ratingRes) ? ratingRes[0] : ratingRes) as RatingSummary | null;
-    return { profile: p, stats: s ?? { friend_count: 0, clip_count: 0, crew_count: 0 }, rating: rating ?? { avg_score: 0, rating_count: 0, top_tags: [] } };
+    const { data: linkedRes } = await supabase.rpc("public_linked_accounts" as any, { _user_id: p.id });
+    const linked = (Array.isArray(linkedRes) ? linkedRes : []) as PublicLinked[];
+    return { linked, profile: p, stats: s ?? { friend_count: 0, clip_count: 0, crew_count: 0 }, rating: rating ?? { avg_score: 0, rating_count: 0, top_tags: [] } };
   },
   head: ({ params, loaderData }) => {
     const d = loaderData?.profile;
@@ -108,7 +120,11 @@ export const Route = createFileRoute("/u/$handle")({
 });
 
 function UserProfilePage() {
-  const { profile: p, stats, rating } = Route.useLoaderData();
+  const { profile: p, stats, rating, linked: linkedRaw } = Route.useLoaderData();
+  const linked = (linkedRaw ?? []) as PublicLinked[];
+  const steam = linked.find((l) => l.platform.toLowerCase() === "steam") ?? null;
+  const otherPlatforms = linked.filter((l) => l.platform.toLowerCase() !== "steam");
+
   const initial = (p.display_name ?? p.username).slice(0, 1).toUpperCase();
   const [snippet, setSnippet] = useState<VoiceSnippet | null>(null);
   const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
@@ -276,6 +292,31 @@ function UserProfilePage() {
             )}
           </div>
         </div>
+
+        {/* Gaming passport */}
+        {(steam || otherPlatforms.length > 0) && (
+          <Section title="Universal gaming passport">
+            <div className="space-y-3">
+              {steam && (
+                <SteamPassportCard
+                  gamertag={steam.gamertag}
+                  steamId={steam.external_uid}
+                  data={steam.aggregated_stats}
+                />
+              )}
+              {otherPlatforms.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {otherPlatforms.map((l) => (
+                    <span key={l.platform} className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface/60 px-3 py-2 text-xs">
+                      <span className="uppercase tracking-widest text-muted-foreground font-bold">{l.platform}</span>
+                      <span className="font-mono font-bold">{l.gamertag}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Section>
+        )}
 
         {/* Bio */}
         {p.bio && (
