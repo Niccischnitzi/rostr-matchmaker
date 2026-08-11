@@ -120,9 +120,11 @@ export const Route = createFileRoute("/u/$handle")({
 });
 
 function UserProfilePage() {
-  const { profile: p, stats, rating, linked } = Route.useLoaderData();
-  const steam = (linked ?? []).find((l) => l.platform.toLowerCase() === "steam") ?? null;
-  const otherPlatforms = (linked ?? []).filter((l) => l.platform.toLowerCase() !== "steam");
+  const { profile: p, stats, rating, linked: linkedRaw } = Route.useLoaderData();
+  const linked = (linkedRaw ?? []) as PublicLinked[];
+  const steam = linked.find((l) => l.platform.toLowerCase() === "steam") ?? null;
+  const otherPlatforms = linked.filter((l) => l.platform.toLowerCase() !== "steam");
+
   const initial = (p.display_name ?? p.username).slice(0, 1).toUpperCase();
   const [snippet, setSnippet] = useState<VoiceSnippet | null>(null);
   const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
