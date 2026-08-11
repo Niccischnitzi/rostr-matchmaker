@@ -316,7 +316,7 @@ function ShopPage() {
                               className={cn(
                                 "rounded-md px-3 py-1.5 text-xs font-semibold transition",
                                 isEquipped
-                                  ? "bg-emerald-600 text-primary-foreground hover:opacity-90"
+                                  ? "bg-emerald-600 text-white hover:opacity-90"
                                   : "bg-primary text-primary-foreground hover:opacity-90",
                               )}
                             >
