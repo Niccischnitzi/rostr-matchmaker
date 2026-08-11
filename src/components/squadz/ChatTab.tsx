@@ -35,8 +35,9 @@ type ConvWithPeer = Conversation & {
 };
 
 export function ChatTab() {
-  const [view, setView] = useState<"chats" | "friends" | "lfg">("chats");
+  const [view, setView] = useState<"chats" | "groups" | "friends" | "lfg">("chats");
   const [openChat, setOpenChat] = useState<string | null>(null);
+
 
   // Cross-tab: FindTab dispatches `rostr:open-chat` with a conversationId.
   useEffect(() => {
