@@ -30,7 +30,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 describe("Batch C UI surfaces", () => {
   it("applies public equipped cosmetics to other users' avatars", async () => {
-    const { container } = render(<UserAvatar userId="other" avatarUrl="https://example.test/a.png" fallback="OP" />);
+    const { container } = render(<UserAvatar userId="22222222-2222-4222-8222-222222222222" avatarUrl="https://example.test/a.png" fallback="OP" />);
 
     expect(container.querySelector('img[src="https://example.test/a.png"]')).not.toBeNull();
     await waitFor(() => expect(container.querySelector(".halo-public")).not.toBeNull());
