@@ -10,6 +10,8 @@ import { useSquadz } from "@/lib/squadz-store";
 import { UserSafetyActions } from "./UserSafetyActions";
 import { EmptyState } from "./EmptyState";
 import { GlowButton } from "./GlowButton";
+import { UserAvatar } from "./UserAvatar";
+
 
 
 type Friend = {
@@ -42,13 +44,9 @@ export function FriendsTab() {
       if (error) throw error;
       const list = (data ?? []) as Friend[];
       const ids = Array.from(new Set(list.flatMap((r) => [r.requester_id, r.addressee_id]))).filter((i) => i !== user.id);
-      const [friendProfiles, discoverRows] = await Promise.all([
-        fetchProfiles(ids),
-        supabase.from("profiles").select("id, username, display_name, avatar_url, bio").neq("id", user.id).order("username").limit(50),
-      ]);
+      const friendProfiles = await fetchProfiles(ids);
       setRows(list);
       setProfiles(new Map(friendProfiles.map((p) => [p.id, p])));
-      setDiscover((discoverRows.data ?? []) as ProfileLite[]);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not load friends");
     } finally {
@@ -58,6 +56,28 @@ export function FriendsTab() {
 
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
+
+  // Server-side player search (debounced). A client-side slice of profiles can
+  // never find newer accounts, so discovery must hit the database every time.
+  useEffect(() => {
+    const needle = q.trim();
+    if (!user || needle.length < 2) { setDiscover([]); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const escaped = needle.replace(/[%_,]/g, "");
+      if (!escaped) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url, bio")
+        .neq("id", user.id)
+        .or(`username.ilike.%${escaped}%,display_name.ilike.%${escaped}%`)
+        .order("username")
+        .limit(12);
+      if (!cancelled) setDiscover((data ?? []) as ProfileLite[]);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [q, user]);
+
 
   // Live friend requests / accepts across accounts
   useEffect(() => {
@@ -155,8 +175,8 @@ export function FriendsTab() {
                 const p = profiles.get(r.requester_id);
                 return (
                   <Row key={r.id} profile={p}>
-                    <Button size="sm" onClick={() => respond(r.id, "accepted")}><Check className="h-4 w-4" /></Button>
-                    <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
+                    <Button size="sm" aria-label="Accept request" onClick={() => respond(r.id, "accepted")}><Check className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="outline" aria-label="Decline request" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
                   </Row>
                 );
               })}
@@ -168,7 +188,7 @@ export function FriendsTab() {
               {outgoing.map((r) => (
                 <Row key={r.id} profile={profiles.get(r.addressee_id)}>
                   <span className="text-xs text-muted-foreground">Pending…</span>
-                  <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="outline" aria-label="Cancel request" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
                 </Row>
               ))}
             </Section>
@@ -215,17 +235,18 @@ export function FriendsTab() {
               return (
                 <Row key={r.id} profile={p}>
                   <UserSafetyActions targetId={p?.id} targetLabel={p?.display_name ?? p?.username} onBlocked={() => remove(r.id)} />
-                  <Button size="sm" variant="outline" onClick={() => message(p?.id)}>
+                  <Button size="sm" variant="outline" aria-label="Message friend" onClick={() => message(p?.id)}>
                     <MessageCircle className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="outline" aria-label="Remove friend" onClick={() => remove(r.id)}><X className="h-4 w-4" /></Button>
                 </Row>
               );
             })}
             {discoveryResults.map((p) => (
               <Row key={p.id} profile={p}>
                 <UserSafetyActions targetId={p.id} targetLabel={p.display_name ?? p.username} />
-                <Button size="sm" onClick={() => add(p)}><UserPlus className="h-4 w-4" /></Button>
+                <Button size="sm" aria-label={`Add ${p.username} to your rostr`} onClick={() => add(p)}><UserPlus className="h-4 w-4" /></Button>
+
               </Row>
             ))}
           </Section>
@@ -249,9 +270,14 @@ function Section({ title, icon: Icon, children }: { title: string; icon: typeof 
 function Row({ profile, children }: { profile?: RowProfile | null; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface/60 transition">
-      <div className="h-10 w-10 rounded-full bg-surface-2 overflow-hidden shrink-0">
-        {profile?.avatar_url && <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />}
-      </div>
+      <UserAvatar
+        userId={profile?.id}
+        avatarUrl={profile?.avatar_url}
+        fallback={profile?.username ?? profile?.display_name ?? "?"}
+        size={40}
+        className="shrink-0"
+      />
+
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold truncate">{profile?.display_name ?? profile?.username ?? "…"}</p>
         <p className="text-[11px] text-muted-foreground truncate">@{profile?.username ?? "user"}</p>
