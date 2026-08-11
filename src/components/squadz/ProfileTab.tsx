@@ -52,7 +52,11 @@ type LinkedAccount = {
   platform: string;
   gamertag: string;
   current_rank_display: string | null;
+  external_uid?: string | null;
+  verified?: boolean | null;
+  aggregated_stats?: SteamPassportData | null;
 };
+
 
 type VoiceSnippet = {
   user_id: string;
