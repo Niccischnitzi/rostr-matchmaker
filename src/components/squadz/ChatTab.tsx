@@ -54,9 +54,9 @@ export function ChatTab() {
       {!openChat && (
         <>
           <h1 className="font-display text-3xl lg:text-4xl font-black tracking-tight">Chat</h1>
-          <p className="text-sm text-muted-foreground mt-1 mb-5">Messages, friends, and the LFG board.</p>
-          <div className="inline-flex rounded-full bg-surface p-1 border border-border mb-5">
-            {([["chats", "Messages"], ["friends", "Friends"], ["lfg", "LFG Board"]] as const).map(([k, l]) => (
+          <p className="text-sm text-muted-foreground mt-1 mb-5">Messages, groups, friends, and the LFG board.</p>
+          <div className="inline-flex flex-wrap rounded-full bg-surface p-1 border border-border mb-5">
+            {([["chats", "Messages"], ["groups", "Groups"], ["friends", "Friends"], ["lfg", "LFG Board"]] as const).map(([k, l]) => (
               <button
                 key={k}
                 onClick={() => setView(k)}
@@ -76,11 +76,14 @@ export function ChatTab() {
         <DMWindow conversationId={openChat} onBack={() => setOpenChat(null)} />
       ) : view === "chats" ? (
         <DMList onOpen={setOpenChat} />
+      ) : view === "groups" ? (
+        <GroupChats />
       ) : view === "friends" ? (
         <FriendsTab />
       ) : (
         <LFGBoard />
       )}
+
     </div>
   );
 }
