@@ -12,6 +12,7 @@ import { BattleCard } from "./BattleCard";
 import { PurchasesSection } from "./PurchasesSection";
 import { LfgAdStats } from "./LfgAdStats";
 import { SteamConnectButton } from "./SteamConnectButton";
+import { SteamPassportCard, type SteamPassportData } from "./SteamPassportCard";
 import { CosmeticAvatar } from "@/components/cosmetics/CosmeticAvatar";
 import { useEquippedCosmetics } from "@/hooks/use-equipped-cosmetics";
 
@@ -123,7 +124,7 @@ export function ProfileTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("linked_accounts")
-        .select("id, user_id, platform, gamertag, current_rank_display")
+        .select("id, user_id, platform, gamertag, current_rank_display, external_uid, verified, aggregated_stats")
         .eq("user_id", userId!)
         .order("platform");
       if (error) throw error;
@@ -327,7 +328,18 @@ export function ProfileTab() {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
-            {linked.map((a) => {
+            {linked.filter((a) => a.platform.toLowerCase() === "steam").map((a) => (
+              <div key={`steam-${a.id}`} className="sm:col-span-2">
+                <SteamPassportCard
+                  gamertag={a.gamertag}
+                  steamId={a.external_uid ?? null}
+                  data={(a.aggregated_stats ?? null) as SteamPassportData | null}
+                  own
+                  onSynced={() => qc.invalidateQueries({ queryKey: ["linked-accounts", userId] })}
+                />
+              </div>
+            ))}
+            {linked.filter((a) => a.platform.toLowerCase() !== "steam").map((a) => {
               const meta = platformMeta[a.platform] ?? { icon: "🎮", color: "#444" };
               return (
                 <div key={a.id} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
