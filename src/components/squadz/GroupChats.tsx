@@ -226,7 +226,7 @@ function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     on && "bg-primary/10",
                   )}
                 >
-                  <UserAvatar userId={p.id} src={p.avatar_url} name={p.display_name ?? p.username} size={36} />
+                  <UserAvatar userId={p.id} avatarUrl={p.avatar_url} fallback={(p.display_name ?? p.username)?.slice(0, 2)} size={36} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold truncate text-sm">{p.display_name ?? p.username}</p>
                     <p className="text-xs text-muted-foreground truncate">@{p.username}</p>
@@ -337,7 +337,7 @@ function GroupWindow({ group, onBack }: { group: Group; onBack: () => void }) {
             const p = profiles.get(m.sender_id);
             return (
               <div key={m.id} className={cn("flex gap-2", mine && "flex-row-reverse")}>
-                <UserAvatar userId={m.sender_id} src={p?.avatar_url} name={p?.display_name ?? p?.username} size={28} />
+                <UserAvatar userId={m.sender_id} avatarUrl={p?.avatar_url} fallback={(p?.display_name ?? p?.username ?? "P").slice(0, 2)} size={28} />
                 <div className={cn("max-w-[75%]", mine && "text-right")}>
                   {!mine && (
                     <p className="text-[11px] text-muted-foreground mb-0.5">{p?.display_name ?? p?.username ?? "Player"}</p>
