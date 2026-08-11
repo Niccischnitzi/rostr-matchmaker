@@ -207,7 +207,7 @@ function PricingPage() {
                   className="relative rounded-2xl border border-border bg-card p-6 flex flex-col gap-4"
                 >
                   {plan.save && (
-                    <span className="absolute -top-2 right-4 rounded-full bg-emerald-500 text-white text-[10px] uppercase tracking-wide px-2 py-0.5">
+                    <span className="absolute -top-2 right-4 rounded-full bg-emerald-600 text-white text-[10px] uppercase tracking-wide px-2 py-0.5">
                       {plan.save}
                     </span>
                   )}

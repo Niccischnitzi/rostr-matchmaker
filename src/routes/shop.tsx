@@ -316,7 +316,7 @@ function ShopPage() {
                               className={cn(
                                 "rounded-md px-3 py-1.5 text-xs font-semibold transition",
                                 isEquipped
-                                  ? "bg-emerald-500 text-white hover:opacity-90"
+                                  ? "bg-emerald-600 text-white hover:opacity-90"
                                   : "bg-primary text-primary-foreground hover:opacity-90",
                               )}
                             >
@@ -371,7 +371,7 @@ function ShopPage() {
 
       {previewItem && (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-foreground/60 backdrop-blur-sm p-4"
           onClick={() => setPreviewItem(null)}
         >
           <div

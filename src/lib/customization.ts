@@ -192,9 +192,14 @@ export function applyCustomization(c: Customization = loadCustomization()) {
     : paletteHexes.length >= 2
       ? [paletteHexes[0], paletteHexes[1] ?? paletteHexes[0], paletteHexes[2] ?? paletteHexes[0], paletteHexes[0]]
       : [accent.primary, accent.glow, accent.primary, accent.glow];
+  // Contrast-aware text on the accent: dark ink on bright accents (lime/amber/cyan),
+  // near-white on deep ones (indigo/violet/orange). Keeps AA in light AND dark mode.
+  const accentL = Number(accent.primary.match(/oklch\(\s*([0-9.]+)/)?.[1] ?? "0.66");
+  const onAccent = accentL >= 0.72 ? "oklch(0.16 0.012 270)" : "oklch(0.99 0 0)";
   for (const el of targets) {
     el.style.setProperty("--primary", accent.primary);
-    el.style.setProperty("--primary-foreground", "oklch(0.08 0 0)");
+    el.style.setProperty("--primary-foreground", onAccent);
+
     el.style.setProperty("--primary-glow", accent.glow);
     el.style.setProperty("--ring", accent.ring);
     el.style.setProperty("--accent", accentSurface);
