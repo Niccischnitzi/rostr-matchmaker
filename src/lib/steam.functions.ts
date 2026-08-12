@@ -6,11 +6,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const Input = z.object({
-  external_id: z.string().regex(/^\d{17}$/),
-  display_name: z.string().max(120).nullable().optional(),
-  avatar_url: z.string().url().max(500).nullable().optional(),
-});
+// The client may only hand back the signed token minted by the OpenID return
+// route — never a raw Steam id — so a "verified" link always implies real proof.
+const Input = z.object({ token: z.string().min(20).max(2000) });
 
 export const linkSteam = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -18,34 +16,41 @@ export const linkSteam = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    const { verifySteamClaim } = await import("./steam.server");
+    const claim = verifySteamClaim(data.token);
+    if (!claim) return { error: "Steam proof was invalid or expired — try connecting again." };
+
     // Enforce one rostr account per Steam id.
     const { data: existing } = await supabase
       .from("linked_accounts")
       .select("user_id")
       .eq("platform", "steam")
-      .eq("external_uid", data.external_id)
+      .eq("external_uid", claim.external_id)
       .maybeSingle();
     if (existing && existing.user_id !== userId) {
       return { error: "This Steam account is already linked to another rostr profile." };
     }
 
     const { fetchSteamPassport } = await import("./playerStats.server");
-    const passport = await fetchSteamPassport(data.external_id).catch(() => null);
+    const passport = await fetchSteamPassport(claim.external_id).catch(() => null);
 
-    const { error } = await supabase
+    // `verified` and `aggregated_stats` are locked to trusted server writes by the
+    // protect_linked_account_verification trigger, so use the admin client here.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
       .from("linked_accounts")
       .upsert(
         {
           user_id: userId,
           platform: "steam",
-          external_uid: data.external_id,
-          gamertag: passport?.display_name ?? data.display_name ?? data.external_id,
+          external_uid: claim.external_id,
+          gamertag: passport?.display_name ?? claim.display_name ?? claim.external_id,
           verified: true,
           aggregated_stats: (passport ?? {
-            steam_id: data.external_id,
-            avatar_url: data.avatar_url ?? null,
-            display_name: data.display_name ?? null,
-            profile_url: `https://steamcommunity.com/profiles/${data.external_id}`,
+            steam_id: claim.external_id,
+            avatar_url: claim.avatar_url ?? null,
+            display_name: claim.display_name ?? null,
+            profile_url: `https://steamcommunity.com/profiles/${claim.external_id}`,
           }) as never,
         } as never,
         { onConflict: "user_id,platform" } as never
@@ -73,7 +78,9 @@ export const syncSteam = createServerFn({ method: "POST" })
     const passport = await fetchSteamPassport(steamId);
     if (!passport) return { error: "Steam is not reachable right now. Try again shortly." };
 
-    const { error: upErr } = await supabase
+    // Synced stats are trusted-server-only (protect_linked_account_verification).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: upErr } = await supabaseAdmin
       .from("linked_accounts")
       .update({
         gamertag: passport.display_name ?? steamId,

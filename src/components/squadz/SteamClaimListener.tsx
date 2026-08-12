@@ -18,14 +18,8 @@ export function SteamClaimListener() {
     url.searchParams.delete("steam_link");
     window.history.replaceState({}, "", url.toString());
     try {
-      const payload = JSON.parse(decodeURIComponent(raw));
-      link({
-        data: {
-          external_id: String(payload.external_id ?? ""),
-          display_name: payload.display_name ?? null,
-          avatar_url: payload.avatar_url ?? null,
-        },
-      }).then((res: any) => {
+      // `raw` is a signed, short-lived token minted by /api/public/steam/return.
+      link({ data: { token: raw } }).then((res: any) => {
         if (res?.error) toast.error(res.error);
         else if (res?.ok) {
           toast.success("Steam linked");

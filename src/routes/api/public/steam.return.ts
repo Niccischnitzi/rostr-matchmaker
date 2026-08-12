@@ -52,15 +52,18 @@ export const Route = createFileRoute("/api/public/steam/return")({
           }
         }
 
-        // Hand off to a client-side claim page; we encode the verified
-        // payload in URL hash so the client can call a server fn that
-        // requires auth and writes the row scoped to the signed-in user.
-        const payload = encodeURIComponent(JSON.stringify({
+        // Hand off to a client-side claim page. The payload is HMAC-signed with a
+        // server-only secret and short-lived, so the client can NOT forge a Steam
+        // id or a "verified" link — linkSteam re-verifies the signature.
+        const { signSteamClaim } = await import("@/lib/steam.server");
+        const token = signSteamClaim({
           provider: "steam",
           external_id: steamId,
-          ...persona,
-        }));
-        const redirect = `/?steam_link=${payload}`;
+          display_name: persona.display_name,
+          avatar_url: persona.avatar_url,
+          exp: Date.now() + 5 * 60_000,
+        });
+        const redirect = `/?steam_link=${encodeURIComponent(token)}`;
         return new Response(null, { status: 302, headers: { Location: redirect } });
       },
     },
