@@ -2686,6 +2686,16 @@ export type Database = {
       mark_all_notifications_read: { Args: never; Returns: number }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
+      my_private_profile: {
+        Args: never
+        Returns: {
+          date_of_birth: string
+          email_verified_at: string
+          id: string
+          pro_until: string
+          rep_score: number
+        }[]
+      }
       pair_chemistry: {
         Args: { _other_user: string }
         Returns: {
