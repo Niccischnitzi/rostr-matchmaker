@@ -12,9 +12,25 @@ const STEAM_OPENID = "https://steamcommunity.com/openid/login";
 
 type LinkedSteam = { external_uid: string | null; gamertag: string; aggregated_stats: any };
 
+function buildSteamUrl() {
+  const returnTo = `${window.location.origin}/api/public/steam/return`;
+  const realm = window.location.origin;
+  const params = new URLSearchParams({
+    "openid.ns": "http://specs.openid.net/auth/2.0",
+    "openid.mode": "checkid_setup",
+    "openid.return_to": returnTo,
+    "openid.realm": realm,
+    "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+    "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+  });
+  return `${STEAM_OPENID}?${params.toString()}`;
+}
+
 export function SteamConnectButton({ className }: { className?: string }) {
   const [linked, setLinked] = useState<LinkedSteam | null>(null);
   const [loading, setLoading] = useState(true);
+  const [popupBlockedUrl, setPopupBlockedUrl] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,20 +50,27 @@ export function SteamConnectButton({ className }: { className?: string }) {
       }
     })();
     return () => { cancelled = true; };
+  }, [tick]);
+
+  // The Steam tab writes this key once the link is claimed.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "rostr:steam_linked") setTick((t) => t + 1);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   function startLink() {
-    const returnTo = `${window.location.origin}/api/public/steam/return`;
-    const realm = window.location.origin;
-    const params = new URLSearchParams({
-      "openid.ns": "http://specs.openid.net/auth/2.0",
-      "openid.mode": "checkid_setup",
-      "openid.return_to": returnTo,
-      "openid.realm": realm,
-      "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
-      "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
-    });
-    window.location.href = `${STEAM_OPENID}?${params.toString()}`;
+    const url = buildSteamUrl();
+    // Steam refuses to be framed (X-Frame-Options), and the preview runs inside
+    // an iframe — so always hand off to a real top-level tab/window.
+    const win = window.open(url, "_blank", "noopener,noreferrer,width=1000,height=760");
+    if (!win) {
+      setPopupBlockedUrl(url);
+      return;
+    }
+    setPopupBlockedUrl(null);
   }
 
   if (loading) {
@@ -65,8 +88,20 @@ export function SteamConnectButton({ className }: { className?: string }) {
   }
 
   return (
-    <Button onClick={startLink} variant="outline" className={`gap-2 ${className ?? ""}`}>
-      <Gamepad2 className="h-4 w-4" /> Connect Steam
-    </Button>
+    <div className={`inline-flex flex-col gap-1 ${className ?? ""}`}>
+      <Button onClick={startLink} variant="outline" className="gap-2">
+        <Gamepad2 className="h-4 w-4" /> Connect Steam
+      </Button>
+      {popupBlockedUrl && (
+        <a
+          href={popupBlockedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] font-semibold text-primary underline underline-offset-4"
+        >
+          Popup blocked — open Steam login
+        </a>
+      )}
+    </div>
   );
 }

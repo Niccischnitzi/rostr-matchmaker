@@ -31,6 +31,11 @@ export function SteamClaimListener() {
           toast.success("Steam linked");
           qc.invalidateQueries({ queryKey: ["linked-accounts"] });
           qc.invalidateQueries({ queryKey: ["battlecard"] });
+          // Tell the tab that started the link (popup flow) to refresh, then close.
+          try { localStorage.setItem("rostr:steam_linked", String(Date.now())); } catch { /* ignore */ }
+          if (window.opener && window.opener !== window) {
+            setTimeout(() => window.close(), 900);
+          }
         }
       }).catch((e) => {
         toast.error(e instanceof Error ? e.message : "Could not link Steam");
