@@ -88,8 +88,20 @@ export function SteamConnectButton({ className }: { className?: string }) {
   }
 
   return (
-    <Button onClick={startLink} variant="outline" className={`gap-2 ${className ?? ""}`}>
-      <Gamepad2 className="h-4 w-4" /> Connect Steam
-    </Button>
+    <div className={`inline-flex flex-col gap-1 ${className ?? ""}`}>
+      <Button onClick={startLink} variant="outline" className="gap-2">
+        <Gamepad2 className="h-4 w-4" /> Connect Steam
+      </Button>
+      {popupBlockedUrl && (
+        <a
+          href={popupBlockedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] font-semibold text-primary underline underline-offset-4"
+        >
+          Popup blocked — open Steam login
+        </a>
+      )}
+    </div>
   );
 }
