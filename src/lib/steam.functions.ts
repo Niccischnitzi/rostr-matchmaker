@@ -78,7 +78,9 @@ export const syncSteam = createServerFn({ method: "POST" })
     const passport = await fetchSteamPassport(steamId);
     if (!passport) return { error: "Steam is not reachable right now. Try again shortly." };
 
-    const { error: upErr } = await supabase
+    // Synced stats are trusted-server-only (protect_linked_account_verification).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: upErr } = await supabaseAdmin
       .from("linked_accounts")
       .update({
         gamertag: passport.display_name ?? steamId,
