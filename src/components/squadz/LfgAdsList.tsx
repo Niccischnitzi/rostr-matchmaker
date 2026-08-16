@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ListRowsSkeleton } from "./LoadingSkeletons";
 import { Loader2, Megaphone, MapPin, UserPlus, Check, Megaphone as MegaphoneIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -60,7 +61,7 @@ export function LfgAdsList() {
     setAdded((prev) => new Set(prev).add(ad.id));
   }
 
-  if (loading) return <div className="grid place-items-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if (loading) return <div className="mt-8"><ListRowsSkeleton count={3} /></div>;
 
   return (
     <div className="mt-8">

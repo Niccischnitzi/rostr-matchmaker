@@ -368,7 +368,6 @@ function TabFrame({ active, tabKey, dir = 1, children }: { active: boolean; tabK
         ? `tab-mounted-show ${dir === 1 ? "tab-swap-right" : "tab-swap-left"} relative overflow-hidden`
         : "tab-mounted-hidden"}
     >
-      {active && <div className="arcade-sweep" aria-hidden />}
       <TabErrorBoundary label={tabKey}>{children}</TabErrorBoundary>
     </div>
   );

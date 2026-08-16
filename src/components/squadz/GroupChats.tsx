@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ListRowsSkeleton, MessagesSkeleton } from "./LoadingSkeletons";
 import { ArrowLeft, Loader2, Plus, Search, Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -66,9 +67,7 @@ export function GroupChats() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-10 grid place-items-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
-      </div>
+      <ListRowsSkeleton count={4} />
     );
   }
 
@@ -326,9 +325,7 @@ function GroupWindow({ group, onBack }: { group: Group; onBack: () => void }) {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loading ? (
-          <div className="h-full grid place-items-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
+          <MessagesSkeleton count={6} />
         ) : messages.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-10">No messages yet — say hi 👋</p>
         ) : (

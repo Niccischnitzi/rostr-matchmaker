@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { CardGridSkeleton, ProfileSkeleton } from "./LoadingSkeletons";
 import { ArrowLeft, Hash, Users, Crown, Loader2, Plus, Send, Shield, Swords, Palette } from "lucide-react";
 import { ClubAppearance } from "./ClubAppearance";
 import { ClubWars } from "./ClubWars";
@@ -94,9 +95,7 @@ export function ClubsTab() {
       )}
 
       {loading ? (
-        <div className="py-16 grid place-items-center text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
+        <div className="mt-5"><CardGridSkeleton count={6} /></div>
       ) : (
         <div className="mt-5">
           {joined.length > 0 && (
@@ -351,8 +350,8 @@ function ClubDetail({ clubId, onBack, onChanged }: { clubId: string; onBack: () 
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 pt-10 pb-10 grid place-items-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
+      <div className="max-w-5xl mx-auto px-4 pt-10 pb-10">
+        <ProfileSkeleton />
       </div>
     );
   }
