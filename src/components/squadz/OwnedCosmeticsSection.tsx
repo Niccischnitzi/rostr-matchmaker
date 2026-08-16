@@ -26,7 +26,6 @@ export function OwnedCosmeticsSection() {
       all: rows.length,
       halo: rows.filter((r) => r.item.type === "halo").length,
       avatar_frame: rows.filter((r) => r.item.type === "avatar_frame").length,
-      background: rows.filter((r) => r.item.type === "background").length,
       tag: rows.filter((r) => r.item.type === "tag").length,
     }),
     [rows],
@@ -62,7 +61,7 @@ export function OwnedCosmeticsSection() {
       <EmptyState
         variant="cosmic"
         title="Your loadout is empty"
-        body="Head to the shop to unlock halos, frames, tags, and animated backgrounds."
+        body="Head to the shop to unlock halos, frames, and profile tags."
         action={
           <Link
             to="/shop"
@@ -80,7 +79,6 @@ export function OwnedCosmeticsSection() {
     ["all", "All", counts.all],
     ["halo", "Halos", counts.halo],
     ["avatar_frame", "Frames", counts.avatar_frame],
-    ["background", "Backgrounds", counts.background],
     ["tag", "Tags", counts.tag],
   ];
 
@@ -128,7 +126,6 @@ export function OwnedCosmeticsSection() {
               className={cn(
                 "relative rounded-xl border p-2.5 flex flex-col items-center gap-2 text-center transition overflow-hidden",
                 r.equipped ? "border-primary/60 bg-primary/5" : "border-border bg-surface/60",
-                r.item.type === "background" && r.item.css_class,
               )}
             >
               {r.equipped && (
@@ -177,9 +174,6 @@ function Preview({ item }: { item: ShopItem }) {
         <div className="h-full w-full rounded-full bg-gradient-to-br from-muted-foreground/40 to-muted-foreground/10" />
       </CosmeticAvatar>
     );
-  }
-  if (item.type === "background") {
-    return <div className={cn("h-11 w-full rounded-md border border-border", item.css_class)} />;
   }
   return (
     <span className="text-[9px] px-2 py-1 rounded-full border border-primary/50 text-primary font-black uppercase tracking-widest">
