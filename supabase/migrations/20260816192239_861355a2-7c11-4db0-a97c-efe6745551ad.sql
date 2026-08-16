@@ -1,0 +1,2 @@
+UPDATE public.shop_items SET is_active = false, updated_at = now() WHERE type = 'background';
+UPDATE public.user_inventory SET equipped = false WHERE item_id IN (SELECT id FROM public.shop_items WHERE type = 'background');
