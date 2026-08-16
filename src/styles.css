@@ -130,18 +130,15 @@
   }
 }
 
+/* Quiet elevation instead of a neon bloom. */
 @utility glow-orange {
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent),
-              0 10px 40px -10px color-mix(in oklab, var(--primary) 50%, transparent);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 12%),
+              0 8px 24px -18px color-mix(in oklab, var(--primary) 40%, transparent);
 }
 
+/* Flat accent text — reads as editorial, not as a gradient sticker. */
 @utility text-gradient-orange {
-  background-image: linear-gradient(135deg, var(--primary), oklch(0.78 0.18 55));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  display: inline-block;
+  color: var(--primary);
 }
 
 @keyframes pulse-ring {
