@@ -403,8 +403,8 @@ export function FindTab() {
           </div>
         ) : top ? (
           <div key={top.id} className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-sm flex flex-col soft-rise animate-fade-in">
-            <div className="relative h-32 sm:h-40 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent">
-              <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+            <div className="relative h-32 sm:h-40 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--primary)_22%,var(--surface)),var(--surface))] border-b border-border">
+              <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, currentColor 1px, transparent 1px), radial-gradient(circle at 70% 60%, currentColor 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
               <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
                 {top.isLfg && (
                   <div className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
