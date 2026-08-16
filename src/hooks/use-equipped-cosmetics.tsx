@@ -3,7 +3,6 @@ import { useInventory } from "./use-inventory";
 
 /**
  * Applies the currently-equipped cosmetics globally:
- *  - `background` item → CSS class on <body> (paints app-wide background)
  *  - `tag` item      → CSS class on <body data-tag="..."> for pill styling
  * Halo & frame are consumed per-avatar via `useInventory().equipped`.
  *
@@ -17,18 +16,9 @@ export function useApplyEquippedCosmetics() {
     const body = document.body;
     const prevClasses: string[] = [];
 
-    if (equipped.background?.css_class) {
-      const classes = equipped.background.css_class.split(/\s+/).filter(Boolean);
-      classes.forEach((c) => {
-        if (!body.classList.contains(c)) {
-          body.classList.add(c);
-          prevClasses.push(c);
-        }
-      });
-      body.dataset.cosmeticBg = equipped.background.key;
-    } else {
-      delete body.dataset.cosmeticBg;
-    }
+    // Animated cosmetic backgrounds were removed — the app background is
+    // owned entirely by the theme.
+    delete body.dataset.cosmeticBg;
 
     if (equipped.tag?.key) {
       body.dataset.cosmeticTag = equipped.tag.key;
@@ -39,7 +29,7 @@ export function useApplyEquippedCosmetics() {
     return () => {
       prevClasses.forEach((c) => body.classList.remove(c));
     };
-  }, [equipped.background?.css_class, equipped.background?.key, equipped.tag?.key]);
+  }, [equipped.tag?.key]);
 
   return equipped;
 }

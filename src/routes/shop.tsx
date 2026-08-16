@@ -20,7 +20,7 @@ export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
       { title: "Shard Shop — Rostr" },
-      { name: "description", content: "Buy Rostr Shards and unlock halos, avatar frames, and animated backgrounds." },
+      { name: "description", content: "Buy Rostr Shards and unlock halos, avatar frames, and profile tags." },
       { property: "og:title", content: "Shard Shop — Rostr" },
       { property: "og:description", content: "Buy Rostr Shards and unlock cosmetics." },
       { property: "og:type", content: "website" },
@@ -162,7 +162,7 @@ function ShopPage() {
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         <div className="text-center space-y-2">
           <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Shard Shop</h1>
-          <p className="text-muted-foreground">Unlock halos, frames, and animated backgrounds with Shards.</p>
+          <p className="text-muted-foreground">Unlock halos, frames, and profile tags with Shards.</p>
         </div>
 
         <div className="flex justify-center">
@@ -199,7 +199,7 @@ function ShopPage() {
                 />
               </div>
               <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-                {(["all", "halo", "avatar_frame", "background", "tag"] as const).map((t) => (
+                {(["all", "halo", "avatar_frame", "tag"] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setTypeFilter(t)}
@@ -277,7 +277,6 @@ function ShopPage() {
                       key={item.id}
                       className={cn(
                         "relative rounded-2xl border border-border bg-card p-5 flex flex-col gap-3 overflow-hidden transition",
-                        item.type === "background" && item.css_class,
                       )}
                     >
                       <div className="flex items-start justify-between">
@@ -377,7 +376,6 @@ function ShopPage() {
           <div
             className={cn(
               "relative rounded-3xl border border-border bg-card p-8 max-w-sm w-full flex flex-col items-center gap-4 overflow-hidden",
-              previewItem.type === "background" && previewItem.css_class,
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -417,9 +415,6 @@ function PreviewGlyph({ item }: { item: ShopItem }) {
         <div className="h-full w-full rounded-full bg-gradient-to-br from-muted-foreground/40 to-muted-foreground/10" />
       </CosmeticAvatar>
     );
-  }
-  if (item.type === "background") {
-    return <div className={cn("h-16 w-40 rounded-lg", item.css_class)} />;
   }
   return <div className="text-xs px-3 py-1 rounded-full border border-primary/50 text-primary font-bold uppercase tracking-widest">{item.name}</div>;
 }

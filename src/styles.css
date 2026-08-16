@@ -610,7 +610,7 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
 }
 
 /* ------------------------------------------------------------------ */
-/* Cosmetic engine — halos, avatar frames, and fluid backgrounds.      */
+/* Cosmetic engine — halos, avatar frames, and profile tags.           */
 /* Overlays are absolute-positioned so they never affect layout.       */
 /* ------------------------------------------------------------------ */
 
@@ -647,24 +647,6 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
   animation: frame-shimmer 3.2s linear infinite;
 }
 
-.fluid-bg-sunset {
-  background: linear-gradient(-45deg, #ff6a00, #ff2e63, #7b2cff, #ff6a00);
-  background-size: 400% 400%;
-  animation: fluid-shift 15s ease infinite;
-  color: white;
-}
-.fluid-bg-aurora {
-  background: linear-gradient(-45deg, #00c2ff, #22d3ee, #7c3aed, #10b981);
-  background-size: 400% 400%;
-  animation: fluid-shift 18s ease infinite;
-  color: white;
-}
-.fluid-bg-ember {
-  background: linear-gradient(-45deg, #ff8c00, #0a0a0a, #444, #ff8c00);
-  background-size: 400% 400%;
-  animation: fluid-shift 12s ease infinite;
-  color: white;
-}
 
 .tag-founder {
   background: linear-gradient(90deg, #f59e0b, #ef4444);
@@ -677,11 +659,6 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
   text-transform: uppercase;
 }
 
-@keyframes fluid-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
 @keyframes halo-spin {
   from { filter: hue-rotate(0deg); }
   to   { filter: hue-rotate(360deg); }
@@ -701,8 +678,7 @@ html[data-reels-fullscreen="true"] [data-app-header="true"] {
 
 @media (prefers-reduced-motion: reduce) {
   .halo-gold, .halo-neon, .halo-fire,
-  .frame-diamond,
-  .fluid-bg-sunset, .fluid-bg-aurora, .fluid-bg-ember {
+  .frame-diamond {
     animation: none !important;
   }
 }
