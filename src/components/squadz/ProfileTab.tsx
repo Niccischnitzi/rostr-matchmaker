@@ -304,7 +304,11 @@ export function ProfileTab() {
 
       {/* Battlecard — aggregated stats from linked platforms */}
       <div className="mt-6">
-        <BattleCard username={profile.username} linkedPlatforms={linked.map((l) => l.platform)} />
+        <BattleCard
+          username={profile.username}
+          linkedPlatforms={linked.map((l) => l.platform)}
+          verifiedPlatforms={linked.filter((l) => (l as { verified?: boolean }).verified).map((l) => l.platform)}
+        />
       </div>
 
       {/* Linked accounts */}
