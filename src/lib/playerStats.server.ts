@@ -142,8 +142,15 @@ export type SteamPassport = {
   country: string | null;
   created_at: string | null;
   library_count: number;
+  /** Games with any recorded playtime. */
+  played_count: number;
   total_hours: number;
-  top_games: Array<{ appid: number; name: string | null; hours: number }>;
+  /** Hours played in the last two weeks. */
+  recent_hours: number;
+  /** Steam community level, when the profile exposes it. */
+  level: number | null;
+  top_games: Array<{ appid: number; name: string | null; hours: number; hours_2w: number }>;
+  recent_games: Array<{ appid: number; name: string | null; hours_2w: number }>;
   synced_at: string;
 };
 
@@ -155,17 +162,36 @@ export type SteamPassport = {
 export async function fetchSteamPassport(steamId: string): Promise<SteamPassport | null> {
   const key = process.env.STEAM_WEB_API_KEY;
   if (!key) return null;
-  const persona = await fetchSteamPersona(steamId);
-  const owned = await steamJson(
-    `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${key}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`,
-  );
-  const games: Array<{ appid: number; playtime_forever?: number; name?: string }> =
+  const [persona, owned, recent, levelRes] = await Promise.all([
+    fetchSteamPersona(steamId),
+    steamJson(
+      `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${key}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`,
+    ),
+    steamJson(
+      `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${key}&steamid=${steamId}&count=6`,
+    ),
+    steamJson(`https://api.steampowered.com/IPlayerService/GetSteamLevel/v1/?key=${key}&steamid=${steamId}`),
+  ]);
+
+  const games: Array<{ appid: number; playtime_forever?: number; playtime_2weeks?: number; name?: string }> =
     owned?.response?.games ?? [];
+  const recentGames: Array<{ appid: number; playtime_2weeks?: number; name?: string }> =
+    recent?.response?.games ?? [];
+  const recentMinutes = new Map<number, number>(
+    recentGames.map((g) => [g.appid, g.playtime_2weeks ?? 0]),
+  );
+
   const totalMinutes = games.reduce((a, g) => a + (g.playtime_forever ?? 0), 0);
+  const hrs = (m: number | undefined) => Math.round((m ?? 0) / 60);
   const top = [...games]
     .sort((a, b) => (b.playtime_forever ?? 0) - (a.playtime_forever ?? 0))
-    .slice(0, 5)
-    .map((g) => ({ appid: g.appid, name: g.name ?? null, hours: Math.round((g.playtime_forever ?? 0) / 60) }));
+    .slice(0, 6)
+    .map((g) => ({
+      appid: g.appid,
+      name: g.name ?? null,
+      hours: hrs(g.playtime_forever),
+      hours_2w: hrs(g.playtime_2weeks ?? recentMinutes.get(g.appid)),
+    }));
 
   return {
     steam_id: steamId,
@@ -175,8 +201,18 @@ export async function fetchSteamPassport(steamId: string): Promise<SteamPassport
     country: persona?.country ?? null,
     created_at: persona?.created_at ?? null,
     library_count: games.length,
+    played_count: games.filter((g) => (g.playtime_forever ?? 0) > 0).length,
     total_hours: Math.round(totalMinutes / 60),
+    recent_hours: Math.round(
+      recentGames.reduce((a, g) => a + (g.playtime_2weeks ?? 0), 0) / 60,
+    ),
+    level: typeof levelRes?.response?.player_level === "number" ? levelRes.response.player_level : null,
     top_games: top,
+    recent_games: recentGames.slice(0, 4).map((g) => ({
+      appid: g.appid,
+      name: g.name ?? null,
+      hours_2w: hrs(g.playtime_2weeks),
+    })),
     synced_at: new Date().toISOString(),
   };
 }
