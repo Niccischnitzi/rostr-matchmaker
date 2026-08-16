@@ -142,7 +142,7 @@ function AdCard({
   return (
     <div ref={ref} className="hover-spin-inset relative rounded-3xl border border-border bg-card overflow-hidden shadow-lg flex flex-col soft-rise animate-fade-in">
       {/* Banner */}
-      <div className="relative h-20 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent">
+      <div className="relative h-20 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--primary)_22%,var(--surface)),var(--surface))] border-b border-border">
         <div className="absolute inset-0 opacity-30 overflow-hidden" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
         <div className="absolute top-2 right-2">
           <UserSafetyActions targetId={ad.id} targetLabel={name} onBlocked={onBlocked} />

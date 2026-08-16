@@ -204,7 +204,7 @@ export function ProfileTab() {
     <div className="max-w-5xl mx-auto px-4 pt-6 lg:pt-10 pb-10">
       {/* Header card */}
       <div className="rounded-3xl border border-border bg-card overflow-hidden">
-        <div className="h-32 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent relative">
+        <div className="h-32 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--primary)_22%,var(--surface)),var(--surface))] border-b border-border relative">
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 30% 30%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
           <button
             onClick={onSignOut}
