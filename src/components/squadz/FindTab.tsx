@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus, Check, ChevronsUpDown } from "lucide-react";
 import { useSquadz } from "@/lib/squadz-store";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -263,12 +264,12 @@ export function FindTab() {
     <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10 relative">
       {matchBurst && (
         <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center animate-fade-in">
-          <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
           <div className="relative animate-scale-in text-center">
-            <div className="font-display text-7xl md:text-8xl font-black text-gradient-orange drop-shadow-[0_0_30px_var(--primary)]">
+            <div className="font-display text-5xl md:text-6xl font-black tracking-tight text-primary">
               IT'S A MATCH
             </div>
-            <p className="mt-3 text-lg text-white/90 font-semibold">You're both on each other's rostr 🎮</p>
+            <p className="mt-3 text-base text-foreground/80 font-semibold">You're both on each other's rostr 🎮</p>
           </div>
         </div>
       )}
@@ -386,11 +387,24 @@ export function FindTab() {
 
       <div className="relative">
         {loading ? (
-          <div className="rounded-3xl border border-border bg-card h-[520px] animate-pulse" />
+          <div className="rounded-3xl border border-border bg-card h-[520px] overflow-hidden">
+            <Skeleton className="h-32 sm:h-40 w-full rounded-none" />
+            <div className="p-5 space-y-3">
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-3 w-1/3" />
+              <div className="flex gap-2 pt-2">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-2 w-full mt-4" />
+              <Skeleton className="h-2 w-4/5" />
+            </div>
+          </div>
         ) : top ? (
-          <div key={top.id} className="hover-spin-inset relative rounded-3xl border border-border bg-card overflow-hidden shadow-2xl flex flex-col soft-rise animate-fade-in">
-            <div className="relative h-32 sm:h-40 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent">
-              <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+          <div key={top.id} className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-sm flex flex-col soft-rise animate-fade-in">
+            <div className="relative h-32 sm:h-40 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--primary)_22%,var(--surface)),var(--surface))] border-b border-border">
+              <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, currentColor 1px, transparent 1px), radial-gradient(circle at 70% 60%, currentColor 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
               <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
                 {top.isLfg && (
                   <div className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">

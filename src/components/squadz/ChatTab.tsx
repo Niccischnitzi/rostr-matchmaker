@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ListRowsSkeleton } from "./LoadingSkeletons";
 import { ArrowLeft, Send, Gamepad2, MessageSquarePlus, Loader2, Search, Phone, Video, Paperclip } from "lucide-react";
 import { ringPeer } from "./IncomingCallListener";
 import { sfx } from "@/lib/sfx";
@@ -160,9 +161,7 @@ function DMList({ onOpen }: { onOpen: (id: string) => void }) {
   return (
     <>
       {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-10 grid place-items-center text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
+        <ListRowsSkeleton count={5} />
       ) : convos.length === 0 ? (
         <EmptyState
           variant="cosmic"
@@ -652,9 +651,7 @@ function LFGBoard() {
 
       <div className="grid gap-3">
         {loading ? (
-          <div className="rounded-2xl border border-border bg-card p-10 grid place-items-center text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
+          <ListRowsSkeleton count={4} />
         ) : rows.length === 0 ? (
           <EmptyState
             variant="controller"

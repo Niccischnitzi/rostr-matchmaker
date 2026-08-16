@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { ListRowsSkeleton } from "./LoadingSkeletons";
 import { Users, UserPlus, Check, X, Loader2, MessageCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -166,7 +167,7 @@ export function FriendsTab() {
       </div>
 
       {loading ? (
-        <div className="h-24 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        <ListRowsSkeleton count={5} />
       ) : (
         <div className="space-y-6">
           {incoming.length > 0 && (

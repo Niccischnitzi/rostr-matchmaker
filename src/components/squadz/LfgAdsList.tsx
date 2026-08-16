@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ListRowsSkeleton } from "./LoadingSkeletons";
 import { Loader2, Megaphone, MapPin, UserPlus, Check, Megaphone as MegaphoneIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -60,7 +61,7 @@ export function LfgAdsList() {
     setAdded((prev) => new Set(prev).add(ad.id));
   }
 
-  if (loading) return <div className="grid place-items-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if (loading) return <div className="mt-8"><ListRowsSkeleton count={3} /></div>;
 
   return (
     <div className="mt-8">
@@ -141,7 +142,7 @@ function AdCard({
   return (
     <div ref={ref} className="hover-spin-inset relative rounded-3xl border border-border bg-card overflow-hidden shadow-lg flex flex-col soft-rise animate-fade-in">
       {/* Banner */}
-      <div className="relative h-20 bg-gradient-to-br from-primary via-[color-mix(in_oklab,var(--primary)_60%,var(--primary-glow))] to-accent">
+      <div className="relative h-20 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--primary)_22%,var(--surface)),var(--surface))] border-b border-border">
         <div className="absolute inset-0 opacity-30 overflow-hidden" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
         <div className="absolute top-2 right-2">
           <UserSafetyActions targetId={ad.id} targetLabel={name} onBlocked={onBlocked} />

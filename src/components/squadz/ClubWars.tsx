@@ -15,7 +15,6 @@ export function ClubWars({ club }: { club: Club; isOfficer?: boolean }) {
           backgroundSize: "44px 44px",
         }}
       />
-      <div className="absolute -inset-24 bg-primary/20 blur-3xl animate-pulse -z-0 pointer-events-none" />
 
       <div className="relative p-8 sm:p-12 flex flex-col items-center text-center gap-4 min-h-[360px] justify-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/15 text-primary px-3 py-1">
