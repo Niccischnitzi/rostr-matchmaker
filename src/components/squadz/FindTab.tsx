@@ -568,11 +568,11 @@ export function FindTab() {
         )}
       </div>
 
-      {connected.length > 0 && (
+      {recentlyAdded.length > 0 && (
         <div className="mt-8">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Your rostr ({connected.length})</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Added this session ({recentlyAdded.length})</p>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
-            {connected.map((c) => (
+            {recentlyAdded.map((c) => (
               <div key={c.id} className="shrink-0 w-20 text-center">
                 <img src={c.avatar} alt={c.username} className="h-16 w-16 rounded-2xl object-cover border-2 border-primary mx-auto" />
                 <p className="text-xs mt-1 truncate font-medium">{c.username}</p>
