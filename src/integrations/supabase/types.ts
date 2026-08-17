@@ -435,6 +435,51 @@ export type Database = {
           },
         ]
       }
+      club_war_participants: {
+        Row: {
+          club_id: string
+          id: string
+          is_standin: boolean
+          joined_at: string
+          slot: number
+          user_id: string
+          war_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          is_standin?: boolean
+          joined_at?: string
+          slot: number
+          user_id: string
+          war_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          is_standin?: boolean
+          joined_at?: string
+          slot?: number
+          user_id?: string
+          war_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_war_participants_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_war_participants_war_id_fkey"
+            columns: ["war_id"]
+            isOneToOne: false
+            referencedRelation: "club_wars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_war_stakes: {
         Row: {
           amount: number
@@ -480,6 +525,60 @@ export type Database = {
           },
         ]
       }
+      club_war_submissions: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          map_index: number
+          note: string | null
+          our_score: number
+          proof_url: string | null
+          their_score: number
+          user_id: string
+          war_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          map_index?: number
+          note?: string | null
+          our_score?: number
+          proof_url?: string | null
+          their_score?: number
+          user_id: string
+          war_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          map_index?: number
+          note?: string | null
+          our_score?: number
+          proof_url?: string | null
+          their_score?: number
+          user_id?: string
+          war_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_war_submissions_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_war_submissions_war_id_fkey"
+            columns: ["war_id"]
+            isOneToOne: false
+            referencedRelation: "club_wars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_wars: {
         Row: {
           challenger_club_id: string
@@ -495,6 +594,7 @@ export type Database = {
           reported_at: string | null
           reported_by: string | null
           reported_club_id: string | null
+          roster_size: number
           ruleset: string
           season_id: string | null
           settled_at: string | null
@@ -519,6 +619,7 @@ export type Database = {
           reported_at?: string | null
           reported_by?: string | null
           reported_club_id?: string | null
+          roster_size?: number
           ruleset: string
           season_id?: string | null
           settled_at?: string | null
@@ -543,6 +644,7 @@ export type Database = {
           reported_at?: string | null
           reported_by?: string | null
           reported_club_id?: string | null
+          roster_size?: number
           ruleset?: string
           season_id?: string | null
           settled_at?: string | null
@@ -2713,6 +2815,18 @@ export type Database = {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
       }
+      club_war_roster: {
+        Args: { _war_id: string }
+        Returns: {
+          avatar_url: string
+          club_id: string
+          display_name: string
+          slot: number
+          submissions: number
+          user_id: string
+          username: string
+        }[]
+      }
       club_war_standings: {
         Args: { _season?: string }
         Returns: {
@@ -2749,6 +2863,7 @@ export type Database = {
           reported_at: string | null
           reported_by: string | null
           reported_club_id: string | null
+          roster_size: number
           ruleset: string
           season_id: string | null
           settled_at: string | null
@@ -2847,12 +2962,18 @@ export type Database = {
         Args: { _group: string; _user: string }
         Returns: boolean
       }
+      is_war_participant_club_member: {
+        Args: { _user: string; _war: string }
+        Returns: boolean
+      }
+      join_club_war: { Args: { _war_id: string }; Returns: Json }
       join_lfg_ad: { Args: { _ad_id: string }; Returns: Json }
       kick_clan_member: {
         Args: { _clan: string; _user: string }
         Returns: boolean
       }
       leave_clan: { Args: { _clan: string }; Returns: boolean }
+      leave_club_war: { Args: { _war_id: string }; Returns: Json }
       mark_all_notifications_read: { Args: never; Returns: number }
       media_upload_cost: { Args: { _user: string }; Returns: number }
       media_uploads_today: { Args: { _user: string }; Returns: number }
@@ -3000,6 +3121,7 @@ export type Database = {
           reported_at: string | null
           reported_by: string | null
           reported_club_id: string | null
+          roster_size: number
           ruleset: string
           season_id: string | null
           settled_at: string | null
@@ -3034,6 +3156,7 @@ export type Database = {
           reported_at: string | null
           reported_by: string | null
           reported_club_id: string | null
+          roster_size: number
           ruleset: string
           season_id: string | null
           settled_at: string | null
@@ -3080,6 +3203,7 @@ export type Database = {
           reported_at: string | null
           reported_by: string | null
           reported_club_id: string | null
+          roster_size: number
           ruleset: string
           season_id: string | null
           settled_at: string | null
@@ -3100,6 +3224,17 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       spend_tokens: { Args: { _amount: number }; Returns: number }
+      submit_club_war_result: {
+        Args: {
+          _map_index: number
+          _note?: string
+          _our_score: number
+          _proof_url?: string
+          _their_score: number
+          _war_id: string
+        }
+        Returns: Json
+      }
       submit_match_rating:
         | {
             Args: {

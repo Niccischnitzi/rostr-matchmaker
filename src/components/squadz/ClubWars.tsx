@@ -18,6 +18,7 @@ import {
 import { ShardIcon } from "@/components/cosmetics/ShardIcon";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WarRoster } from "./WarRoster";
 
 const GAMES = ["Valorant", "CS2", "League of Legends", "Rocket League", "Apex Legends", "Fortnite", "Overwatch 2", "Rainbow Six Siege"];
 
@@ -38,7 +39,7 @@ export function ClubWars({ club, isOfficer = false }: { club: Club; isOfficer?: 
 
   const season = useQuery({ queryKey: ["war-season"], queryFn: fetchActiveSeason });
   const wars = useQuery({ queryKey: ["club-wars", club.id], queryFn: () => fetchClubWars(club.id) });
-  const standings = useQuery({ queryKey: ["war-standings"], queryFn: fetchWarStandings });
+  const standings = useQuery({ queryKey: ["war-standings"], queryFn: fetchWarStandings, refetchInterval: 20_000 });
 
   const clubIds = useMemo(() => {
     const ids = new Set<string>();
@@ -307,6 +308,15 @@ function WarCard({
 
       {w.status === "reported" && !awaitingMyConfirm && (
         <p className="mt-3 text-xs text-muted-foreground">Result submitted — waiting for the other crew to confirm.</p>
+      )}
+
+      {["pending", "accepted", "active", "reported"].includes(w.status) && (
+        <WarRoster
+          war={w}
+          myClubId={club.id}
+          rivalName={nameOf(iAmChallenger ? w.defender_club_id : w.challenger_club_id)}
+          onChanged={onReported}
+        />
       )}
 
       {reporting && (
