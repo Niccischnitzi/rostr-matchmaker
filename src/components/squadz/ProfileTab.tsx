@@ -350,12 +350,12 @@ export function ProfileTab() {
               </div>
             ))}
             {linked.filter((a) => a.platform.toLowerCase() !== "steam").map((a) => {
-              const meta = platformMeta[a.platform] ?? { icon: "🎮", color: "#444" };
+              const meta = platformMeta[a.platform.toLowerCase()] ?? { icon: "🎮", color: "#444", label: a.platform };
               return (
                 <div key={a.id} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
                   <div className="h-11 w-11 rounded-xl grid place-items-center text-xl shrink-0" style={{ background: meta.color, color: "white" }}>{meta.icon}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{a.platform}</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{platformLabel(a.platform)}</p>
                     <p className="font-mono font-bold truncate text-sm">{a.gamertag}</p>
                     {a.current_rank_display && <p className="text-[10px] text-primary font-semibold">{a.current_rank_display}</p>}
                   </div>
