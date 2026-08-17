@@ -741,10 +741,6 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
     </Modal>
   );
 }
-      </div>
-    </Modal>
-  );
-}
 
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
