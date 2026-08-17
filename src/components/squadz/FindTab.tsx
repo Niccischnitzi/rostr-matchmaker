@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus, Check, ChevronsUpDown } from "lucide-react";
+import { X, Heart, Scale, Search, ArrowDownUp, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus, Check, ChevronsUpDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { sfx } from "@/lib/sfx";
 import { LfgAdSheet } from "./LfgAdSheet";
 import { YourLfgCard } from "./YourLfgCard";
 import { EmptyState } from "./EmptyState";
+import { CompareProfiles } from "./CompareProfiles";
 import { UserAvatar } from "./UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -34,6 +35,9 @@ const COUNTRIES = ["Australia","Austria","Belgium","Brazil","Canada","Chile","Ch
 type DeckCard = Player & { isLfg?: boolean; lfgTitle?: string | null; lfgBody?: string | null; realId?: string; lfgAdId?: string };
 
 type Filters = {
+  query: string;
+  kind: "all" | "players" | "lfg";
+  sort: "match" | "newest" | "games";
   ageRange: [number, number];
   traits: string[];
   country: string;
@@ -44,6 +48,9 @@ type Filters = {
 };
 
 const DEFAULT_FILTERS: Filters = {
+  query: "",
+  kind: "all",
+  sort: "match",
   ageRange: [16, 45],
   traits: [],
   country: "",
@@ -70,6 +77,8 @@ export function FindTab() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [matchBurst, setMatchBurst] = useState<string | null>(null);
+  const [compare, setCompare] = useState<DeckCard[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     try { localStorage.setItem("rostr:find-filters", JSON.stringify(filters)); } catch { /* noop */ }
@@ -248,6 +257,13 @@ export function FindTab() {
 
   const filtered = useMemo(() => deck.filter((p) => {
     if (user?.id && p.realId === user.id) return false;
+    if (filters.kind === "players" && p.isLfg) return false;
+    if (filters.kind === "lfg" && !p.isLfg) return false;
+    if (filters.query.trim()) {
+      const q = filters.query.trim().toLowerCase();
+      const hay = [p.username, p.location, p.lfgTitle ?? "", p.lfgBody ?? "", ...p.games.map((g) => g.name), ...p.traits].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     if (p.realId && existingFriendIds.has(p.realId)) return false;
     if (filters.country && !p.country.toLowerCase().includes(filters.country.toLowerCase())) return false;
     if (filters.games.length && !filters.games.some((g) => p.games.some((pg) => pg.name.toLowerCase() === g.toLowerCase()))) return false;
@@ -255,6 +271,15 @@ export function FindTab() {
     if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
     if (filters.traits.length && !filters.traits.some((t) => p.traits.includes(t as never))) return false;
     return true;
+  }).sort((a, b) => {
+    if (filters.sort === "games") return b.games.length - a.games.length;
+    if (filters.sort === "newest") return Number(!!b.isLfg) - Number(!!a.isLfg);
+    // Best match: LFG ads first, then people who share the most filtered games.
+    const score = (c: DeckCard) =>
+      (c.isLfg ? 2 : 0) +
+      (filters.games.length ? c.games.filter((g) => filters.games.some((f) => f.toLowerCase() === g.name.toLowerCase())).length : 0) +
+      (filters.traits.length ? c.traits.filter((t) => filters.traits.includes(t as string)).length : 0);
+    return score(b) - score(a);
   }), [deck, filters, user?.id, existingFriendIds]);
 
   const top = filtered[0];
@@ -315,7 +340,7 @@ export function FindTab() {
     } else sfx.tap();
   };
 
-  const activeCount = (filters.games.length + filters.traits.length + (filters.country ? 1 : 0) + (filters.region ? 1 : 0) + (filters.micOnly ? 1 : 0) + (filters.onlineOnly ? 1 : 0));
+  const activeCount = ((filters.query.trim() ? 1 : 0) + (filters.kind !== 'all' ? 1 : 0) + filters.games.length + filters.traits.length + (filters.country ? 1 : 0) + (filters.region ? 1 : 0) + (filters.micOnly ? 1 : 0) + (filters.onlineOnly ? 1 : 0));
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6 lg:pt-10 relative">
@@ -438,6 +463,42 @@ export function FindTab() {
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2 mb-4">
+        <div className="relative flex-1 min-w-[12rem]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={filters.query}
+            onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}
+            placeholder="Search players, games, tags…"
+            aria-label="Search the deck"
+            className="w-full h-10 rounded-xl border border-border bg-surface pl-9 pr-3 text-sm"
+          />
+        </div>
+        <div className="flex gap-1 p-1 rounded-xl bg-surface">
+          {([["all", "All"], ["players", "Players"], ["lfg", "LFG"]] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setFilters((f) => ({ ...f, kind: k }))}
+              className={cn("h-8 px-3 rounded-lg text-xs font-bold transition-colors",
+                filters.kind === k ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground")}
+            >{label}</button>
+          ))}
+        </div>
+        <label className="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-border bg-surface text-xs font-bold">
+          <ArrowDownUp className="h-3.5 w-3.5 text-muted-foreground" />
+          <select
+            value={filters.sort}
+            onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as Filters["sort"] }))}
+            aria-label="Sort deck"
+            className="bg-transparent outline-none"
+          >
+            <option value="match">Best match</option>
+            <option value="newest">Freshest LFG</option>
+            <option value="games">Most games</option>
+          </select>
+        </label>
+      </div>
+
       <LfgAdSheet open={adOpen} onOpenChange={setAdOpen} />
 
       <YourLfgCard onEdit={() => setAdOpen(true)} />
@@ -543,6 +604,20 @@ export function FindTab() {
               <button onClick={() => handle("skip")} disabled={busy} className="h-14 w-14 rounded-full border-2 border-border bg-card grid place-items-center hover:border-destructive hover:text-destructive transition-colors disabled:opacity-50">
                 <X className="h-6 w-6" />
               </button>
+              <button
+                onClick={() => {
+                  setCompare((prev) => {
+                    if (prev.some((c) => c.id === top.id)) return prev;
+                    if (prev.length >= 3) { toast.info("You can compare up to 3 players"); return prev; }
+                    return [...prev, top];
+                  });
+                }}
+                className="h-14 w-14 rounded-full border-2 border-border bg-card grid place-items-center hover:border-primary hover:text-primary transition-colors"
+                aria-label="Add to comparison"
+                title="Add to comparison"
+              >
+                <Scale className="h-5 w-5" />
+              </button>
               <button onClick={() => handle("squad")} disabled={busy} className="h-16 w-16 rounded-full bg-primary text-primary-foreground grid place-items-center glow-orange hover:scale-105 transition-transform disabled:opacity-60">
                 <Heart className="h-7 w-7 fill-current" />
               </button>
@@ -566,6 +641,32 @@ export function FindTab() {
           />
         )}
       </div>
+
+      {compare.length > 0 && (
+        <div className="sticky bottom-4 z-20 mt-6 rounded-2xl border border-border bg-card/95 backdrop-blur p-3 flex items-center gap-3 shadow-lg">
+          <div className="flex gap-2 min-w-0 flex-1 overflow-x-auto">
+            {compare.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setCompare((prev) => prev.filter((x) => x.id !== c.id))}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold hover:border-destructive"
+              >
+                {c.username} <X className="h-3 w-3" />
+              </button>
+            ))}
+          </div>
+          <Button size="sm" className="gap-1.5 shrink-0" onClick={() => setCompareOpen(true)}>
+            <Scale className="h-3.5 w-3.5" /> Compare ({compare.length})
+          </Button>
+        </div>
+      )}
+
+      <CompareProfiles
+        cards={compare}
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        onRemove={(id) => setCompare((prev) => prev.filter((c) => c.id !== id))}
+      />
 
       {recentlyAdded.length > 0 && (
         <div className="mt-8">
