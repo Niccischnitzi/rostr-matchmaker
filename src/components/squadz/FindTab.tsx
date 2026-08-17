@@ -294,10 +294,25 @@ export function FindTab() {
       }
       return;
     }
-    swipe(top.id, dir);
-    if (dir === "squad") {
+    if (dir === "squad" && top.realId) {
       sfx.like();
-      toast.success(`Added ${top.username} to your rostr!`, { description: "They'll get notified instantly." });
+      const card = top;
+      setRecentlyAdded((prev) => [card, ...prev.filter((c) => c.id !== card.id)].slice(0, 20));
+      setExistingFriendIds((prev) => new Set(prev).add(card.realId!));
+      void (async () => {
+        try {
+          await requestFriend(card.realId!);
+          toast.success(`Added ${card.username} to your rostr!`, { description: "They'll get notified instantly." });
+        } catch (e: any) {
+          setExistingFriendIds((prev) => {
+            const next = new Set(prev);
+            next.delete(card.realId!);
+            return next;
+          });
+          setRecentlyAdded((prev) => prev.filter((c) => c.id !== card.id));
+          toast.error(e?.message ?? `Could not add ${card.username}`);
+        }
+      })();
     } else sfx.tap();
   };
 
