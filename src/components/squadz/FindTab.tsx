@@ -56,7 +56,8 @@ const DEFAULT_FILTERS: Filters = {
 
 export function FindTab() {
   const { user } = useAuth();
-  const { players, connected, swipe } = useSquadz();
+  const [profileCards, setProfileCards] = useState<DeckCard[]>([]);
+  const [recentlyAdded, setRecentlyAdded] = useState<DeckCard[]>([]);
   const [filters, setFilters] = useState<Filters>(() => {
     try {
       const raw = localStorage.getItem("rostr:find-filters");
