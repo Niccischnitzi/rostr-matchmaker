@@ -665,36 +665,33 @@ function EditProfileDialog({ profile, userId, onClose }: { profile: Profile; use
 
 function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existing: string[]; onClose: () => void }) {
   const qc = useQueryClient();
-  const navigate = useNavigate();
-  const available = PLATFORMS.filter((p) => !existing.includes(p));
-  const [platform, setPlatform] = useState<string>(available[0] ?? "Steam");
+  const linkedKeys = existing.map((p) => p.toLowerCase());
+  const available = PLATFORMS.filter((p) => !linkedKeys.includes(p));
+  const [platform, setPlatform] = useState<string>(available[0] ?? "riot");
   const [tag, setTag] = useState("");
   const [busy, setBusy] = useState(false);
-  const [connecting, setConnecting] = useState<string | null>(null);
 
   useEffect(() => {
-    if (available.length === 0) {
+    if (available.length === 0 && linkedKeys.includes("steam")) {
       toast.info("All platforms already linked");
       onClose();
     }
-  }, [available.length, onClose]);
+  }, [available.length, linkedKeys, onClose]);
 
   const save = async () => {
-    if (!tag.trim()) {
-      toast.error("Enter a gamertag");
+    if (tag.trim().length < 2) {
+      toast.error("Enter a valid handle");
       return;
     }
     setBusy(true);
     try {
-      const { error } = await supabase.from("linked_accounts").insert({
-        user_id: userId,
-        platform,
-        gamertag: tag.trim(),
-        current_rank_display: null,
-      });
+      const { error } = await supabase.rpc("upsert_linked_account" as never, {
+        _platform: platform,
+        _gamertag: tag.trim(),
+      } as never);
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["linked-accounts", userId] });
-      toast.success(`${platform} linked`);
+      toast.success(`${platformLabel(platform)} linked`);
       onClose();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not link");
@@ -703,70 +700,47 @@ function AddLinkedDialog({ userId, existing, onClose }: { userId: string; existi
     }
   };
 
-  // Mock OAuth quick-connect: redirects through /auth/callback/{provider}
-  // which simulates a token-exchange handshake and inserts the linked_account.
-  const quickConnect = (provider: "Steam" | "Discord" | "Tracker.gg") => {
-    const slug = provider === "Tracker.gg" ? "tracker" : provider.toLowerCase();
-    const platformName = provider === "Tracker.gg" ? "Steam" : provider;
-    if (existing.includes(platformName)) {
-      toast.info(`${platformName} already linked`);
-      return;
-    }
-    setConnecting(provider);
-    // Brief visual delay before navigating to the mock callback route.
-    setTimeout(() => {
-      toast.success(`${platformName} connected (mock)`);
-    }, 250);
-  };
-
   return (
     <Modal title="Add platform" onClose={onClose}>
       <div className="space-y-4">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Quick connect</p>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-3">
-              <SteamConnectButton className="w-full justify-center" />
-            </div>
-            {(["Discord", "Tracker.gg"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => quickConnect(p)}
-                disabled={connecting !== null}
-                className="h-16 rounded-xl border border-border bg-surface hover:bg-surface-2 text-xs font-bold flex flex-col items-center justify-center gap-1 disabled:opacity-50 transition"
-              >
-                {connecting === p ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                ) : (
-                  <span className="text-lg">{p === "Discord" ? "💬" : "📊"}</span>
-                )}
-                <span>{p}</span>
-              </button>
-            ))}
+        {!linkedKeys.includes("steam") && (
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Verified connect</p>
+            <SteamConnectButton className="w-full justify-center" />
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Steam signs you in through Steam itself, so your library and playtime sync automatically.
+            </p>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2">Steam uses live OpenID. Discord & Tracker.gg are mock for now.</p>
-        </div>
+        )}
 
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-px bg-border" />
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Or add manually</p>
-          <div className="flex-1 h-px bg-border" />
-        </div>
+        {available.length > 0 && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px bg-border" />
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Add a handle</p>
+              <div className="flex-1 h-px bg-border" />
+            </div>
 
-        <Row label="Platform">
-          <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={inputCls}>
-            {available.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-        </Row>
-        <Row label="Gamertag / ID">
-          <input value={tag} onChange={(e) => setTag(e.target.value)} className={inputCls} placeholder="ghostshot42#1234" />
-        </Row>
-        <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="flex-1 h-10 rounded-xl border border-border bg-surface text-sm font-bold hover:bg-surface-2">Cancel</button>
-          <button onClick={save} disabled={busy} className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50">
-            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Add
-          </button>
-        </div>
+            <Row label="Platform">
+              <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={inputCls}>
+                {available.map((p) => <option key={p} value={p}>{platformLabel(p)}</option>)}
+              </select>
+            </Row>
+            <Row label="Gamertag / ID">
+              <input value={tag} onChange={(e) => setTag(e.target.value)} className={inputCls} placeholder="ghostshot42#1234" maxLength={64} />
+            </Row>
+            <div className="flex gap-2 pt-2">
+              <button onClick={onClose} className="flex-1 h-10 rounded-xl border border-border bg-surface text-sm font-bold hover:bg-surface-2">Cancel</button>
+              <button onClick={save} disabled={busy} className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50">
+                {busy && <Loader2 className="h-4 w-4 animate-spin" />} Add
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
       </div>
     </Modal>
   );
