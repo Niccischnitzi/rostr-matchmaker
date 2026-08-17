@@ -309,6 +309,15 @@ function WarCard({
         <p className="mt-3 text-xs text-muted-foreground">Result submitted — waiting for the other crew to confirm.</p>
       )}
 
+      {["pending", "accepted", "active", "reported"].includes(w.status) && (
+        <WarRoster
+          war={w}
+          myClubId={club.id}
+          rivalName={nameOf(iAmChallenger ? w.defender_club_id : w.challenger_club_id)}
+          onChanged={onReported}
+        />
+      )}
+
       {reporting && (
         <ReportForm
           war={w}
