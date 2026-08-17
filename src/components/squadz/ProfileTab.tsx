@@ -25,18 +25,37 @@ const statusColors: Record<string, string> = {
 };
 
 /** Platform keys are stored lowercase (matches the Steam OpenID link + upsert RPC). */
-const PLATFORMS = ["riot", "xbox", "psn", "twitch", "youtube", "discord", "epic", "battlenet", "faceit"] as const;
+const PLATFORMS = [
+  "riot", "xbox", "psn", "nintendo", "battlenet", "epic", "ea", "ubisoft", "activision",
+  "rockstar", "faceit", "esea", "gamebattles", "roblox", "minecraft", "osu",
+  "discord", "twitch", "youtube", "kick", "tiktok", "instagram", "x", "reddit",
+] as const;
 const platformMeta: Record<string, { icon: string; color: string; label: string }> = {
-  steam:     { icon: "🎮", color: "#171a21", label: "Steam" },
-  psn:       { icon: "🅿️", color: "#003791", label: "PlayStation" },
-  xbox:      { icon: "🟢", color: "#107C10", label: "Xbox" },
-  riot:      { icon: "⚡", color: "#D32936", label: "Riot" },
-  battlenet: { icon: "⚔️", color: "#148EFF", label: "Battle.net" },
-  faceit:    { icon: "🔥", color: "#FF5500", label: "FACEIT" },
-  twitch:    { icon: "📺", color: "#9146FF", label: "Twitch" },
-  youtube:   { icon: "▶️", color: "#FF0000", label: "YouTube" },
-  discord:   { icon: "💬", color: "#5865F2", label: "Discord" },
-  epic:      { icon: "🕹️", color: "#2A2A2A", label: "Epic Games" },
+  steam:       { icon: "🎮", color: "#171a21", label: "Steam" },
+  psn:         { icon: "🅿️", color: "#003791", label: "PlayStation" },
+  xbox:        { icon: "🟢", color: "#107C10", label: "Xbox" },
+  nintendo:    { icon: "🔴", color: "#E60012", label: "Nintendo" },
+  riot:        { icon: "⚡", color: "#D32936", label: "Riot" },
+  battlenet:   { icon: "⚔️", color: "#148EFF", label: "Battle.net" },
+  ea:          { icon: "🅴", color: "#FF4747", label: "EA" },
+  ubisoft:     { icon: "🌀", color: "#0F8CE9", label: "Ubisoft" },
+  activision:  { icon: "🎯", color: "#F5A623", label: "Activision" },
+  rockstar:    { icon: "⭐", color: "#FCAF17", label: "Rockstar" },
+  epic:        { icon: "🕹️", color: "#2A2A2A", label: "Epic Games" },
+  faceit:      { icon: "🔥", color: "#FF5500", label: "FACEIT" },
+  esea:        { icon: "🛡️", color: "#0E5CAD", label: "ESEA" },
+  gamebattles: { icon: "🏆", color: "#111827", label: "GameBattles" },
+  roblox:      { icon: "🧱", color: "#E2231A", label: "Roblox" },
+  minecraft:   { icon: "⛏️", color: "#5B8731", label: "Minecraft" },
+  osu:         { icon: "🎵", color: "#FF66AA", label: "osu!" },
+  discord:     { icon: "💬", color: "#5865F2", label: "Discord" },
+  twitch:      { icon: "📺", color: "#9146FF", label: "Twitch" },
+  youtube:     { icon: "▶️", color: "#FF0000", label: "YouTube" },
+  kick:        { icon: "🟩", color: "#53FC18", label: "Kick" },
+  tiktok:      { icon: "🎬", color: "#000000", label: "TikTok" },
+  instagram:   { icon: "📸", color: "#E1306C", label: "Instagram" },
+  x:           { icon: "✖️", color: "#000000", label: "X" },
+  reddit:      { icon: "👽", color: "#FF4500", label: "Reddit" },
 };
 const platformLabel = (p: string) => platformMeta[p.toLowerCase()]?.label ?? p;
 
