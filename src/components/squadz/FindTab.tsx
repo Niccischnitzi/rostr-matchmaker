@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { X, Heart, SlidersHorizontal, MapPin, Sparkles, Megaphone, Gamepad2, Mic, Globe, MessageCircle, UserPlus, Check, ChevronsUpDown } from "lucide-react";
-import { useSquadz } from "@/lib/squadz-store";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,8 @@ const DEFAULT_FILTERS: Filters = {
 
 export function FindTab() {
   const { user } = useAuth();
-  const { players, connected, swipe } = useSquadz();
+  const [profileCards, setProfileCards] = useState<DeckCard[]>([]);
+  const [recentlyAdded, setRecentlyAdded] = useState<DeckCard[]>([]);
   const [filters, setFilters] = useState<Filters>(() => {
     try {
       const raw = localStorage.getItem("rostr:find-filters");
@@ -197,16 +197,58 @@ export function FindTab() {
     );
   }
 
-
+  // Real players: public profiles, excluding me and anyone already on my rostr.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let q = supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url, country, timezone, age, gender, playstyle_badges, custom_traits, lfg_games, availability_status, current_game_activity, bio")
+        .eq("is_public", true)
+        .order("updated_at", { ascending: false })
+        .limit(60);
+      if (user?.id) q = q.neq("id", user.id);
+      const { data } = await q;
+      if (cancelled) return;
+      const rows = ((data as any[]) ?? []) as Array<Record<string, any>>;
+      setProfileCards(
+        rows.map((r) => {
+          const username = r.display_name ?? r.username ?? "Player";
+          const games: string[] = Array.isArray(r.lfg_games) ? r.lfg_games : [];
+          const traits: string[] = [
+            ...(Array.isArray(r.playstyle_badges) ? r.playstyle_badges : []),
+            ...(Array.isArray(r.custom_traits) ? r.custom_traits : []),
+          ];
+          return {
+            id: `profile-${r.id}`,
+            realId: r.id,
+            username,
+            avatar: r.avatar_url ?? `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${encodeURIComponent(username)}&backgroundColor=ff5722,ff8a4c,1f1f23,2d2d33`,
+            playstyle: r.current_game_activity ?? r.availability_status ?? "Looking for Rostr",
+            location: r.country ?? "—",
+            timezone: r.timezone ?? "",
+            age: typeof r.age === "number" ? r.age : 21,
+            gender: r.gender ?? "",
+            country: r.country ?? "",
+            games: games.slice(0, 4).map((g) => ({ name: g, rank: "", color: "var(--primary)" })),
+            traits: traits as Trait[],
+            lfgBody: r.bio ?? null,
+          } as DeckCard;
+        }),
+      );
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const deck: DeckCard[] = useMemo(() => [
     ...lfgCards.filter((c) => !dismissed.has(c.id)),
-    ...players.filter((p) => !dismissed.has(p.id)),
-  ], [lfgCards, players, dismissed]);
+    ...profileCards.filter((p) => !dismissed.has(p.id)),
+  ], [lfgCards, profileCards, dismissed]);
 
   const filtered = useMemo(() => deck.filter((p) => {
-    if (p.isLfg && user?.id && p.realId === user.id) return false;
-    if (p.isLfg && p.realId && existingFriendIds.has(p.realId)) return false;
+    if (user?.id && p.realId === user.id) return false;
+    if (p.realId && existingFriendIds.has(p.realId)) return false;
     if (filters.country && !p.country.toLowerCase().includes(filters.country.toLowerCase())) return false;
     if (filters.games.length && !filters.games.some((g) => p.games.some((pg) => pg.name.toLowerCase() === g.toLowerCase()))) return false;
     if (p.isLfg) return true;
@@ -251,10 +293,25 @@ export function FindTab() {
       }
       return;
     }
-    swipe(top.id, dir);
-    if (dir === "squad") {
+    if (dir === "squad" && top.realId) {
       sfx.like();
-      toast.success(`Added ${top.username} to your rostr!`, { description: "They'll get notified instantly." });
+      const card = top;
+      setRecentlyAdded((prev) => [card, ...prev.filter((c) => c.id !== card.id)].slice(0, 20));
+      setExistingFriendIds((prev) => new Set(prev).add(card.realId!));
+      void (async () => {
+        try {
+          await requestFriend(card.realId!);
+          toast.success(`Added ${card.username} to your rostr!`, { description: "They'll get notified instantly." });
+        } catch (e: any) {
+          setExistingFriendIds((prev) => {
+            const next = new Set(prev);
+            next.delete(card.realId!);
+            return next;
+          });
+          setRecentlyAdded((prev) => prev.filter((c) => c.id !== card.id));
+          toast.error(e?.message ?? `Could not add ${card.username}`);
+        }
+      })();
     } else sfx.tap();
   };
 
@@ -510,11 +567,11 @@ export function FindTab() {
         )}
       </div>
 
-      {connected.length > 0 && (
+      {recentlyAdded.length > 0 && (
         <div className="mt-8">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Your rostr ({connected.length})</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Added this session ({recentlyAdded.length})</p>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
-            {connected.map((c) => (
+            {recentlyAdded.map((c) => (
               <div key={c.id} className="shrink-0 w-20 text-center">
                 <img src={c.avatar} alt={c.username} className="h-16 w-16 rounded-2xl object-cover border-2 border-primary mx-auto" />
                 <p className="text-xs mt-1 truncate font-medium">{c.username}</p>
