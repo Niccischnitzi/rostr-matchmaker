@@ -24,15 +24,21 @@ const statusColors: Record<string, string> = {
   "Looking for Squad": "bg-primary",
 };
 
-const PLATFORMS = ["Steam", "PSN", "Xbox", "Riot", "BattleNet", "Faceit"] as const;
-const platformMeta: Record<string, { icon: string; color: string }> = {
-  Steam:     { icon: "🎮", color: "#171a21" },
-  PSN:       { icon: "🅿️", color: "#003791" },
-  Xbox:      { icon: "🟢", color: "#107C10" },
-  Riot:      { icon: "⚡", color: "#D32936" },
-  BattleNet: { icon: "⚔️", color: "#148EFF" },
-  Faceit:    { icon: "🔥", color: "var(--primary)" },
+/** Platform keys are stored lowercase (matches the Steam OpenID link + upsert RPC). */
+const PLATFORMS = ["riot", "xbox", "psn", "twitch", "youtube", "discord", "epic", "battlenet", "faceit"] as const;
+const platformMeta: Record<string, { icon: string; color: string; label: string }> = {
+  steam:     { icon: "🎮", color: "#171a21", label: "Steam" },
+  psn:       { icon: "🅿️", color: "#003791", label: "PlayStation" },
+  xbox:      { icon: "🟢", color: "#107C10", label: "Xbox" },
+  riot:      { icon: "⚡", color: "#D32936", label: "Riot" },
+  battlenet: { icon: "⚔️", color: "#148EFF", label: "Battle.net" },
+  faceit:    { icon: "🔥", color: "#FF5500", label: "FACEIT" },
+  twitch:    { icon: "📺", color: "#9146FF", label: "Twitch" },
+  youtube:   { icon: "▶️", color: "#FF0000", label: "YouTube" },
+  discord:   { icon: "💬", color: "#5865F2", label: "Discord" },
+  epic:      { icon: "🕹️", color: "#2A2A2A", label: "Epic Games" },
 };
+const platformLabel = (p: string) => platformMeta[p.toLowerCase()]?.label ?? p;
 
 type Profile = {
   id: string;
