@@ -435,53 +435,122 @@ export type Database = {
           },
         ]
       }
+      club_war_stakes: {
+        Row: {
+          amount: number
+          club_id: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+          war_id: string
+        }
+        Insert: {
+          amount: number
+          club_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+          war_id: string
+        }
+        Update: {
+          amount?: number
+          club_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+          war_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_war_stakes_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_war_stakes_war_id_fkey"
+            columns: ["war_id"]
+            isOneToOne: false
+            referencedRelation: "club_wars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_wars: {
         Row: {
           challenger_club_id: string
+          challenger_score: number
           created_at: string
           created_by: string
           defender_club_id: string
+          defender_score: number
           ends_at: string | null
           format: string
           game_title: string
           id: string
+          reported_at: string | null
+          reported_by: string | null
+          reported_club_id: string | null
           ruleset: string
+          season_id: string | null
+          settled_at: string | null
           starts_at: string | null
           status: string
           updated_at: string
           wager_pool: number
+          wager_shards: number
           winner_club_id: string | null
         }
         Insert: {
           challenger_club_id: string
+          challenger_score?: number
           created_at?: string
           created_by: string
           defender_club_id: string
+          defender_score?: number
           ends_at?: string | null
           format?: string
           game_title: string
           id?: string
+          reported_at?: string | null
+          reported_by?: string | null
+          reported_club_id?: string | null
           ruleset: string
+          season_id?: string | null
+          settled_at?: string | null
           starts_at?: string | null
           status?: string
           updated_at?: string
           wager_pool?: number
+          wager_shards?: number
           winner_club_id?: string | null
         }
         Update: {
           challenger_club_id?: string
+          challenger_score?: number
           created_at?: string
           created_by?: string
           defender_club_id?: string
+          defender_score?: number
           ends_at?: string | null
           format?: string
           game_title?: string
           id?: string
+          reported_at?: string | null
+          reported_by?: string | null
+          reported_club_id?: string | null
           ruleset?: string
+          season_id?: string | null
+          settled_at?: string | null
           starts_at?: string | null
           status?: string
           updated_at?: string
           wager_pool?: number
+          wager_shards?: number
           winner_club_id?: string | null
         }
         Relationships: [
@@ -500,6 +569,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "club_wars_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "war_seasons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "club_wars_winner_club_id_fkey"
             columns: ["winner_club_id"]
             isOneToOne: false
@@ -514,6 +590,7 @@ export type Database = {
           banner_url: string | null
           created_at: string
           description: string | null
+          elo: number
           id: string
           member_count: number
           name: string
@@ -527,6 +604,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           description?: string | null
+          elo?: number
           id?: string
           member_count?: number
           name: string
@@ -540,6 +618,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           description?: string | null
+          elo?: number
           id?: string
           member_count?: number
           name?: string
@@ -2424,6 +2503,36 @@ export type Database = {
         }
         Relationships: []
       }
+      war_seasons: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          starts_at?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          starts_at?: string
+        }
+        Relationships: []
+      }
       webhook_events: {
         Row: {
           created_at: string
@@ -2571,6 +2680,14 @@ export type Database = {
         Returns: number
       }
       boost_lfg: { Args: { _cost: number; _hours: number }; Returns: string }
+      can_manage_clan: {
+        Args: { _clan: string; _user: string }
+        Returns: boolean
+      }
+      can_manage_club: {
+        Args: { _club: string; _user: string }
+        Returns: boolean
+      }
       can_rate_match: {
         Args: {
           _challenge?: string
@@ -2595,6 +2712,59 @@ export type Database = {
       club_role_of: {
         Args: { _club: string; _user: string }
         Returns: Database["public"]["Enums"]["club_role"]
+      }
+      club_war_standings: {
+        Args: { _season?: string }
+        Returns: {
+          club_id: string
+          club_name: string
+          club_tag: string
+          elo: number
+          losses: number
+          map_diff: number
+          points: number
+          wins: number
+        }[]
+      }
+      create_club_war: {
+        Args: {
+          _challenger_club: string
+          _defender_club: string
+          _format?: string
+          _game: string
+          _scheduled_at?: string
+          _wager?: number
+        }
+        Returns: {
+          challenger_club_id: string
+          challenger_score: number
+          created_at: string
+          created_by: string
+          defender_club_id: string
+          defender_score: number
+          ends_at: string | null
+          format: string
+          game_title: string
+          id: string
+          reported_at: string | null
+          reported_by: string | null
+          reported_club_id: string | null
+          ruleset: string
+          season_id: string | null
+          settled_at: string | null
+          starts_at: string | null
+          status: string
+          updated_at: string
+          wager_pool: number
+          wager_shards: number
+          winner_club_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "club_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_media_post: {
         Args: {
@@ -2696,6 +2866,28 @@ export type Database = {
           rep_score: number
         }[]
       }
+      notify_clan_officers: {
+        Args: {
+          _body: string
+          _clan: string
+          _kind: string
+          _link: string
+          _ref: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      notify_club_officers: {
+        Args: {
+          _body: string
+          _club: string
+          _kind: string
+          _link: string
+          _ref: string
+          _title: string
+        }
+        Returns: undefined
+      }
       pair_chemistry: {
         Args: { _other_user: string }
         Returns: {
@@ -2783,11 +2975,82 @@ export type Database = {
           streak: number
         }[]
       }
+      remove_linked_account: { Args: { _platform: string }; Returns: boolean }
       report_challenge_winner: {
         Args: { _challenge_id: string; _winner_id: string }
         Returns: Json
       }
+      report_club_war_result: {
+        Args: {
+          _challenger_score: number
+          _defender_score: number
+          _war_id: string
+        }
+        Returns: {
+          challenger_club_id: string
+          challenger_score: number
+          created_at: string
+          created_by: string
+          defender_club_id: string
+          defender_score: number
+          ends_at: string | null
+          format: string
+          game_title: string
+          id: string
+          reported_at: string | null
+          reported_by: string | null
+          reported_club_id: string | null
+          ruleset: string
+          season_id: string | null
+          settled_at: string | null
+          starts_at: string | null
+          status: string
+          updated_at: string
+          wager_pool: number
+          wager_shards: number
+          winner_club_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "club_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       request_friend: { Args: { _target_user: string }; Returns: Json }
+      respond_club_war: {
+        Args: { _accept: boolean; _war_id: string }
+        Returns: {
+          challenger_club_id: string
+          challenger_score: number
+          created_at: string
+          created_by: string
+          defender_club_id: string
+          defender_score: number
+          ends_at: string | null
+          format: string
+          game_title: string
+          id: string
+          reported_at: string | null
+          reported_by: string | null
+          reported_club_id: string | null
+          ruleset: string
+          season_id: string | null
+          settled_at: string | null
+          starts_at: string | null
+          status: string
+          updated_at: string
+          wager_pool: number
+          wager_shards: number
+          winner_club_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "club_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_all: { Args: { _limit?: number; _q: string }; Returns: Json }
       send_dm_to_user: {
         Args: { _attachment_url?: string; _body?: string; _other_user: string }
@@ -2800,6 +3063,39 @@ export type Database = {
           _user: string
         }
         Returns: boolean
+      }
+      settle_club_war: {
+        Args: { _war_id: string }
+        Returns: {
+          challenger_club_id: string
+          challenger_score: number
+          created_at: string
+          created_by: string
+          defender_club_id: string
+          defender_score: number
+          ends_at: string | null
+          format: string
+          game_title: string
+          id: string
+          reported_at: string | null
+          reported_by: string | null
+          reported_club_id: string | null
+          ruleset: string
+          season_id: string | null
+          settled_at: string | null
+          starts_at: string | null
+          status: string
+          updated_at: string
+          wager_pool: number
+          wager_shards: number
+          winner_club_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "club_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -2839,6 +3135,27 @@ export type Database = {
       update_clan_cosmetic: {
         Args: { _clan: string; _cosmetic: Json }
         Returns: boolean
+      }
+      upsert_linked_account: {
+        Args: { _external_uid?: string; _gamertag: string; _platform: string }
+        Returns: {
+          aggregated_stats: Json
+          created_at: string
+          current_rank_display: string | null
+          external_uid: string | null
+          gamertag: string
+          id: number
+          platform: string
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "linked_accounts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       upsert_voice_snippet: {
         Args: { _duration_seconds: number; _storage_path: string }
